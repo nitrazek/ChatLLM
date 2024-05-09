@@ -4,10 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon --watch src/**/*.ts --exec npx ts-node src/index.ts",
+    "dev": "nodemon",
     "build": "tsc",
     "serve": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "src"
+    ],
+    "ext": "ts",
+    "exec": "npx ts-node src/index.ts"
   },
   "keywords": [],
   "author": "",
