@@ -5,9 +5,10 @@ import './App.css';
 
 function App() {
   const [messages, setMessages] = useState([
-    { id: 1, text: "Cześć, jak się masz?", fromUser: true, user: { name: "You", avatar: "url_do_twojego_awatara" } },
-    { id: 2, text: "Witaj! Jestem w porządku, dzięki!", fromUser: false, user: { name: "Bot", avatar: "url_do_awatara_bota" } },
-    { id: 3, text: "Czy masz jakieś plany na dzisiaj?", fromUser: true, user: { name: "You", avatar: "url_do_twojego_awatara" } }
+    { id: 1, text: "Cześć, jak się masz?", fromUser: true, user: { name: "Ty", avatar: "./avatars/user.png" } },
+    { id: 2, text: "Witaj! U mnie wszystko w porządku!", fromUser: false, user: { name: "Bot", avatar: "./avatars/bot.png" } },
+    { id: 3, text: "Kim jest Adam Małysz?", fromUser: true, user: { name: "Ty", avatar: "./avatars/user.png" } },
+    { id: 4, text: "Adam Małysz to polski skoczek narciarski, który jest uważany za jednego z najlepszych skoczków wszech czasów. Jego karierę określa się mianem \"epoki złotej\".", fromUser: false, user: { name: "Bot", avatar: "./avatars/bot.png" } }
   ]);
 
   const chatHistory = [
@@ -22,22 +23,26 @@ function App() {
         <div className="upperSide">
           <div className="upperSideTop">G E N E R A T O R</div>
           <button className="newChatButton">Rozpocznij nowy czat</button>
+          <br></br>
           <div className="upperSideBottom">
-          <ul style={{ listStyleType: "none", padding: 0, margin: 0, textAlign: "center" }}> {/* Dodaj styl inline */}
-          {chatHistory.map((option, index) => (
-            <li key={index} style={{ display: "block" }}> {/* Dodaj styl inline */}
-              <button className="chatHistoryButton">{option}</button>
-            </li>
+            <ul className="chatHistory" style={{ textAlign: "center", alignContent: "center" }}>
+              Historia czatów:
+              {chatHistory.map((option, index) => (
+                <li key={index}>
+                  <button className="chatHistoryButton">{option}</button>
+                </li>
               ))}
             </ul>
           </div>
         </div>
 
         <div className="lowerSide">
-          <button className="sideBarButton">Ustawienia</button>
-          <button className='sideBarButton'>Panel administratora</button>
-          <button className='sideBarButton'>Wyloguj się</button>
+          <br></br>
+          <button className="newChatButton">Ustawienia</button>
+          <button className='newChatButton'>Panel administratora</button>
+          <button className='newChatButton'>Wyloguj się</button>
         </div>
+
       </div>
       <div className="main">
         <div className="mainTop">

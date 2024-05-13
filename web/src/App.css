@@ -41,6 +41,8 @@ body {
   justify-content: center;
   align-items: center;
   flex-grow: 1;
+  border-top: #7289da solid 2px;
+  margin-bottom: 7%;
 }
 
 /* Main content area */
@@ -71,7 +73,7 @@ body {
 
 /* Styling for the top text */
 .upperSideTop {
-  color: #0099FF;
+  color: #7289da;
   margin-bottom: 15px;
   margin-top: 15px;
   font-weight: bold;
@@ -79,23 +81,25 @@ body {
 
 /* Styling for the 'Rozpocznij nowy czat' button */
 .newChatButton {
-  background-color: #0099FF;
+  background-color: #7289da;
   color: white;
   padding: 10px 20px;
   border-radius: 10px;
   font-size: large;
   margin-bottom: 15px;
+  width: 100%;
 }
 
 .sideBarButton {
   background: none;
-  color: #0099FF;
-  border-bottom: #0099FF 2px solid;
+  color: #7289da;
+  border-bottom: #7289da 2px solid;
   border-left: none;
   border-right: none;
   border-top: none;
   padding: 2px;
   margin-bottom: 10px;
+  width: 100%;
 }
 
 /* Styling for the chat input */
@@ -137,10 +141,35 @@ input[type="text"]::placeholder {
 }
 
 .chatHistoryButton {
-  background-color: #1e2124;
+  background-color: transparent;
   color: white;
   padding: 10px 20px;
-  border-radius: 10px;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: white 2px solid;
   font-size: medium;
   margin: 5px;
+  width: 100%;
+}
+
+ul.chatHistory {
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
+}
+
+ul.chatHistory > li {
+  list-style-type: "⯈";
+  padding: 0;
+  margin: 0;
+}
+
+.upperSideBottom {
+  font-size: medium;
+}
+
+.avatar {
+  width: 4%;
+  margin: 1%;
 }
