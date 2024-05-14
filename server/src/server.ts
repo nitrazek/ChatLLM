@@ -2,7 +2,7 @@ import Fastify, { FastifyInstance } from "fastify";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import dotenv from "dotenv";
-import modelRoute from "./routes/model-route";
+import modelRoutes from "./routes/questions";
 
 dotenv.config();
 
@@ -13,9 +13,9 @@ fastify.register(swagger);
 fastify.register(swaggerUi, {
   routePrefix: "/documentation"
 })
-fastify.register(modelRoute, { prefix: "/api/v1/model" });
+fastify.register(modelRoutes, { prefix: "/api/v1/model" });
 
-fastify.listen({ port: port }, (err: Error | null, address: String) => {
+fastify.listen({ port: port }, (err, address) => {
   console.log(`[server]: Server is running at ${address}`);
 });
 
