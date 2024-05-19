@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyReply, FastifyRequest, RawReplyDefaultExpression, RawRequestDefaultExpression, RawServerDefault } from "fastify";
 import ollama from "../services/ollama";
 import { BaseMessageChunk } from "langchain/schema";
+import { CustomReply, CustomRequest } from "../utils/types";
 
 type AskQuestionRequest = {
   question: string
@@ -29,8 +30,8 @@ const questionsRoute = async (fastify: FastifyInstance) => {
       }
     }
   }, async (
-    request: FastifyRequest<{ Body: AskQuestionRequest, Reply: AskQuestionReply }>,
-    reply: FastifyReply<RawServerDefault, RawRequestDefaultExpression, RawReplyDefaultExpression, { Body: AskQuestionRequest, Reply: AskQuestionReply }>
+    request: CustomRequest<AskQuestionRequest, AskQuestionReply>,
+    reply: CustomReply<AskQuestionRequest, AskQuestionReply>
   ) => {
     const question: string = request.body.question;
     const messageChunk: BaseMessageChunk = await ollama.invoke(question);
