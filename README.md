@@ -9,3 +9,7 @@ System inteligentnej bazy wiedzy wykorzystującej interfejs w języku naturalnym
 # Dokumentacja OpenAPI:
 - uruchamiasz serwer poleceniem "npm run dev"
 - wchodzisz na adres localhost:3000/documentation
+
+# Aplikacja webowa:
+- uruchamiasz aplikację poleceniem "npm start"
+- aplikacja uruchamia się pod adresem localhost:80
