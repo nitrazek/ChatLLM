@@ -1,7 +1,4 @@
-# ollama/Dockerfile
-FROM ubuntu:20.04
-WORKDIR /model
+FROM ollama/ollama
 
-COPY . .
-EXPOSE 11434
-CMD ["python", "run_model.py"]
+WORKDIR /root/.ollama/models
+RUN ollama serve & ollama pull llama3

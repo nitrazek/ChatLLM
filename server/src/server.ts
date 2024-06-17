@@ -1,4 +1,5 @@
 import Fastify, { FastifyInstance } from "fastify";
+import cors from "@fastify/cors";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import dotenv from "dotenv";
@@ -13,6 +14,13 @@ fastify.register(swagger);
 fastify.register(swaggerUi, {
   routePrefix: "/documentation"
 })
+
+fastify.register(cors, {
+  origin: "*",
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
+});
 fastify.register(modelRoutes, { prefix: "/api/v1/model" });
 
 fastify.listen({ port: port }, (err, address) => {

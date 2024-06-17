@@ -33,8 +33,10 @@ const questionsRoute = async (fastify: FastifyInstance) => {
     request: CustomRequest<AskQuestionRequest, AskQuestionReply>,
     reply: CustomReply<AskQuestionRequest, AskQuestionReply>
   ) => {
+    console.log(request.body);
     const question: string = request.body.question;
     const messageChunk: BaseMessageChunk = await ollama.invoke(question);
+    console.log(messageChunk?.content);
     reply.send({ answer: messageChunk.content as string })
   });
 };
