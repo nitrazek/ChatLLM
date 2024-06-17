@@ -1,0 +1,7 @@
+# ollama/Dockerfile
+FROM ubuntu:20.04
+WORKDIR /model
+
+COPY . .
+EXPOSE 11434
+CMD ["python", "run_model.py"]
