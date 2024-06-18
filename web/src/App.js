@@ -4,18 +4,58 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 
 function App() {
-  const [messages, setMessages] = useState([
-    { id: 1, text: "Cześć, jak się masz?", fromUser: true, user: { name: "Ty", avatar: "./avatars/user.png" } },
-    { id: 2, text: "Witaj! U mnie wszystko w porządku!", fromUser: false, user: { name: "Bot", avatar: "./avatars/bot.png" } },
-    { id: 3, text: "Kim jest Adam Małysz?", fromUser: true, user: { name: "Ty", avatar: "./avatars/user.png" } },
-    { id: 4, text: "Adam Małysz to polski skoczek narciarski, który jest uważany za jednego z najlepszych skoczków wszech czasów. Jego karierę określa się mianem \"epoki złotej\".", fromUser: false, user: { name: "Bot", avatar: "./avatars/bot.png" } }
-  ]);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const chatHistory = [
     "Adam Małysz",
     "Co jest cięższe?",
     "Powitanie"
   ];
+
+  const sendMessage = async () => {
+    if (input.trim() === '') return;
+
+    const userMessage = {
+      id: messages.length + 1,
+      text: input,
+      fromUser: true,
+      user: { name: "Ty", avatar: "./avatars/user.png" }
+    };
+
+    setMessages([...messages, userMessage]);
+    setInput('');
+    setIsLoading(true);
+
+    try {
+      const response = await axios.post('http://localhost:3000/api/v1/model/questions', { question: input });
+      const botMessage = {
+        id: messages.length + 2,
+        text: response.data.answer, // Use response.data.answer instead of response.data.reply
+        fromUser: false,
+        user: { name: "Bot", avatar: "./avatars/bot.png" }
+      };
+
+      setMessages(prevMessages => [...prevMessages, botMessage]);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      // Optionally add an error message to the chat
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); // Prevent the default action of the Enter key
+      sendMessage();
+    }
+  };
 
   return (
     <div className="App">
@@ -42,12 +82,11 @@ function App() {
           <button className='newChatButton'>Panel administratora</button>
           <button className='newChatButton'>Wyloguj się</button>
         </div>
-
       </div>
       <div className="main">
         <div className="mainTop">
           {messages.map(message => (
-            <div key={message.id} className={message.fromUser ? "userMessage" : "botMessage"}>
+            <div key={message.id} className={message.fromUser? "userMessage" : "botMessage"}>
               <div className="messageHeader">
                 <img src={message.user.avatar} alt={message.user.name} className="avatar" />
                 <span className="username">{message.user.name}</span>
@@ -59,7 +98,14 @@ function App() {
         <div className="mainBottom">
           <div className="chatFooter">
             <div className="input">
-              <input type="text" placeholder="Napisz wiadomość..."></input>
+              <input 
+                type="text" 
+                placeholder="Napisz wiadomość..."
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                disabled={isLoading}
+              />
             </div>
           </div>
         </div>
