@@ -30,6 +30,7 @@
     "chromadb": "^1.8.1",
     "chromadb-default-embed": "^2.13.2",
     "fastify": "^4.27.0",
+    "@fastify/cors": "^8.0.0",
     "langchain": "^0.1.37"
   }
 }

@@ -1,4 +1,5 @@
 import Fastify, { FastifyInstance } from "fastify";
+import cors from "@fastify/cors";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import multipart from "@fastify/multipart";
@@ -15,8 +16,16 @@ const fastify: FastifyInstance = Fastify({ logger: true })
 const port: number = process.env.PORT ? +process.env.PORT : 3000;
 
 fastify.register(swagger);
-fastify.register(swaggerUi, { routePrefix: "/api/v1/documentation" });
+fastify.register(swaggerUi, {
+  routePrefix: "/api/v1documentation"
+});
 fastify.register(multipart);
+fastify.register(cors, {
+  origin: "*",
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
+});
 fastify.register(modelRoutes, { prefix: "/api/v1/model" });
 fastify.register(baseRoutes, { prefix: "/api/v1/base" });
 
