@@ -1,0 +1,22 @@
+version: '3.9'
+services:
+    frontend:
+        build:
+            context: ./web
+        ports:
+            - "80:80"
+
+    backend:
+        build:
+            context: ./server
+        ports:
+            - "3000:3000"
+        depends_on:
+            - ollama
+
+    ollama:
+        image: ollama/ollama
+        volumes:
+            - ./ollama/models:/root/.ollama/models
+        ports:
+            - "11434:11434"
