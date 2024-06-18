@@ -17,7 +17,7 @@ const port: number = process.env.PORT ? +process.env.PORT : 3000;
 
 fastify.register(swagger);
 fastify.register(swaggerUi, {
-  routePrefix: "/api/v1documentation"
+  routePrefix: "/api/v1/documentation"
 });
 fastify.register(multipart);
 fastify.register(cors, {
