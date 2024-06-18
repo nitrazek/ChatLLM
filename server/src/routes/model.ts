@@ -4,9 +4,16 @@ import { Answer, AnswerType, Question, QuestionType } from "../schemas/model";
 import { chroma } from "../services/chroma";
 import { RunnablePassthrough, RunnableSequence } from "@langchain/core/runnables";
 import { formatDocumentsAsString } from "langchain/util/document";
-import { pull } from "langchain/hub";
-import { ChatPromptTemplate } from "langchain/prompts";
+import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
+import { BaseMessageChunk } from "langchain/schema";
+
+const template = `
+You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question.
+Use three sentences maximum and keep the answer concise.
+Question: {question} 
+Context: {context}  
+Answer:`;
 
 const questionsRoute = async (fastify: FastifyInstance) => {
   fastify.post<{ Body: QuestionType, Reply: AnswerType }>("/questions", {
@@ -18,7 +25,6 @@ const questionsRoute = async (fastify: FastifyInstance) => {
     }
   }, async (request, response) => {
     const retriever = chroma?.asRetriever();
-    const ragPrompt = await pull<ChatPromptTemplate>("rlm/rag-prompt");
     const qaChain = RunnableSequence.from([
       {
         context: (input: { question: string }, callbacks) => {
@@ -27,14 +33,14 @@ const questionsRoute = async (fastify: FastifyInstance) => {
         },
         question: new RunnablePassthrough(),
       },
-      ragPrompt,
+      PromptTemplate.fromTemplate(template),
       ollama,
       new StringOutputParser(),
     ]);
 
     const question: string = request.body.question;
-    const answer: string = await qaChain.invoke({ question });
-    response.status(200).send({ answer: answer })
+    const messageChunk: BaseMessageChunk = await ollama.invoke(question);
+    response.status(200).send({ answer: messageChunk.content as string })
   });
 };
 

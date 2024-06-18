@@ -13,7 +13,10 @@ const filesRoute = async (fastify: FastifyInstance) => {
     }
   }, async (request, response) => {
     const file: MultipartFile | undefined = await request.file();
-    if(file === undefined) return response.status(400);
+    if(file === undefined) { 
+      response.status(400).send();
+      return;
+    }
     
     const fileBuffer: Buffer = await file.toBuffer();
     console.log(fileBuffer.toString());
@@ -22,7 +25,7 @@ const filesRoute = async (fastify: FastifyInstance) => {
       ids: [file.filename]
     });
 
-    return response.status(204);
+    response.status(204).send();
   });
 }
 
