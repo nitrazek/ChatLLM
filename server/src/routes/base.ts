@@ -1,9 +1,17 @@
 import { MultipartFile } from "@fastify/multipart";
 import { FastifyInstance } from "fastify";
 import { chroma } from "../services/chroma";
+import { FileUploadError, FileUploadErrorType, FileUploadSuccess, FileUploadSuccessType } from "../schemas/base";
 
 const filesRoute = async (fastify: FastifyInstance) => {
-  fastify.post("/files", async (request, response) => {
+  fastify.post<{ Reply: FileUploadSuccessType | FileUploadErrorType }>("/files", {
+    schema: {
+      response: {
+        204: FileUploadSuccess,
+        400: FileUploadError
+      }
+    }
+  }, async (request, response) => {
     const file: MultipartFile | undefined = await request.file();
     if(file === undefined) return response.status(400);
     
