@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mobile/viewModels/MainChatViewModel.dart';
 import 'package:mobile/views/MainChat.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -9,18 +11,15 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-        statusBarColor: Color(0xFF282B30), // Ustaw kolor paska statusu na czerwony
-        statusBarIconBrightness: Brightness.light, // Ustaw kolor ikon na jasny (biały)
-      ),
-    );
-    return MaterialApp(
-      home: const MainChatPage(),
-    );
+    return MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (context) => MainChatViewModel())
+        ],
+        child: const MaterialApp(
+          home: const MainChatPage(),
+        ));
   }
 }
 
