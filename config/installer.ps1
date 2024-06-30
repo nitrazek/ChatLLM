@@ -98,7 +98,20 @@ if (-not $dockerInstalled) {
     Write-Host "[+] Docker Desktop is already installed." -ForegroundColor Green
 }
 
-
+$dockerOutput = docker ps 2>$null
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "[+] Docker is running." -ForegroundColor Green
+} else {
+    Write-Host "[x] Docker is not running " -ForegroundColor Yellow
+    Write-Output "Starting docker desktop..."
+    if (Test-Path "C:\Program Files\Docker\Docker\Docker Desktop.exe") {
+        Start-Process -FilePath "C:\Program Files\Docker\Docker\Docker Desktop.exe" -ArgumentList "--run-background"
+        Start-Sleep 10
+        Write-Host "Started docker desktop.`n" -ForegroundColor Green
+    } else {
+        Write-Host "Couldn't find docker desktop in default location. Start it manually." -ForegroundColor Red
+    }
+}
 
 $gpuInfo = Get-WmiObject -Class Win32_VideoController | Where-Object {$_.Description -like '*NVIDIA*'}
 if ($gpuInfo) {
