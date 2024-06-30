@@ -35,5 +35,6 @@ if %errorlevel% neq 0 (
 
 :build
 cls
-pause REM to delete
-REM powershell -ExecutionPolicy Bypass -File "%~dp0config-scripts\build.ps1"
+powershell -ExecutionPolicy Bypass -File "%~dp0config\build.ps1"
+
+REM TODO - Zapisać i operować na ścieżce uruchomieniowej

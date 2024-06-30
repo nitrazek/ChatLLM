@@ -122,5 +122,5 @@ if ($gpuInfo) {
     Write-Host "`nComputer is ready to run this software, but it may experience performance issues." -ForegroundColor Yellow
 }
 
-Write-Host -NoNewLine 'Press any key to close program...';
-$null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
+Write-Host -NoNewLine 'Press any key to close program...'
+$null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
