@@ -1,14 +1,10 @@
 $executionPolicy = Get-ExecutionPolicy -Scope CurrentUser
-if ($executionPolicy -ne "RemoteSigned" -and $executionPolicy -ne "Bypass") {
-    Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Bypass -Force
-}
-
-set-executionpolicy -scope CurrentUser -executionPolicy Bypass -Force
 If (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
   Start-Process powershell.exe "-File",('"{0}"' -f $MyInvocation.MyCommand.Path) -Verb RunAs
   exit
 }
 
+Set-Location -Path $PSScriptRoot
 Clear-Host
 
 $hyperv = Get-WindowsOptionalFeature -FeatureName Microsoft-Hyper-V-All -Online -ErrorAction SilentlyContinue
@@ -72,13 +68,13 @@ if (-not $dockerInstalled) {
     Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath
 
     Write-Output "Installing Docker Desktop..."
-    $process = Start-Process -FilePath $installerPath -quiet -Wait -PassThru -NoNewWindow -RedirectStandardError $installerOutputPath
+    $process = Start-Process -FilePath $installerPath -Wait -PassThru -RedirectStandardError $installerOutputPath
     Remove-Item -Path $installerPath -Force -ErrorAction SilentlyContinue
 
     if ($process.ExitCode -eq 0) {
         Write-Host "Docker Desktop installation completed.`n" -ForegroundColor Green
     } else {
-        $currentPath = Split-Path -Parent $MyInvocation.MyCommand.Path
+        $currentPath = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
         $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
         $outputFileName = "installer_output_$timestamp.log"
 

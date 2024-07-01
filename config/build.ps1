@@ -11,12 +11,7 @@ function CheckDockerRunning {
     return $dockerRunning
 }
 
-$executionPolicy = Get-ExecutionPolicy -Scope CurrentUser
-if ($executionPolicy -ne "RemoteSigned" -and $executionPolicy -ne "Bypass") {
-    Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Bypass -Force
-}
-
-set-executionpolicy -scope CurrentUser -executionPolicy Bypass -Force
+Set-Location -Path $PSScriptRoot
 If (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
   Start-Process powershell.exe "-File",('"{0}"' -f $MyInvocation.MyCommand.Path) -Verb RunAs
   exit
@@ -33,9 +28,10 @@ while ($continue) {
         exit
     }
 
-    docker-compose -f .\docker-compose.yaml down
-    docker-compose -f .\docker-compose.yaml up --build -d
+    docker-compose -f ..\docker-compose.yaml down
+    docker-compose -f ..\docker-compose.yaml up --build -d
     docker image prune -f
+    Start-Sleep 1
     docker ps
 
     Write-Output "`n"

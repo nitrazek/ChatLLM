@@ -1,7 +1,7 @@
 @echo off
 
 >nul 2>&1 net session || (
-    powershell.exe -Command "Start-Process -Verb RunAs '%0'"
+    powershell -Command "Start-Process -Verb RunAs '%0'"
     exit /b
 )
 
@@ -21,7 +21,7 @@ if %errorlevel% neq 0 (
     goto ask
 
     :run
-    powershell.exe "%~dp0config\installer.ps1"
+    powershell -ExecutionPolicy Bypass -File "%~dp0config\installer.ps1"
     docker ps >nul 2>&1
     if %errorlevel% neq 0 exit /b
     goto build
@@ -36,5 +36,3 @@ if %errorlevel% neq 0 (
 :build
 cls
 powershell -ExecutionPolicy Bypass -File "%~dp0config\build.ps1"
-
-REM TODO - Zapisać i operować na ścieżce uruchomieniowej
