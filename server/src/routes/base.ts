@@ -1,7 +1,8 @@
 import { MultipartFile } from "@fastify/multipart";
 import { FastifyInstance } from "fastify";
-import { chroma } from "../services/chroma";
 import { FileUploadError, FileUploadErrorType, FileUploadSuccess, FileUploadSuccessType } from "../schemas/base";
+import { getChromaConnection } from "../services/chroma";
+import { Chroma } from "@langchain/community/vectorstores/chroma";
 
 const filesRoute = async (fastify: FastifyInstance) => {
   fastify.post<{ Reply: FileUploadSuccessType | FileUploadErrorType }>("/files", {
@@ -21,7 +22,8 @@ const filesRoute = async (fastify: FastifyInstance) => {
     const fileBuffer: Buffer = await file.toBuffer();
     console.log(fileBuffer.toString());
 
-    const documents = await chroma?.addDocuments([{ pageContent: fileBuffer.toString(), metadata: { fileName: file.filename } }], {
+    const chroma: Chroma = await getChromaConnection();
+    const documents = await chroma.addDocuments([{ pageContent: fileBuffer.toString(), metadata: { fileName: file.filename } }], {
       ids: [file.filename]
     });
 

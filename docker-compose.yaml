@@ -1,12 +1,13 @@
-version: '3.9'
 services:
-    frontend:
+    web:
+        container_name: web
         build:
             context: ./web
         ports:
             - "80:80"
 
-    backend:
+    server:
+        container_name: server
         build:
             context: ./server
         ports:
@@ -15,10 +16,14 @@ services:
             - ollama
             - chroma
         environment:
-            - PORT=3000
+            - HOST=0.0.0.0
+            - OLLAMA_URL=http://ollama:11434
+            - OLLAMA_MODEL=llama2
+            - CHROMA_URL=http://chroma:8000
 
     ollama:
         image: ollama/ollama
+        container_name: ollama
         volumes:
             - ./ollama/models:/root/.ollama/models
         ports:
@@ -26,5 +31,6 @@ services:
 
     chroma:
         image: chromadb/chroma
+        container_name: chroma
         ports:
             - "9001:8000"
