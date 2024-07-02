@@ -13,13 +13,16 @@ services:
         depends_on:
             - ollama
             - chroma
-        environment:
-            - PORT=3000
 
     ollama:
         image: ollama/ollama
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                        - capabilities: [ gpu ]
         volumes:
-            - ./ollama/models:/root/.ollama/models
+            - ollama:/root/.ollama
         ports:
             - "11434:11434"
 
@@ -27,3 +30,6 @@ services:
         image: chromadb/chroma
         ports:
             - "9001:8000"
+
+volumes:
+    ollama:

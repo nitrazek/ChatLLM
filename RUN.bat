@@ -35,4 +35,4 @@ if %errorlevel% neq 0 (
 
 :build
 cls
-powershell -ExecutionPolicy Bypass -File "%~dp0config\build.ps1"
+powershell -ExecutionPolicy Bypass -File "%~dp0config\builder.ps1"

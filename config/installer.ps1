@@ -101,7 +101,7 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "[x] Docker is not running " -ForegroundColor Yellow
     Write-Output "Starting docker desktop..."
     if (Test-Path "C:\Program Files\Docker\Docker\Docker Desktop.exe") {
-        Start-Process -FilePath "C:\Program Files\Docker\Docker\Docker Desktop.exe" -ArgumentList "--run-background"
+        Start-Process -FilePath "C:\Program Files\Docker\Docker\Docker Desktop.exe" -WindowStyle Minimized
         Start-Sleep 10
         Write-Host "Started docker desktop.`n" -ForegroundColor Green
     } else {
@@ -118,5 +118,5 @@ if ($gpuInfo) {
     Write-Host "`nComputer is ready to run this software, but it may experience performance issues." -ForegroundColor Yellow
 }
 
-Write-Host -NoNewLine 'Press any key to close program...'
+Write-Host -NoNewLine 'Press any key to continue...'
 $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
