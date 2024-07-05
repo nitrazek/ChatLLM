@@ -1,29 +1,24 @@
-/* Reset CSS */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* Root font size */
 html {
   font-size: 24px;
 }
 
-/* Body styles */
 body {
   background-color: #36393e;
   color: white;
   font-family: 'Manrope', sans-serif;
 }
 
-/* App container */
 .App {
   min-height: 100vh;
   display: flex;
 }
 
-/* Sidebar */
 .sideBar {
   flex: 2;
   border-right: 2px solid #1e2124;
@@ -34,7 +29,6 @@ body {
   align-items: center;
 }
 
-/* Styling for the lower side */
 .lowerSide {
   display: flex;
   flex-direction: column;
@@ -45,7 +39,6 @@ body {
   margin-bottom: 7%;
 }
 
-/* Main content area */
 .main {
   flex: 9;
   margin: 15px;
@@ -53,16 +46,16 @@ body {
   flex-direction: column;
 }
 
-/* Styling for the upper side */
 .mainTop {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* Przenieś wiadomości na górę */
+  justify-content: flex-start;
   align-items: center;
-  height: 100%;
+  height: 89vh;
+  overflow-y: auto; 
 }
 
-/* Styling for the upper side */
+
 .upperSide {
   display: flex;
   flex-direction: column;
@@ -71,7 +64,6 @@ body {
   height: 100%;
 }
 
-/* Styling for the top text */
 .upperSideTop {
   color: #7289da;
   margin-bottom: 15px;
@@ -79,7 +71,6 @@ body {
   font-weight: bold;
 }
 
-/* Styling for the 'Rozpocznij nowy czat' button */
 .newChatButton {
   background-color: #7289da;
   color: white;
@@ -87,7 +78,7 @@ body {
   border-radius: 10px;
   font-size: large;
   margin-bottom: 15px;
-  width: 100%;
+  width: 14vw;
 }
 
 .sideBarButton {
@@ -102,7 +93,6 @@ body {
   width: 100%;
 }
 
-/* Styling for the chat input */
 .input {
   margin-top: auto;
   margin-bottom: 20px;
@@ -129,29 +119,34 @@ input[type="text"]::placeholder {
   margin: 7.5px 0;
   border-radius: 5px;
   font-size: medium;
-  width: 50%; /* Occupying half of the screen */
+  width: 50%; 
 }
 
 .userMessage {
-  align-self: flex-start; /* Aligning to the left */
+  align-self: flex-start; 
 }
 
 .botMessage {
-  align-self: flex-end; /* Aligning to the right */
+  align-self: flex-end; 
 }
 
 .chatHistoryButton {
   background-color: transparent;
   color: white;
-  padding: 10px 20px;
+  padding: 10px 15px;
   border-top: none;
   border-left: none;
   border-right: none;
   border-bottom: white 2px solid;
   font-size: medium;
   margin: 5px;
-  width: 100%;
+  width: 90%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
+
 
 ul.chatHistory {
   padding: 0;
@@ -163,10 +158,13 @@ ul.chatHistory > li {
   list-style-type: "⯈";
   padding: 0;
   margin: 0;
+  width: 15vw;
 }
 
 .upperSideBottom {
   font-size: medium;
+  height: 50vh;
+  overflow-y: auto;
 }
 
 .avatar {
