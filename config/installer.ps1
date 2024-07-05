@@ -20,14 +20,15 @@ if($hyperv.State -eq "Enabled") {
         Write-Host "It's likely that this computer does not support Hyper-V." -ForegroundColor Red
         Write-Host -NoNewLine 'Press any key to continue...'
         $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
-    }
-    Write-Output "Downloading necessary features... (estimated 30s)"
-    Start-Sleep 30
+    } finally {
+        Write-Output "Downloading necessary features... (estimated 30s)"
+        Start-Sleep 30
 
-    Write-Host "Hyper-V is enabled now. Reboot the system to continue the installation.`n" -ForegroundColor Green
-    Write-Host -NoNewLine 'Press any key to close program...'
-    $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
-    exit
+        Write-Host "Hyper-V is enabled now. Reboot the system to continue the installation.`n" -ForegroundColor Green
+        Write-Host -NoNewLine 'Press any key to close program...'
+        $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+        exit
+    }
 }
 
 $wsl = Get-WindowsOptionalFeature -FeatureName Microsoft-Windows-Subsystem-Linux -Online -ErrorAction SilentlyContinue
