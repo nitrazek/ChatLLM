@@ -30,6 +30,7 @@ while ($continue) {
 
     docker-compose -f ..\docker-compose.yaml down
     docker-compose -f ..\docker-compose.yaml up --build -d
+    docker exec ollama ollama run llama3
     docker image prune -f
     Start-Sleep 1
     docker ps
@@ -37,6 +38,7 @@ while ($continue) {
     Write-Output "`n"
     $response = Read-Host "Do you want to rebuild? (y/n)"
     if (!($response.ToLower().StartsWith('y'))) {
+        docker-compose -f ..\docker-compose.yaml down
         $continue = $false
         Write-Host "Exited."
     }
