@@ -7,13 +7,13 @@ import dotenv from "dotenv";
 import baseRoutes from "./routes/base";
 import modelRoutes from "./routes/model";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
-import { createChromaConnection } from "./services/chroma";
 
 dotenv.config();
 
 const fastify: FastifyInstance = Fastify({ logger: true })
   .withTypeProvider<TypeBoxTypeProvider>();
 const port: number = process.env.PORT ? +process.env.PORT : 3000;
+const host: string = process.env.HOST ?? "localhost";
 
 fastify.register(swagger);
 fastify.register(swaggerUi, {
@@ -29,10 +29,9 @@ fastify.register(cors, {
 fastify.register(modelRoutes, { prefix: "/api/v1/model" });
 fastify.register(baseRoutes, { prefix: "/api/v1/base" });
 
-fastify.listen({ port: port }, (err, address) => {
+fastify.listen({ port: port, host: host }, (err, address) => {
   console.log(`[server]: Server is running at ${address}`);
 });
 
 fastify.ready()
-  .then(createChromaConnection)
   .then(() => { fastify.swagger(); });
