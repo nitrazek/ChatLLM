@@ -1,12 +1,13 @@
 import { FastifyInstance } from "fastify";
 import ollama from "../services/ollama";
 import { Answer, AnswerType, Question, QuestionType } from "../schemas/model";
-import { chroma } from "../services/chroma";
 import { RunnablePassthrough, RunnableSequence } from "@langchain/core/runnables";
 import { formatDocumentsAsString } from "langchain/util/document";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { BaseMessageChunk } from "langchain/schema";
+import { getChromaConnection } from "../services/chroma";
+import { Chroma } from "@langchain/community/vectorstores/chroma";
 
 const template = `
 You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question.
@@ -24,7 +25,8 @@ const questionsRoute = async (fastify: FastifyInstance) => {
       }
     }
   }, async (request, response) => {
-    const retriever = chroma?.asRetriever();
+    const chroma: Chroma = await getChromaConnection();
+    const retriever = chroma.asRetriever();
     const qaChain = RunnableSequence.from([
       {
         context: (input: { question: string }, callbacks) => {
