@@ -16,6 +16,7 @@ body {
 
 .App {
   min-height: 100vh;
+  height: 100vh;
   display: flex;
 }
 
@@ -152,6 +153,7 @@ ul.chatHistory {
   padding: 0;
   margin: 0;
   list-style-type: none;
+  min-height: 100px;
 }
 
 ul.chatHistory > li {
