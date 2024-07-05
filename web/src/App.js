@@ -86,7 +86,7 @@ function App() {
       <div className="main">
         <div className="mainTop">
           {messages.map(message => (
-            <div key={message.id} className={message.fromUser? "userMessage" : "botMessage"}>
+            <div key={message.id} className={message.fromUser ? "userMessage" : "botMessage"}>
               <div className="messageHeader">
                 <img src={message.user.avatar} alt={message.user.name} className="avatar" />
                 <span className="username">{message.user.name}</span>
@@ -98,8 +98,8 @@ function App() {
         <div className="mainBottom">
           <div className="chatFooter">
             <div className="input">
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="Napisz wiadomość..."
                 value={input}
                 onChange={handleInputChange}

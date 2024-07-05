@@ -17,10 +17,9 @@ if($hyperv.State -eq "Enabled") {
         Enable-WindowsOptionalFeature -FeatureName Microsoft-Hyper-V-All -Online -ErrorAction SilentlyContinue
     } catch {
         Write-Host "Failed to enable Hyper-V." -ForegroundColor Red
-        Write-Host "It's likely that this computer does not support Hyper-V. Try enabling it manually." -ForegroundColor Red
-        Write-Host -NoNewLine 'Press any key to close program...'
+        Write-Host "It's likely that this computer does not support Hyper-V." -ForegroundColor Red
+        Write-Host -NoNewLine 'Press any key to continue...'
         $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
-        exit
     }
     Write-Output "Downloading necessary features... (estimated 30s)"
     Start-Sleep 30
