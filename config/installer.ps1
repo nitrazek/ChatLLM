@@ -36,7 +36,8 @@ if($wsl.State -eq "Enabled") {
     Write-Host "[x] WSL2 is not enabled. Enabling WSL2 feature..." -ForegroundColor Yellow -ErrorAction SilentlyContinue
 
     try {
-        Enable-WindowsOptionalFeature -FeatureName VirtualMachinePlatform -Online -All -NoRestart
+        $ProgressPreference = 'SilentlyContinue'
+        Enable-WindowsOptionalFeature -FeatureName VirtualMachinePlatform -Online -All -NoRestart # wsl --install
     } catch {
         Write-Host "Failed to enable WSL2." -ForegroundColor Red
         Write-Host "It's likely that this computer does not support WSL2. Try enabling it manually." -ForegroundColor Red
@@ -70,7 +71,11 @@ if (-not $dockerInstalled) {
     Remove-Item -Path $installerPath -Force -ErrorAction SilentlyContinue
 
     if ($process.ExitCode -eq 0) {
-        Write-Host "Docker Desktop installation completed.`n" -ForegroundColor Green
+        Remove-Item -Path $installerOutputPath -Force -ErrorAction SilentlyContinue
+        Write-Host "Docker Desktop installation completed. Reboot the system to continue the installation.`n" -ForegroundColor Green
+        Write-Host -NoNewLine 'Press any key to close program...'
+        $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+        exit
     } else {
         $currentPath = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
         $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
@@ -85,9 +90,6 @@ if (-not $dockerInstalled) {
         $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
         exit
     }
-
-    Remove-Item -Path $installerOutputPath -Force -ErrorAction SilentlyContinue
-    Remove-Item -Path $installerErrorsPath -Force -ErrorAction SilentlyContinue
 } else {
     Write-Host "[+] Docker Desktop is already installed." -ForegroundColor Green
 }
