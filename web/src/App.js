@@ -69,7 +69,7 @@ function App() {
           <div className="upperSideTop">G E N E R A T O R</div>
           <button className="newChatButton">Rozpocznij nowy czat</button>
           <br></br>
-              Historia czatów:
+          Historia czatów:
           <div className="upperSideBottom">
             <ul className="chatHistory" style={{ textAlign: "center", alignContent: "center" }}>
               {chatHistory.map((option, index) => (
@@ -80,9 +80,7 @@ function App() {
             </ul>
           </div>
         </div>
-
         <div className="lowerSide">
-          <br></br>
           <button className="newChatButton">Ustawienia</button>
           <button className='newChatButton'>Panel administratora</button>
           <button className='newChatButton'>Wyloguj się</button>
