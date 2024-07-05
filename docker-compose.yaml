@@ -12,6 +12,10 @@ services:
             context: ./server
         ports:
             - "3000:3000"
+        environment:
+            - HOST=0.0.0.0
+            - OLLAMA_URL=http://ollama:11434
+            - CHROMA_URL=http://chroma:8000
         depends_on:
             - ollama
             - chroma
@@ -24,10 +28,6 @@ services:
                 reservations:
                     devices:
                         - capabilities: [ gpu ]
-        environment:
-            - HOST=0.0.0.0
-            - OLLAMA_URL=http://ollama:11434
-            - CHROMA_URL=http://chroma:8000
         volumes:
             - ollama:/root/.ollama
         ports:
