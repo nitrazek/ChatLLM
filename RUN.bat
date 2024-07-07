@@ -13,7 +13,7 @@ if %errorlevel% neq 0 (
     :ask
     echo Docker is not running or not installed.
     set response=
-    set /p "response=Do you want to install Docker? (y/n): "
+    set /p "response=Do you want to run health check? (y/n): "
     IF NOT '!response!'=='' SET response=!response:~0,1!
     if /i "!response!"=="Y" goto run
     if /i "!response!"=="N" goto abort

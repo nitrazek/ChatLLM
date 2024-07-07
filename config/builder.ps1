@@ -17,6 +17,18 @@ If (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
   exit
 }
 
+$gpuInfo = Get-WmiObject -Class Win32_VideoController | Where-Object {$_.Description -like '*NVIDIA*'}
+$composeFilePath = "..\docker-compose-cpu.yaml"
+if ($gpuInfo) {
+    $composeFilePath = "..\docker-compose-gpu.yaml"
+    Write-Host "NVIDIA GPU detected. Using GPU-enabled Docker Compose file..." -ForegroundColor Green
+} else {
+    Write-Host "No NVIDIA GPU detected. Using CPU-only Docker Compose file..." -ForegroundColor Yellow
+}
+
+Start-Sleep 5
+Clear-Host
+
 $continue = $true
 while ($continue) {
     Clear-Host
@@ -28,8 +40,8 @@ while ($continue) {
         exit
     }
 
-    docker-compose -f ..\docker-compose.yaml down
-    docker-compose -f ..\docker-compose.yaml up --build -d
+    docker-compose -f $composeFilePath down
+    docker-compose -f $composeFilePath up --build -d
     docker exec ollama ollama run llama3
     docker image prune -f
     Start-Sleep 1
@@ -38,7 +50,7 @@ while ($continue) {
     Write-Output "`n"
     $response = Read-Host "Do you want to rebuild? (y/n)"
     if (!($response.ToLower().StartsWith('y'))) {
-        docker-compose -f ..\docker-compose.yaml down
+        docker-compose -f $composeFilePath down
         $continue = $false
         Write-Host "Exited."
     }
