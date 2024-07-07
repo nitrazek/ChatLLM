@@ -2,8 +2,14 @@ function Set-OpenUiOnStartup {
     param ([bool] $disable)
 
     $settingsJson = "$env:APPDATA\Docker\settings.json"
+    if (!(Test-Path $settingsJson -PathType Leaf)) {
+        if ($disable) {
+            Write-Host "    No Docker settings found. Switching to window mode..." -ForegroundColor Yellow
+        }
+        return
+    }
+
     $settings = Get-Content $settingsJson | ConvertFrom-Json 
-    
     if ($settings.openUIOnStartupDisabled -ne $disable) {
         if (!(Test-Path "$settingsJson.bak" -PathType Leaf)) {
             Write-Output "    Creating backup file for docker desktop settings..."
@@ -83,7 +89,7 @@ if($wsl.State -eq "Enabled") {
         } catch {
             Write-Host "    Failed to enable WSL2." -ForegroundColor Red
             Write-Host "    It's likely that this computer does not support WSL2." -ForegroundColor Red
-            $response = Read-Host -Prompt "    Do you want to continue anyway? It may couse problems. (y/n)"
+            $response = Read-Host -Prompt "    Do you want to continue anyway? It may cause problems. (y/n)"
             if ($response -ne 'y') {
                 Write-Host "    Script aborted. Try enabling WSL2 manually." -ForegroundColor Yellow
                 Write-Host -NoNewLine '    Press any key to close program...'
