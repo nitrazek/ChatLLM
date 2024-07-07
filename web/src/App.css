@@ -33,7 +33,6 @@ body {
   min-width: 220px;
 }
 
-/* Styling for the lower side */
 .lowerSide {
   display: flex;
   flex-direction: column;
