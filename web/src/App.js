@@ -12,7 +12,7 @@ function App() {
     "Adam Małysz",
     "Co jest cięższe?",
     "Powitanie",
-    "test1",
+    "test1test1test1test1ttest1test1test1test1test1test1test1est1",
     "test2",
     "test3",
     "test4",
@@ -65,11 +65,12 @@ function App() {
   return (
     <div className="App">
       <div className="sideBar">
-        <div className="upperSide">
+        <div className="generatorContainer">
           <div className="upperSideTop">G E N E R A T O R</div>
           <button className="newChatButton">Rozpocznij nowy czat</button>
-          <br></br>
-          Historia czatów:
+        </div>
+        <div className="upperSide">
+          <span className="chatHistorySpan">Historia czatów:</span>
           <div className="upperSideBottom">
             <ul className="chatHistory" style={{ textAlign: "center", alignContent: "center" }}>
               {chatHistory.map((option, index) => (
@@ -82,14 +83,14 @@ function App() {
         </div>
         <div className="lowerSide">
           <button className="newChatButton">Ustawienia</button>
-          <button className='newChatButton'>Panel administratora</button>
-          <button className='newChatButton'>Wyloguj się</button>
+          <button className="newChatButton">Panel administratora</button>
+          <button className="newChatButton">Wyloguj się</button>
         </div>
       </div>
       <div className="main">
         <div className="mainTop">
           {messages.map(message => (
-            <div key={message.id} className={message.fromUser? "userMessage" : "botMessage"}>
+            <div key={message.id} className={message.fromUser ? "userMessage" : "botMessage"}>
               <div className="messageHeader">
                 <img src={message.user.avatar} alt={message.user.name} className="avatar" />
                 <span className="username">{message.user.name}</span>

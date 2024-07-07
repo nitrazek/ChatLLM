@@ -2,6 +2,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  
 }
 
 html {
@@ -12,6 +13,7 @@ body {
   background-color: #36393e;
   color: white;
   font-family: 'Manrope', sans-serif;
+  overflow-y: hidden;
 }
 
 .App {
@@ -31,14 +33,19 @@ body {
   min-width: 220px;
 }
 
+/* Styling for the lower side */
 .lowerSide {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  flex-grow: 1;
   border-top: #7289da solid 2px;
-  margin-bottom: 7%;
+  width: 100%;
+  padding: 10px 0;
+  position: sticky;
+  bottom: 0;
+  background-color: #282b30;
+  z-index: 2;
 }
 
 .main {
@@ -53,7 +60,8 @@ body {
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  height: 89vh;
+  height: 96vh;
+  min-height: 500;
   overflow-y: auto; 
 }
 
@@ -64,13 +72,15 @@ body {
   justify-content: flex-start;
   align-items: center;
   height: 100%;
+
 }
 
 .upperSideTop {
   color: #7289da;
   margin-bottom: 15px;
-  margin-top: 15px;
   font-weight: bold;
+  z-index: 3;
+  background-color:#282b30;
 }
 
 .newChatButton {
@@ -111,6 +121,7 @@ input[type="text"] {
   background-color: #484d52;
   color: white;
   font-size: 16px;
+  margin-top: 10px;
 }
 
 input[type="text"]::placeholder {
@@ -159,6 +170,7 @@ ul.chatHistory {
   margin: 0;
   list-style-type: none;
   min-height: 100px;
+  background-color: rgb(30, 33, 36, 0.35);
 }
 
 ul.chatHistory > li {
@@ -167,6 +179,7 @@ ul.chatHistory > li {
   margin: 0;
   width: 15vw;
   min-width: 170px;
+  
 }
 
 .upperSideBottom {
@@ -177,5 +190,23 @@ ul.chatHistory > li {
 
 .avatar {
   width: 4%;
+  min-width: 20px;
   margin: 1%;
+}
+
+.generatorContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 20px 0;
+  background-color: #282b30;
+  z-index: 3;
+  border-bottom: #7289da 2px solid;
+  margin-bottom: 15px;
+}
+
+.chatHistorySpan {
+  margin-bottom: 10px;
 }
