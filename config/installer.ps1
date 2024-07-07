@@ -45,7 +45,7 @@ if($hyperv.State -eq "Enabled") {
         } catch {
             Write-Host "    Failed to enable Hyper-V." -ForegroundColor Red
             Write-Host "    It's likely that this computer does not support Hyper-V." -ForegroundColor Red
-            $response = Read-Host -Prompt "    Do you want to continue anyway? It may couse problems. (y/n)"
+            $response = Read-Host -Prompt "    Do you want to continue anyway? It may cause problems. (y/n)"
             if ($response -ne 'y') {
                 Write-Host "    Script aborted. Try enabling Hyper-V manually." -ForegroundColor Yellow
                 Write-Host -NoNewLine '    Press any key to close program...'
