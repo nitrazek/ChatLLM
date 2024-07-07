@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile/viewModels/MainChatViewModel.dart';
-import 'package:mobile/views/Login.dart';
 import 'package:mobile/views/MainChat.dart';
 import 'package:provider/provider.dart';
 

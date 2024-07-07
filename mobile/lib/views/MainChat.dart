@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/models/Styles.dart';
 import 'package:provider/provider.dart';
 import '../models/ChatMessage.dart';
 import '../viewModels/MainChatViewModel.dart';
@@ -33,9 +34,71 @@ class _MainChatPageState extends State<MainChatPage> {
     double fontSizeScale = screenWidth / 400;
 
     return Scaffold(
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: AppColors.darkest,
+              ),
+              child: Text(
+                'Menu',
+                style: TextStyle(
+                  color: AppColors.purple,
+                  fontSize: 24 * fontSizeScale,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.history),
+              title: Text('History',
+                style: TextStyle(
+                  fontFamily: AppTextStyles.Manrope,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 17 * fontSizeScale,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+      Expanded(
+        child: ListView.builder(
+          itemCount:0, // Placeholder for future chat history items
+          itemBuilder: (context, index) {
+            return ListTile(
+              title: Text('Chat ${index + 1}'),
+            );
+          },
+        ),
+      ),
+      Divider(color: AppColors.purple, thickness: 3),
+      Align(
+        alignment: Alignment.bottomCenter,
+        child: ListTile(
+          leading: Icon(Icons.account_circle),
+          title: Text(
+            'Profile',
+            style: TextStyle(
+              fontFamily: AppTextStyles.Manrope,
+              fontWeight: FontWeight.bold,
+              fontSize: 17 * fontSizeScale,
+            ),
+          ),
+          onTap: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
+          ],
+        ),
+            ),
+
+
       body: SafeArea(
         child: Container(
-          color: const Color(0xFF282B30),
+          color: AppColors.darkest,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -43,22 +106,26 @@ class _MainChatPageState extends State<MainChatPage> {
                 margin: EdgeInsets.only(top: 15, left: screenWidth * 0.03),
                 child: Row(
                   children: [
-                    InkWell(
-                      onTap: () {
-                        Scaffold.of(context).openDrawer();
-                      },
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color(0xFF7289da),
-                        ),
-                        padding: EdgeInsets.all(screenWidth * 0.035),
-                        margin: EdgeInsets.only(right: screenWidth * 0.1),
-                        child: const Icon(
-                          Icons.menu,
-                          color: Colors.white,
-                        ),
-                      ),
+                    Builder(
+                        builder: (context) {
+                          return InkWell(
+                            onTap: () {
+                              Scaffold.of(context).openDrawer();
+                            },
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppColors.purple
+                              ),
+                              padding: EdgeInsets.all(screenWidth * 0.035),
+                              margin: EdgeInsets.only(right: screenWidth * 0.1),
+                              child: const Icon(
+                                Icons.menu,
+                                color: Colors.white,
+                              ),
+                            ),
+                          );
+                        }
                     ),
                     Text(
                       'GENERATOR',
@@ -72,7 +139,7 @@ class _MainChatPageState extends State<MainChatPage> {
                     Container(
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Color(0xFF7289da),
+                        color: AppColors.purple,
                       ),
                       padding: EdgeInsets.all(screenWidth * 0.035),
                       margin: EdgeInsets.only(left: screenWidth * 0.1),
@@ -87,8 +154,7 @@ class _MainChatPageState extends State<MainChatPage> {
               SizedBox(height: screenHeight * 0.05),
               Expanded(
                 child: Container(
-                  color:
-                  const Color(0xFF282B30),
+                  color: AppColors.darkest,
                   padding: const EdgeInsets.symmetric(horizontal: 10.0),
                   child: ListView.builder(
                     itemCount: chatHistory.length,
@@ -111,7 +177,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                   padding: EdgeInsets.all(10.0),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(15.0),
-                                    color: Color(0xFF424549),
+                                    color: AppColors.dark,
                                   ),
                                   child: Text(
                                     showOnScreen.question,
@@ -127,39 +193,34 @@ class _MainChatPageState extends State<MainChatPage> {
                             ),
                           ),
                           Container(
-                              child: Row(
+                            child: Row(
                               children: [
-                              Icon(
-                              Icons.chat,
-                              color: Colors.white,
-                              size: 30,
-                          ),
-                          Container(
-                            constraints: BoxConstraints(maxWidth: screenWidth * 0.8),
-                            margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
-                            padding: EdgeInsets.all(10.0),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15.0),
-                              color: Color(0xFF424549),
-                            ),
-                            child: StreamBuilder<String>(
-                              stream: showOnScreen.response,
-                              builder: (context, snapshot) {
-                                return Text(
-                                  snapshot.data ?? "",
-                                  style: TextStyle(
-                                    fontFamily: 'Manrope-VariableFont_wght',
-                                    color: Colors.white,
-                                    fontSize: 20 * fontSizeScale,
-                                    fontWeight: FontWeight.bold,
+                                Icon(
+                                  Icons.chat,
+                                  color: Colors.white,
+                                  size: 30,
+                                ),
+                                Container(
+                                  constraints: BoxConstraints(maxWidth: screenWidth * 0.8),
+                                  margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+                                  padding: EdgeInsets.all(10.0),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(15.0),
+                                    color: Color(0xFF424549),
                                   ),
-                                );
-                              },
+                                  child: StreamBuilder<String>(
+                                    stream: showOnScreen.response,
+                                    builder: (context, snapshot) {
+                                      return Text(
+                                        snapshot.data ?? "",
+                                        style: AppTextStyles.chatText(fontSizeScale)
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                      ],
-                      ),
-                      ),
                         ],
                       );
                     },
@@ -172,7 +233,7 @@ class _MainChatPageState extends State<MainChatPage> {
                 margin: EdgeInsets.only(left: 10.0, right: 10.0, bottom: 15.0, top: 15.0),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15.0),
-                  color: Color(0xFF424549),
+                  color: AppColors.dark,
                 ),
                 child: Row(
                   children: [
