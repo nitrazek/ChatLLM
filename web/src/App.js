@@ -67,7 +67,7 @@ function App() {
       <div className="sideBar">
         <div className="generatorContainer">
           <div className="upperSideTop">C o k o l w i e k</div>
-          <button className="newChatButton">Rozpocznij nowy czat</button>
+          <button className="button">Rozpocznij nowy czat</button>
         </div>
         <div className="upperSide">
           <span className="chatHistorySpan">Historia czatów:</span>
@@ -82,9 +82,9 @@ function App() {
           </div>
         </div>
         <div className="lowerSide">
-          <button className="newChatButton">Ustawienia</button>
-          <button className="newChatButton">Panel administratora</button>
-          <button className="newChatButton">Wyloguj się</button>
+          <button className="button">Ustawienia</button>
+          <button className="button">Panel administratora</button>
+          <button className="button">Wyloguj się</button>
         </div>
       </div>
       <div className="main">
