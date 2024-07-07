@@ -240,7 +240,7 @@ ul.chatHistory > li:hover {
   transition: all 500ms ease-in-out;
   opacity: 0;
   animation: flash 100ms ease-in-out;
-  transform: scaleX(1.5) scaleY(1.5);
+  transform: scaleX(1.25) scaleY(1.25);
 }
 
 .button:hover::before {
