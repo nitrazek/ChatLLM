@@ -11,7 +11,13 @@ function App() {
   const chatHistory = [
     "Adam Małysz",
     "Co jest cięższe?",
-    "Powitanie"
+    "Powitanie",
+    "test1test1test1test1ttest1test1test1test1test1test1test1est1",
+    "test2",
+    "test3",
+    "test4",
+    "test5",
+    "test6"
   ];
 
   const sendMessage = async () => {
@@ -32,7 +38,7 @@ function App() {
       const response = await axios.post('http://localhost:3000/api/v1/model/questions', { question: input });
       const botMessage = {
         id: messages.length + 2,
-        text: response.data.answer, // Use response.data.answer instead of response.data.reply
+        text: response.data.answer, 
         fromUser: false,
         user: { name: "Bot", avatar: "./avatars/bot.png" }
       };
@@ -40,7 +46,6 @@ function App() {
       setMessages(prevMessages => [...prevMessages, botMessage]);
     } catch (error) {
       console.error('Error sending message:', error);
-      // Optionally add an error message to the chat
     } finally {
       setIsLoading(false);
     }
@@ -52,7 +57,7 @@ function App() {
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
-      e.preventDefault(); // Prevent the default action of the Enter key
+      e.preventDefault();
       sendMessage();
     }
   };
@@ -60,13 +65,14 @@ function App() {
   return (
     <div className="App">
       <div className="sideBar">
+        <div className="generatorContainer">
+          <div className="upperSideTop">C o k o l w i e k</div>
+          <button className="button">Rozpocznij nowy czat</button>
+        </div>
         <div className="upperSide">
-          <div className="upperSideTop">G E N E R A T O R</div>
-          <button className="newChatButton">Rozpocznij nowy czat</button>
-          <br></br>
+          <span className="chatHistorySpan">Historia czatów:</span>
           <div className="upperSideBottom">
             <ul className="chatHistory" style={{ textAlign: "center", alignContent: "center" }}>
-              Historia czatów:
               {chatHistory.map((option, index) => (
                 <li key={index}>
                   <button className="chatHistoryButton">{option}</button>
@@ -75,12 +81,10 @@ function App() {
             </ul>
           </div>
         </div>
-
         <div className="lowerSide">
-          <br></br>
-          <button className="newChatButton">Ustawienia</button>
-          <button className='newChatButton'>Panel administratora</button>
-          <button className='newChatButton'>Wyloguj się</button>
+          <button className="button">Ustawienia</button>
+          <button className="button">Panel administratora</button>
+          <button className="button">Wyloguj się</button>
         </div>
       </div>
       <div className="main">
