@@ -66,7 +66,7 @@ function App() {
     <div className="App">
       <div className="sideBar">
         <div className="generatorContainer">
-          <div className="upperSideTop">BAZA WIEDZY NA LLM</div>
+          <div className="upperSideTop">C o k o l w i e k</div>
           <button className="newChatButton">Rozpocznij nowy czat</button>
         </div>
         <div className="upperSide">
