@@ -102,8 +102,8 @@ function App() {
         <div className="mainBottom">
           <div className="chatFooter">
             <div className="input">
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="Napisz wiadomość..."
                 value={input}
                 onChange={handleInputChange}

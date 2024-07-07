@@ -1,4 +1,0 @@
-FROM ollama/ollama
-
-WORKDIR /root/.ollama/models
-RUN ollama serve & ollama pull llama3
