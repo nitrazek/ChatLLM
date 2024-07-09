@@ -1,15 +1,13 @@
 import { FastifyInstance } from "fastify";
 import ollama from "../services/ollama";
-import { Answer, AnswerType, Question, QuestionType } from "../schemas/model";
+import { Answer, Question, QuestionType } from "../schemas/model";
 import { RunnablePassthrough, RunnableSequence } from "@langchain/core/runnables";
 import { formatDocumentsAsString } from "langchain/util/document";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
-import { BaseMessageChunk } from "langchain/schema";
 import { getChromaConnection } from "../services/chroma";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
-import http from "http";
-import { } from "stream";
+import { convertBaseMessageChunkStream } from "../handlers/model";
 
 const template = `
 You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question.
@@ -19,12 +17,12 @@ Context: {context}
 Answer:`;
 
 const questionsRoute = async (fastify: FastifyInstance) => {
-  fastify.post<{ Body: QuestionType/*, Reply: AnswerType*/ }>("/questions", {
+  fastify.post<{ Body: QuestionType, Reply: ReadableStream<string> }>("/questions", {
     schema: {
       body: Question,
-      // response: {
-      //   200: Answer
-      // }
+      response: {
+        200: Answer
+      }
     }
   }, async (request, response) => {
     const chroma: Chroma = await getChromaConnection();
@@ -43,27 +41,8 @@ const questionsRoute = async (fastify: FastifyInstance) => {
     ]);
 
     const question: string = request.body.question;
-
-    // const options = { hostname: "ollama", port: 11434, path: "/api/generate", method: "POST" }
-    // const ollamaReq = http.request(options, (ollamaRes) => {
-    //   ollamaRes.on("data", (data) => {
-    //     console.log(data);
-    //     console.log("--------------------");
-    //   })
-    //   ollamaRes.on("end", () => {
-    //     console.log("koniec");
-    //   })
-    // })
-    // ollamaReq.write(JSON.stringify({ model: "llama3", prompt: "Why is the sky blue?" }));
-    // ollamaReq.end();
-
-    const messageChunk: BaseMessageChunk = await ollama.invoke(question);
-    const message: string = messageChunk.content as string;
-    // response.status(200).send({ answer: message })
-    const stream = await ollama.stream(question);
-    response.header("Content-Type", "application/x-ndjson");
-    response.status(200).send(stream);
-    return response;
+    const stream: ReadableStream<string> = convertBaseMessageChunkStream(await ollama.stream(question));
+    return response.status(200).send(stream);
   });
 };
 
