@@ -1,13 +1,13 @@
 import { FastifyInstance } from "fastify";
 import ollama from "../services/ollama";
-import { Answer, AnswerType, Question, QuestionType } from "../schemas/model";
+import { Answer, Question, QuestionType } from "../schemas/model";
 import { RunnablePassthrough, RunnableSequence } from "@langchain/core/runnables";
 import { formatDocumentsAsString } from "langchain/util/document";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
-import { BaseMessageChunk } from "langchain/schema";
 import { getChromaConnection } from "../services/chroma";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
+import { convertBaseMessageChunkStream } from "../handlers/model";
 
 const template = `
 You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question.
@@ -17,7 +17,7 @@ Context: {context}
 Answer:`;
 
 const questionsRoute = async (fastify: FastifyInstance) => {
-  fastify.post<{ Body: QuestionType, Reply: AnswerType }>("/questions", {
+  fastify.post<{ Body: QuestionType, Reply: ReadableStream<string> }>("/questions", {
     schema: {
       body: Question,
       response: {
@@ -41,8 +41,8 @@ const questionsRoute = async (fastify: FastifyInstance) => {
     ]);
 
     const question: string = request.body.question;
-    const messageChunk: BaseMessageChunk = await ollama.invoke(question);
-    response.status(200).send({ answer: messageChunk.content as string })
+    const stream: ReadableStream<string> = convertBaseMessageChunkStream(await ollama.stream(question));
+    return response.status(200).send(stream);
   });
 };
 
