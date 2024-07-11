@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 
@@ -7,6 +7,8 @@ function App() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [lastUserMessage, setLastUserMessage] = useState(null);
+
+  const mainTopRef = useRef(null);
 
   const chatHistory = [
     "Adam Małysz",
@@ -49,7 +51,6 @@ function App() {
 
       reader.read().then(function processText({ done, value }) {
         if (done) {
-          //console.log('Strumień danych zakończony');
           setIsLoading(false);
           return;
         }
@@ -57,7 +58,6 @@ function App() {
         const chunk = new TextDecoder().decode(value);
         const parsedChunk = JSON.parse(chunk);
         const answer = parsedChunk.answer;
-        //console.log('Odebrano kawałek danych:', chunk);
 
         accumulatedText += answer;
 
@@ -76,6 +76,11 @@ function App() {
           } else {
             updatedMessages.push(botMessage);
           }
+
+          if (mainTopRef.current) {
+            mainTopRef.current.lastChild.scrollIntoView({ behavior: 'smooth' });
+          }
+
           return updatedMessages;
         });
 
@@ -98,6 +103,12 @@ function App() {
       sendMessage();
     }
   };
+
+  useEffect(() => {
+    if (mainTopRef.current) {
+      mainTopRef.current.lastChild.scrollIntoView({ behavior: 'auto' });
+    }
+  }, [messages]);
 
   return (
     <div className="App">
@@ -125,7 +136,7 @@ function App() {
         </div>
       </div>
       <div className="main">
-        <div className="mainTop">
+        <div className="mainTop" ref={mainTopRef}>
           {messages.map(message => (
             <div key={message.id} className={message.fromUser ? "userMessage" : "botMessage"}>
               <div className="messageHeader">
@@ -135,6 +146,7 @@ function App() {
               <div className="messageContent">{message.text}</div>
             </div>
           ))}
+          <div ref={mainTopRef}></div>
         </div>
         <div className="mainBottom">
           <div className="chatFooter">
