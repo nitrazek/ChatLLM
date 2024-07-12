@@ -106,7 +106,7 @@ function App() {
 
   useEffect(() => {
     if (mainTopRef.current) {
-      mainTopRef.current.lastChild.scrollIntoView({ behavior: 'auto' });
+      mainTopRef.current.scrollTop = mainTopRef.current.scrollHeight;
     }
   }, [messages]);
 
@@ -146,7 +146,6 @@ function App() {
               <div className="messageContent">{message.text}</div>
             </div>
           ))}
-          <div ref={mainTopRef}></div>
         </div>
         <div className="mainBottom">
           <div className="chatFooter">
