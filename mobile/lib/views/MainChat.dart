@@ -40,7 +40,7 @@ class _MainChatPageState extends State<MainChatPage> {
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.darkest,
               ),
               child: Column (
@@ -79,7 +79,7 @@ class _MainChatPageState extends State<MainChatPage> {
               )
             ),
             ListTile(
-              leading: Icon(Icons.history),
+              leading: const Icon(Icons.history),
               title: Text('History',
                 style: TextStyle(
                   fontFamily: AppTextStyles.Manrope,
@@ -92,11 +92,11 @@ class _MainChatPageState extends State<MainChatPage> {
               },
             ),
             SizedBox(height: screenHeight * 0.61),
-      Divider(color: AppColors.purple, thickness: 3),
+      const Divider(color: AppColors.purple, thickness: 3),
       Align(
         alignment: Alignment.bottomCenter,
         child: ListTile(
-          leading: Icon(Icons.account_circle),
+          leading: const Icon(Icons.account_circle),
           title: Text(
             'Profile',
             style: TextStyle(
@@ -182,63 +182,59 @@ class _MainChatPageState extends State<MainChatPage> {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.person,
-                                  color: Colors.white,
-                                  size: 30,
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.person,
+                                color: Colors.white,
+                                size: 30,
+                              ),
+                              Container(
+                                constraints: BoxConstraints(maxWidth: screenWidth * 0.8),
+                                margin: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+                                padding: const EdgeInsets.all(10.0),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(15.0),
+                                  color: AppColors.dark,
                                 ),
-                                Container(
-                                  constraints: BoxConstraints(maxWidth: screenWidth * 0.8),
-                                  margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
-                                  padding: EdgeInsets.all(10.0),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(15.0),
-                                    color: AppColors.dark,
-                                  ),
-                                  child: Text(
-                                    showOnScreen.question,
-                                    style: TextStyle(
-                                      fontFamily: 'Manrope-VariableFont_wght',
-                                      color: Colors.white,
-                                      fontSize: 20 * fontSizeScale,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                child: Text(
+                                  showOnScreen.question,
+                                  style: TextStyle(
+                                    fontFamily: 'Manrope-VariableFont_wght',
+                                    color: Colors.white,
+                                    fontSize: 20 * fontSizeScale,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                          Container(
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.chat,
-                                  color: Colors.white,
-                                  size: 30,
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.chat,
+                                color: Colors.white,
+                                size: 30,
+                              ),
+                              Container(
+                                constraints: BoxConstraints(maxWidth: screenWidth * 0.8),
+                                margin: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+                                padding: const EdgeInsets.all(10.0),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(15.0),
+                                  color: const Color(0xFF424549),
                                 ),
-                                Container(
-                                  constraints: BoxConstraints(maxWidth: screenWidth * 0.8),
-                                  margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
-                                  padding: EdgeInsets.all(10.0),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(15.0),
-                                    color: Color(0xFF424549),
-                                  ),
-                                  child: StreamBuilder<String>(
-                                    stream: showOnScreen.response,
-                                    builder: (context, snapshot) {
-                                      return Text(
-                                        snapshot.data ?? "",
-                                        style: AppTextStyles.chatText(fontSizeScale)
-                                      );
-                                    },
-                                  ),
+                                child: StreamBuilder<String>(
+                                  stream: showOnScreen.response,
+                                  builder: (context, snapshot) {
+                                    return Text(
+                                      snapshot.data ?? "",
+                                      style: AppTextStyles.chatText(fontSizeScale)
+                                    );
+                                  },
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ],
                       );
@@ -249,7 +245,7 @@ class _MainChatPageState extends State<MainChatPage> {
               SizedBox(height: screenHeight * 0.01),
               Container(
                 padding: const EdgeInsets.only(left: 10.0),
-                margin: EdgeInsets.only(left: 10.0, right: 10.0, bottom: 15.0, top: 15.0),
+                margin: const EdgeInsets.only(left: 10.0, right: 10.0, bottom: 15.0, top: 15.0),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15.0),
                   color: AppColors.dark,
