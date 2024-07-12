@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/models/Styles.dart';
+import 'package:mobile/views/AdminPanel.dart';
 import 'package:provider/provider.dart';
 import '../models/ChatMessage.dart';
 import '../viewModels/MainChatViewModel.dart';
@@ -42,13 +43,40 @@ class _MainChatPageState extends State<MainChatPage> {
               decoration: BoxDecoration(
                 color: AppColors.darkest,
               ),
-              child: Text(
-                'Menu',
-                style: TextStyle(
-                  color: AppColors.purple,
-                  fontSize: 24 * fontSizeScale,
-                ),
-              ),
+              child: Column (
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Menu',
+                    style: TextStyle(
+                      fontFamily: AppTextStyles.Manrope,
+                      color: AppColors.purple,
+                      fontSize: 26 * fontSizeScale,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: screenHeight * 0.045),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const AdminPanelPage()),
+                      );
+                    },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.purple,
+                        padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.17, vertical: screenHeight * 0.011),
+                      ),
+                    child: Text('Admin Panel',
+                    style: TextStyle(
+                      fontFamily: AppTextStyles.Manrope,
+                      color: Colors.white,
+                      fontSize: 20 * fontSizeScale,
+                      fontWeight: FontWeight.bold,
+                    ),),
+                  )
+                ]
+              )
             ),
             ListTile(
               leading: Icon(Icons.history),
@@ -63,16 +91,7 @@ class _MainChatPageState extends State<MainChatPage> {
                 Navigator.pop(context);
               },
             ),
-      Expanded(
-        child: ListView.builder(
-          itemCount:0, // Placeholder for future chat history items
-          itemBuilder: (context, index) {
-            return ListTile(
-              title: Text('Chat ${index + 1}'),
-            );
-          },
-        ),
-      ),
+            SizedBox(height: screenHeight * 0.61),
       Divider(color: AppColors.purple, thickness: 3),
       Align(
         alignment: Alignment.bottomCenter,
