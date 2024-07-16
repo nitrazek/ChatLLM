@@ -1,22 +1,31 @@
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import '../services/ChatService.dart';
 
 class MainChatViewModel extends ChangeNotifier {
-  final _chatService = ChatService();
+  final ChatService _chatService = ChatService();
+  String _response = '';
+  final StreamController<String> _responseController = StreamController<String>.broadcast();
 
-  String? _response;
-  String? get response => _response;
+  Stream<String> get responseStream => _responseController.stream;
+  String get response => _response;
 
-  Future<void> sendPrompt(String question) async {
-    _response = await _chatService.postQuestion(question);
+  void sendPrompt(String question) async {
+    await for (var answer in _chatService.postQuestion(question)) {
+      addResponse(answer);
+    }
     notifyListeners();
   }
-  Stream<String> getResponseStream() async* {
-    if (_response != null) {
-      for (int i = 0; i < _response!.length; i++) {
-        await Future.delayed(Duration(milliseconds: 50));
-        yield _response!.substring(0, i + 1);
-      }
-    }
+
+  void addResponse(String response) {
+    _response += response;
+    _responseController.sink.add(_response);
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _responseController.close();
+    super.dispose();
   }
 }

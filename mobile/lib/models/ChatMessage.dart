@@ -1,6 +1,8 @@
+import 'dart:async';
+
 class ChatMessage {
   final String question;
-  Stream<String>? response;
+  String response = ''; // Pole do przechowywania odpowiedzi
 
-  ChatMessage({required this.question, this.response});
+  ChatMessage({required this.question});
 }

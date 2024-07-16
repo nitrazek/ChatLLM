@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/models/Styles.dart';
-import 'package:mobile/views/AdminPanel.dart';
 import 'package:provider/provider.dart';
 import '../models/ChatMessage.dart';
 import '../viewModels/MainChatViewModel.dart';
+import '../models/Styles.dart';
+import 'AdminPanel.dart';
 
 class MainChatPage extends StatefulWidget {
   const MainChatPage({super.key});
@@ -43,8 +43,8 @@ class _MainChatPageState extends State<MainChatPage> {
               decoration: const BoxDecoration(
                 color: AppColors.darkest,
               ),
-              child: Column (
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Menu',
@@ -60,27 +60,35 @@ class _MainChatPageState extends State<MainChatPage> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const AdminPanelPage()),
+                        MaterialPageRoute(
+                          builder: (context) => const AdminPanelPage(),
+                        ),
                       );
                     },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.purple,
-                        padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.17, vertical: screenHeight * 0.011),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.purple,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.17,
+                        vertical: screenHeight * 0.011,
                       ),
-                    child: Text('Admin Panel',
-                    style: TextStyle(
-                      fontFamily: AppTextStyles.Manrope,
-                      color: Colors.white,
-                      fontSize: 20 * fontSizeScale,
-                      fontWeight: FontWeight.bold,
-                    ),),
-                  )
-                ]
-              )
+                    ),
+                    child: Text(
+                      'Admin Panel',
+                      style: TextStyle(
+                        fontFamily: AppTextStyles.Manrope,
+                        color: Colors.white,
+                        fontSize: 20 * fontSizeScale,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             ListTile(
               leading: const Icon(Icons.history),
-              title: Text('History',
+              title: Text(
+                'History',
                 style: TextStyle(
                   fontFamily: AppTextStyles.Manrope,
                   fontWeight: FontWeight.bold,
@@ -92,29 +100,27 @@ class _MainChatPageState extends State<MainChatPage> {
               },
             ),
             SizedBox(height: screenHeight * 0.61),
-      const Divider(color: AppColors.purple, thickness: 3),
-      Align(
-        alignment: Alignment.bottomCenter,
-        child: ListTile(
-          leading: const Icon(Icons.account_circle),
-          title: Text(
-            'Profile',
-            style: TextStyle(
-              fontFamily: AppTextStyles.Manrope,
-              fontWeight: FontWeight.bold,
-              fontSize: 17 * fontSizeScale,
+            const Divider(color: AppColors.purple, thickness: 3),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: ListTile(
+                leading: const Icon(Icons.account_circle),
+                title: Text(
+                  'Profile',
+                  style: TextStyle(
+                    fontFamily: AppTextStyles.Manrope,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 17 * fontSizeScale,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
             ),
-          ),
-          onTap: () {
-            Navigator.pop(context);
-          },
-        ),
-      ),
           ],
         ),
-            ),
-
-
+      ),
       body: SafeArea(
         child: Container(
           color: AppColors.darkest,
@@ -125,27 +131,25 @@ class _MainChatPageState extends State<MainChatPage> {
                 margin: EdgeInsets.only(top: 15, left: screenWidth * 0.03),
                 child: Row(
                   children: [
-                    Builder(
-                        builder: (context) {
-                          return InkWell(
-                            onTap: () {
-                              Scaffold.of(context).openDrawer();
-                            },
-                            child: Container(
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: AppColors.purple
-                              ),
-                              padding: EdgeInsets.all(screenWidth * 0.035),
-                              margin: EdgeInsets.only(right: screenWidth * 0.1),
-                              child: const Icon(
-                                Icons.menu,
-                                color: Colors.white,
-                              ),
-                            ),
-                          );
-                        }
-                    ),
+                    Builder(builder: (context) {
+                      return InkWell(
+                        onTap: () {
+                          Scaffold.of(context).openDrawer();
+                        },
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.purple,
+                          ),
+                          padding: EdgeInsets.all(screenWidth * 0.035),
+                          margin: EdgeInsets.only(right: screenWidth * 0.1),
+                          child: const Icon(
+                            Icons.menu,
+                            color: Colors.white,
+                          ),
+                        ),
+                      );
+                    }),
                     Text(
                       'GENERATOR',
                       style: TextStyle(
@@ -178,7 +182,7 @@ class _MainChatPageState extends State<MainChatPage> {
                   child: ListView.builder(
                     itemCount: chatHistory.length,
                     itemBuilder: (context, index) {
-                      final showOnScreen = chatHistory[index];
+                      final chatMessage = chatHistory[index];
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -198,7 +202,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                   color: AppColors.dark,
                                 ),
                                 child: Text(
-                                  showOnScreen.question,
+                                  chatMessage.question,
                                   style: TextStyle(
                                     fontFamily: 'Manrope-VariableFont_wght',
                                     color: Colors.white,
@@ -225,11 +229,19 @@ class _MainChatPageState extends State<MainChatPage> {
                                   color: const Color(0xFF424549),
                                 ),
                                 child: StreamBuilder<String>(
-                                  stream: showOnScreen.response,
+                                  stream: context.watch<MainChatViewModel>().responseStream,
                                   builder: (context, snapshot) {
+                                    if (snapshot.hasError) {
+                                      return Text('Error: ${snapshot.error}');
+                                    }
+
+                                    if (!snapshot.hasData) {
+                                      return Text('Loading...');
+                                    }
+
                                     return Text(
                                       snapshot.data ?? "",
-                                      style: AppTextStyles.chatText(fontSizeScale)
+                                      style: AppTextStyles.chatText(fontSizeScale),
                                     );
                                   },
                                 ),
@@ -262,16 +274,14 @@ class _MainChatPageState extends State<MainChatPage> {
                         ),
                         controller: textEditingController,
                         onSubmitted: (message) async {
+                          final newMessage = ChatMessage(question: message);
                           setState(() {
-                            chatHistory.add(ChatMessage(question: message, response: null));
+                            chatHistory.add(newMessage);
                           });
+
                           textEditingController.clear();
 
-                          await context.read<MainChatViewModel>().sendPrompt(message);
-
-                          setState(() {
-                            chatHistory.last.response = context.read<MainChatViewModel>().getResponseStream();
-                          });
+                          context.read<MainChatViewModel>().sendPrompt(message);
                         },
                         decoration: const InputDecoration(
                           hintText: "Message",
@@ -285,7 +295,19 @@ class _MainChatPageState extends State<MainChatPage> {
                       ),
                     ),
                     IconButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        if (textEditingController.text.isNotEmpty) {
+                          final message = textEditingController.text;
+                          final newMessage = ChatMessage(question: message);
+                          setState(() {
+                            chatHistory.add(newMessage);
+                          });
+
+                          textEditingController.clear();
+
+                          context.read<MainChatViewModel>().sendPrompt(message);
+                        }
+                      },
                       icon: const Icon(
                         Icons.send,
                         color: Colors.grey,
