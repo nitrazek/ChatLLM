@@ -23,7 +23,7 @@ const filesRoute = async (fastify: FastifyInstance) => {
     console.log(fileBuffer.toString());
 
     const chroma: Chroma = await getChromaConnection();
-    const documents = await chroma.addDocuments([{ pageContent: fileBuffer.toString(), metadata: { fileName: file.filename } }], {
+    await chroma.addDocuments([{ pageContent: fileBuffer.toString(), metadata: { fileName: file.filename } }], {
       ids: [file.filename]
     });
 
