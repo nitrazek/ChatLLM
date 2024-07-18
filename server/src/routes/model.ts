@@ -1,13 +1,15 @@
 import { FastifyInstance } from "fastify";
 import ollama from "../services/ollama";
-import { Answer, Question, QuestionType } from "../schemas/model";
-import { RunnablePassthrough, RunnableSequence } from "@langchain/core/runnables";
+import { Answer, ChatNotFound, ChatNotFoundType, Question, QuestionParams, QuestionParamsType, QuestionType } from "../schemas/model";
+import { RunnablePassthrough, RunnableSequence, RunnableWithMessageHistory, RunnableConfig } from "@langchain/core/runnables";
 import { formatDocumentsAsString } from "langchain/util/document";
-import { PromptTemplate } from "@langchain/core/prompts";
+import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { getChromaConnection } from "../services/chroma";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { convertBaseMessageChunkStream } from "../handlers/model";
+import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
+import { getChat } from "../repositories/chat";
 
 const RAG_TEMPLATE = `
 You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question.
@@ -16,15 +18,36 @@ Question: {question}
 Context: {context}  
 Answer:`;
 
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", "You are a helpful assistant"],
+  new MessagesPlaceholder("history"),
+  ["human", "{input}"],
+]);
+
+const runnable = prompt.pipe(ollama);
+const withHistory = new RunnableWithMessageHistory({
+  runnable,
+  getMessageHistory: (sessionId: number) => {
+    const optionalChat: ChatMessageHistory | undefined = getChat(sessionId);
+    if(optionalChat === undefined) throw new Error();
+    return optionalChat;
+  },
+  inputMessagesKey: "input",
+  historyMessagesKey: "history"
+});
+
 const chatsRoute = async (fastify: FastifyInstance) => {
-  fastify.post("/chats", async (request, response) => {
-    
-  });
-  fastify.post<{ Body: QuestionType, Reply: ReadableStream<string> }>("/chats/1/questions", {
+  fastify.post<{
+    Body: QuestionType,
+    Params: QuestionParamsType,
+    Reply: ReadableStream<string> | ChatNotFoundType
+  }>("/chats/:chatId/questions", {
     schema: {
       body: Question,
+      params: QuestionParams,
       response: {
-        200: Answer
+        200: Answer,
+        404: ChatNotFound
       }
     }
   }, async (request, response) => {
@@ -42,10 +65,15 @@ const chatsRoute = async (fastify: FastifyInstance) => {
     //   ollama,
     //   new StringOutputParser(),
     // ]);
-
-    const question: string = request.body.question;
-    const stream: ReadableStream<string> = convertBaseMessageChunkStream(await ollama.stream(question));
-    return response.status(200).send(stream);
+    const { question } = request.body;
+    const { chatId } = request.params;
+    const config: RunnableConfig = { configurable: { sessionId: chatId } };
+    try {
+      const stream: ReadableStream<string> = convertBaseMessageChunkStream(await withHistory.stream({ input: question }, config));
+      return response.status(200).send(stream);
+    } catch(error) {
+      return response.status(404).send({ errorMessage: "Chat with given id was not found." });
+    }
   });
 };
 
