@@ -37,6 +37,12 @@ const withHistory = new RunnableWithMessageHistory({
 });
 
 const chatsRoute = async (fastify: FastifyInstance) => {
+  fastify.get("/chats", {
+    schema: {}
+  }, async (request, response) => {
+    
+  });
+
   fastify.post("/chats", {
     schema: {}
   }, async (request, response) => {
