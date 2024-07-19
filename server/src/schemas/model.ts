@@ -7,7 +7,7 @@ export const QuestionParams = Type.Object({ chatId: Type.Number() });
 export type QuestionParamsType = Static<typeof QuestionParams>;
 
 export const Answer = Type.Object({ answer: Type.String() }, {
-  description: "ReadableStream of stringified objects in format specified below."
+  description: "ReadableStream of stringified answer chunks in format specified below."
 });
 export type AnswerType = Static<typeof Answer>;
 

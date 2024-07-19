@@ -9,7 +9,7 @@ import { getChromaConnection } from "../services/chroma";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { convertBaseMessageChunkStream } from "../handlers/model";
 import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
-import { getChat } from "../repositories/chat";
+import { createNewChat, getChat } from "../repositories/chat";
 
 const RAG_TEMPLATE = `
 You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question.
@@ -37,6 +37,13 @@ const withHistory = new RunnableWithMessageHistory({
 });
 
 const chatsRoute = async (fastify: FastifyInstance) => {
+  fastify.post("/chats", {
+    schema: {}
+  }, async (request, response) => {
+    createNewChat();
+    return response.status(204).send();
+  });
+
   fastify.post<{
     Body: QuestionType,
     Params: QuestionParamsType,
