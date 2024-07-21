@@ -17,3 +17,19 @@ export const ChatNotFound = Type.Object({
   })
 });
 export type ChatNotFoundType = Static<typeof ChatNotFound>;
+
+export const CreateChat = Type.Object({
+  name: Type.String(),
+  useKnowledgeBase: Type.Boolean()
+});
+export type CreateChatType = Static<typeof CreateChat>;
+
+export const ChatInfo = Type.Object({
+  id: Type.Number(),
+  name: Type.String(),
+  useKnowledgeBase: Type.Boolean()
+});
+export type ChatInfoType = Static<typeof ChatInfo>;
+
+export const Chats = Type.Array(ChatInfo);
+export type ChatsType = Static<typeof Chats>;
