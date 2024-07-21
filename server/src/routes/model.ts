@@ -9,7 +9,7 @@ import { getChromaConnection } from "../services/chroma";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { convertBaseMessageChunkStream } from "../handlers/model";
 import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
-import { createNewChat, getChat } from "../repositories/chat";
+import { Chat, createNewChat, getChat } from "../repositories/chat";
 
 const RAG_TEMPLATE = `
 You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question.
@@ -28,9 +28,9 @@ const runnable = prompt.pipe(ollama);
 const withHistory = new RunnableWithMessageHistory({
   runnable,
   getMessageHistory: (sessionId: number) => {
-    const optionalChat: ChatMessageHistory | undefined = getChat(sessionId);
+    const optionalChat: Chat | undefined = getChat(sessionId);
     if(optionalChat === undefined) throw new Error();
-    return optionalChat;
+    return optionalChat.messageHistory;
   },
   inputMessagesKey: "input",
   historyMessagesKey: "history"
@@ -50,11 +50,17 @@ const chatsRoute = async (fastify: FastifyInstance) => {
     return response.status(204).send();
   });
 
+  fastify.get("/chats/:chatId/messages", {
+    schema: {}
+  }, async (request, response) => {
+
+  });
+
   fastify.post<{
     Body: QuestionType,
     Params: QuestionParamsType,
     Reply: ReadableStream<string> | ChatNotFoundType
-  }>("/chats/:chatId/questions", {
+  }>("/chats/:chatId/messages", {
     schema: {
       body: Question,
       params: QuestionParams,

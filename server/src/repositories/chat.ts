@@ -1,10 +1,24 @@
 import { ChatMessageHistory } from "langchain/memory"
 
-let chatMessageHistories = new Map<number, ChatMessageHistory>();
-chatMessageHistories.set(1, new ChatMessageHistory());
+export type Chat = {
+  name: string,
+  messageHistory: ChatMessageHistory,
+  useKnowledgeBase: boolean
+};
 
-export const getChat = (sessionId: number): ChatMessageHistory | undefined => chatMessageHistories.get(sessionId);
-export const createNewChat = (): void => {
+let chatMessageHistories = new Map<number, Chat>();
+chatMessageHistories.set(1, {
+  name: "test",
+  messageHistory: new ChatMessageHistory(),
+  useKnowledgeBase: false
+});
+
+export const getChat = (sessionId: number): Chat | undefined => chatMessageHistories.get(sessionId);
+export const createNewChat = (name: string, useKnowledgeBase: boolean): void => {
   const lastSessionId = Math.max(...chatMessageHistories.keys(), 0);
-  chatMessageHistories.set(lastSessionId + 1, new ChatMessageHistory());
+  chatMessageHistories.set(lastSessionId + 1, {
+    name: name,
+    messageHistory: new ChatMessageHistory(),
+    useKnowledgeBase: useKnowledgeBase
+  });
 }
