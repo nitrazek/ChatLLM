@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import ollama from "../services/ollama";
-import { Answer, ChatInfoType, ChatNotFound, ChatNotFoundType, ChatsType, CreateChatType, Question, QuestionParams, QuestionParamsType, QuestionType } from "../schemas/model";
+import { Answer, ChatInfoType, ChatNotFound, ChatNotFoundType, Chats, ChatsType, CreateChat, CreateChatType, Messages, MessagesType, Question, QuestionParams, QuestionParamsType, QuestionType } from "../schemas/model";
 import { RunnablePassthrough, RunnableSequence, RunnableWithMessageHistory, RunnableConfig } from "@langchain/core/runnables";
 import { formatDocumentsAsString } from "langchain/util/document";
 import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
@@ -41,7 +41,11 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
   fastify.get<{
     Reply: ChatsType
   }>("/chats", {
-    schema: {}
+    schema: {
+      response: {
+        200: Chats
+      }
+    }
   }, async (request, response) => {
     const chats: Chat[] = getChats();
     return response.status(200).send(
@@ -52,7 +56,9 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
   fastify.post<{
     Body: CreateChatType
   }>("/chats", {
-    schema: {}
+    schema: {
+      body: CreateChat
+    }
   }, async (request, response) => {
     const { name, useKnowledgeBase } = request.body;
     createChat(name, useKnowledgeBase);
@@ -61,10 +67,14 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
 
   fastify.get<{
     Params: QuestionParamsType
-    Reply: BaseMessage[] | ChatNotFoundType
+    Reply: MessagesType | ChatNotFoundType
   }>("/chats/:chatId", {
     schema: {
-      params: QuestionParams
+      params: QuestionParams,
+      response: {
+        200: Messages,
+        404: ChatNotFound
+      }
     }
   }, async (request, response) => {
     const { chatId } = request.params;
@@ -73,7 +83,12 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
     const optChat: Chat | undefined = getChatById(chatId);
     console.log(optChat);
     if(optChat === undefined) return response.status(404).send({ errorMessage: "Chat with given id was not found." });
-    return response.status(200).send(await optChat.messageHistory.getMessages());
+    const messages: BaseMessage[] = await optChat.messageHistory.getMessages();
+    return response.status(200).send(messages.map(baseMessage => {
+      const sender = baseMessage.lc_id.includes("HumanMessage") ? "human" : "ai";
+      const content = baseMessage.lc_kwargs.content;
+      return { sender, content };
+    }));
   });
 
   fastify.post<{

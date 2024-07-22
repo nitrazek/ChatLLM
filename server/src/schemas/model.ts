@@ -33,3 +33,9 @@ export type ChatInfoType = Static<typeof ChatInfo>;
 
 export const Chats = Type.Array(ChatInfo);
 export type ChatsType = Static<typeof Chats>;
+
+export const Messages = Type.Array(Type.Object({
+  sender: Type.String(),
+  content: Type.String()
+}));
+export type MessagesType = Static<typeof Messages>;
