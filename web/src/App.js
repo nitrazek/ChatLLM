@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState, useRef, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 
@@ -7,6 +6,9 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [lastUserMessage, setLastUserMessage] = useState(null);
+
+  const mainTopRef = useRef(null);
 
   const chatHistory = [
     "Adam Małysz",
@@ -30,23 +32,63 @@ function App() {
       user: { name: "Ty", avatar: "./avatars/user.png" }
     };
 
-    setMessages([...messages, userMessage]);
+    setMessages(prevMessages => [...prevMessages, userMessage]);
+    setLastUserMessage(userMessage);
     setInput('');
     setIsLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:3000/api/v1/model/questions', { question: input });
-      const botMessage = {
-        id: messages.length + 2,
-        text: response.data.answer, 
-        fromUser: false,
-        user: { name: "Bot", avatar: "./avatars/bot.png" }
-      };
+      const response = await fetch('http://localhost:3000/api/v1/model/questions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ question: input }),
+      });
 
-      setMessages(prevMessages => [...prevMessages, botMessage]);
+      const reader = response.body.getReader();
+      let accumulatedText = '';
+
+      reader.read().then(function processText({ done, value }) {
+        if (done) {
+          setIsLoading(false);
+          return;
+        }
+
+        const chunk = new TextDecoder().decode(value);
+        const parsedChunk = JSON.parse(chunk);
+        const answer = parsedChunk.answer;
+
+        accumulatedText += answer;
+
+        const botMessage = {
+          id: messages.length + 2,
+          text: accumulatedText,
+          fromUser: false,
+          user: { name: "Bot", avatar: "./avatars/bot.png" }
+        };
+
+        setMessages(prevMessages => {
+          const updatedMessages = [...prevMessages];
+          const existingMessageIndex = updatedMessages.findIndex(msg => !msg.fromUser && msg.id === botMessage.id);
+          if (existingMessageIndex !== -1) {
+            updatedMessages[existingMessageIndex].text = botMessage.text;
+          } else {
+            updatedMessages.push(botMessage);
+          }
+
+          if (mainTopRef.current) {
+            mainTopRef.current.lastChild.scrollIntoView({ behavior: 'smooth' });
+          }
+
+          return updatedMessages;
+        });
+
+        reader.read().then(processText);
+      });
+
     } catch (error) {
       console.error('Error sending message:', error);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -61,6 +103,12 @@ function App() {
       sendMessage();
     }
   };
+
+  useEffect(() => {
+    if (mainTopRef.current) {
+      mainTopRef.current.scrollTop = mainTopRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   return (
     <div className="App">
@@ -88,7 +136,7 @@ function App() {
         </div>
       </div>
       <div className="main">
-        <div className="mainTop">
+        <div className="mainTop" ref={mainTopRef}>
           {messages.map(message => (
             <div key={message.id} className={message.fromUser ? "userMessage" : "botMessage"}>
               <div className="messageHeader">
