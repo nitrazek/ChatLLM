@@ -16,9 +16,9 @@ chatMessageHistories.set(1, {
 });
 
 export const getChats = (): Chat[] => [...chatMessageHistories.values()];
-export const getChatById = (sessionId: string): Chat | undefined => {
+export const getChatById = (sessionId: number): Chat | undefined => {
   console.log({ sessionId });
-  return chatMessageHistories.get(parseInt(sessionId));
+  return chatMessageHistories.get(sessionId);
 };
 export const createChat = (name: string, useKnowledgeBase: boolean): void => {
   const lastSessionId = Math.max(...chatMessageHistories.keys(), 0);

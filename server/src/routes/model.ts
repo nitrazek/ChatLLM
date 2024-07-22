@@ -29,7 +29,7 @@ const runnable = prompt.pipe(ollama);
 const withHistory = new RunnableWithMessageHistory({
   runnable,
   getMessageHistory: (sessionId: number) => {
-    const optChat: Chat | undefined = getChatById(sessionId.toString());
+    const optChat: Chat | undefined = getChatById(sessionId);
     if(optChat === undefined) throw new Error();
     return optChat.messageHistory;
   },
@@ -63,12 +63,14 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
     Params: QuestionParamsType
     Reply: BaseMessage[] | ChatNotFoundType
   }>("/chats/:chatId", {
-    schema: {}
+    schema: {
+      params: QuestionParams
+    }
   }, async (request, response) => {
     const { chatId } = request.params;
     console.log(chatId);
     console.log(typeof chatId);
-    const optChat: Chat | undefined = getChatById(chatId.toString());
+    const optChat: Chat | undefined = getChatById(chatId);
     console.log(optChat);
     if(optChat === undefined) return response.status(404).send({ errorMessage: "Chat with given id was not found." });
     return response.status(200).send(await optChat.messageHistory.getMessages());
