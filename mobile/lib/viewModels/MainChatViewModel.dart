@@ -4,28 +4,43 @@ import '../services/ChatService.dart';
 
 class MainChatViewModel extends ChangeNotifier {
   final ChatService _chatService = ChatService();
-  String _response = '';
-  final StreamController<String> _responseController = StreamController<String>.broadcast();
+  final List<ChatMessage> _chatMessages = [];
 
-  Stream<String> get responseStream => _responseController.stream;
-  String get response => _response;
+  List<ChatMessage> get chatMessages => _chatMessages;
 
   void sendPrompt(String question) async {
+    ChatMessage chatMessage = ChatMessage(question: question);
+    _chatMessages.add(chatMessage);
+    notifyListeners();
+
     await for (var answer in _chatService.postQuestion(question)) {
-      addResponse(answer);
+      chatMessage.addResponse(answer);
     }
+
+    chatMessage.finalizeResponse();
     notifyListeners();
   }
+}
+
+class ChatMessage {
+  final String question;
+  String response = '';
+  final StreamController<String> _responseController = StreamController<String>.broadcast();
+
+  ChatMessage({required this.question});
+
+  Stream<String> get responseStream => _responseController.stream;
 
   void addResponse(String response) {
-    _response += response;
-    _responseController.sink.add(_response);
-    notifyListeners();
+    this.response += response;
+    _responseController.sink.add(this.response);
   }
 
-  @override
+  void finalizeResponse() {
+    _responseController.sink.add(this.response);
+  }
+
   void dispose() {
     _responseController.close();
-    super.dispose();
   }
 }

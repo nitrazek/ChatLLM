@@ -9,11 +9,11 @@ class AppColors {
 class AppTextStyles {
 
   static const String Manrope =  'Manrope-VariableFont_wght';
-  static TextStyle chatText(double fontSizeScale) {
+  static TextStyle chatText(double fontSizeScale, int size) {
     return TextStyle(
       fontFamily: Manrope,
       color: Colors.white,
-      fontSize: 20 * fontSizeScale,
+      fontSize: size * fontSizeScale,
       fontWeight: FontWeight.bold,
     );
   }

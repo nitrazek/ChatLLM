@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/ChatMessage.dart';
 import '../viewModels/MainChatViewModel.dart';
 import '../models/Styles.dart';
 import 'AdminPanel.dart';
@@ -14,7 +13,6 @@ class MainChatPage extends StatefulWidget {
 
 class _MainChatPageState extends State<MainChatPage> {
   late TextEditingController textEditingController;
-  List<ChatMessage> chatHistory = [];
 
   @override
   void initState() {
@@ -152,12 +150,7 @@ class _MainChatPageState extends State<MainChatPage> {
                     }),
                     Text(
                       'GENERATOR',
-                      style: TextStyle(
-                        fontFamily: 'Manrope-VariableFont_wght',
-                        fontSize: 34 * fontSizeScale,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: AppTextStyles.chatText(fontSizeScale, 36)
                     ),
                     Container(
                       decoration: const BoxDecoration(
@@ -180,9 +173,9 @@ class _MainChatPageState extends State<MainChatPage> {
                   color: AppColors.darkest,
                   padding: const EdgeInsets.symmetric(horizontal: 10.0),
                   child: ListView.builder(
-                    itemCount: chatHistory.length,
+                    itemCount: context.watch<MainChatViewModel>().chatMessages.length,
                     itemBuilder: (context, index) {
-                      final chatMessage = chatHistory[index];
+                      final chatMessage = context.watch<MainChatViewModel>().chatMessages[index];
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -202,13 +195,8 @@ class _MainChatPageState extends State<MainChatPage> {
                                   color: AppColors.dark,
                                 ),
                                 child: Text(
-                                  chatMessage.question,
-                                  style: TextStyle(
-                                    fontFamily: 'Manrope-VariableFont_wght',
-                                    color: Colors.white,
-                                    fontSize: 20 * fontSizeScale,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                    chatMessage.question,
+                                    style: AppTextStyles.chatText(fontSizeScale, 20)
                                 ),
                               ),
                             ],
@@ -229,19 +217,22 @@ class _MainChatPageState extends State<MainChatPage> {
                                   color: const Color(0xFF424549),
                                 ),
                                 child: StreamBuilder<String>(
-                                  stream: context.watch<MainChatViewModel>().responseStream,
+                                  stream: chatMessage.responseStream,
                                   builder: (context, snapshot) {
                                     if (snapshot.hasError) {
                                       return Text('Error: ${snapshot.error}');
                                     }
 
-                                    if (!snapshot.hasData) {
-                                      return Text('Loading...');
+                                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                                      return Text(
+                                        chatMessage.response,
+                                        style: AppTextStyles.chatText(fontSizeScale, 20),
+                                      );
                                     }
 
                                     return Text(
-                                      snapshot.data ?? "",
-                                      style: AppTextStyles.chatText(fontSizeScale),
+                                      snapshot.data!,
+                                      style: AppTextStyles.chatText(fontSizeScale, 20),
                                     );
                                   },
                                 ),
@@ -266,27 +257,16 @@ class _MainChatPageState extends State<MainChatPage> {
                   children: [
                     Expanded(
                       child: TextField(
-                        style: TextStyle(
-                          fontFamily: 'Manrope-VariableFont_wght',
-                          color: Colors.white,
-                          fontSize: 18 * fontSizeScale,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: AppTextStyles.chatText(fontSizeScale, 18),
                         controller: textEditingController,
                         onSubmitted: (message) async {
-                          final newMessage = ChatMessage(question: message);
-                          setState(() {
-                            chatHistory.add(newMessage);
-                          });
-
-                          textEditingController.clear();
-
                           context.read<MainChatViewModel>().sendPrompt(message);
+                          textEditingController.clear();
                         },
                         decoration: const InputDecoration(
                           hintText: "Message",
                           hintStyle: TextStyle(
-                            fontFamily: 'Manrope-VariableFont_wght',
+                            fontFamily: AppTextStyles.Manrope,
                             color: Colors.grey,
                             backgroundColor: Color(0xFF424549),
                           ),
@@ -298,14 +278,8 @@ class _MainChatPageState extends State<MainChatPage> {
                       onPressed: () {
                         if (textEditingController.text.isNotEmpty) {
                           final message = textEditingController.text;
-                          final newMessage = ChatMessage(question: message);
-                          setState(() {
-                            chatHistory.add(newMessage);
-                          });
-
-                          textEditingController.clear();
-
                           context.read<MainChatViewModel>().sendPrompt(message);
+                          textEditingController.clear();
                         }
                       },
                       icon: const Icon(
