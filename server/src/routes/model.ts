@@ -22,7 +22,7 @@ Context: {context}
 Answer:`;
 
 const prompt = ChatPromptTemplate.fromMessages([
-  ["system", "You are a helpful assistant"],
+  ["system", RAG_TEMPLATE],
   new MessagesPlaceholder("history"),
   ["human", "{input}"],
 ]);
@@ -106,28 +106,25 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
     const chat: Chat | undefined = getChatById(chatId);
     if(chat === undefined) return response.status(404).send({ errorMessage: "Chat with given id was not found." });
 
-    const runnableWithHistory = new RunnableWithMessageHistory({
-      runnable: prompt.pipe(ollama),
+    const chain = RunnableSequence.from([
+      {
+        context: retriever.pipe(formatDocumentsAsString),
+        question: new RunnablePassthrough(),
+      },
+      prompt,
+      ollama,
+      new StringOutputParser()
+    ]);
+
+    const chainWithHistory = new RunnableWithMessageHistory({
+      runnable: prompt.pipe(chain),
       getMessageHistory: (sessionId: number) => chat.messageHistory,
       inputMessagesKey: "input",
       historyMessagesKey: "history"
     });
 
-    const qaChain = RunnableSequence.from([
-      {
-        context: (input: { question: string }, callbacks) => {
-          const retrieverAndFormatter = retriever.pipe(formatDocumentsAsString);
-          return retrieverAndFormatter.invoke(input.question, callbacks);
-        },
-        question: new RunnablePassthrough(),
-      },
-      PromptTemplate.fromTemplate(RAG_TEMPLATE),
-      runnableWithHistory,
-      new StringOutputParser()
-    ]);
-
     const config: RunnableConfig = { configurable: { sessionId: chatId } };
-    const stream: ReadableStream<string> = await qaChain.stream({ question }, config);
+    const stream: ReadableStream<string> = await chainWithHistory.stream({ input: question }, config);
     return response.status(200).send(stream);
   });
 };
