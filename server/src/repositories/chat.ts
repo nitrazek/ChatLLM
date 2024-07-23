@@ -1,4 +1,5 @@
 import { ChatMessageHistory } from "langchain/memory"
+import { ChatInfoType } from "../schemas/model";
 
 export type Chat = {
   id: number,
@@ -20,12 +21,14 @@ export const getChatById = (sessionId: number): Chat | undefined => {
   console.log({ sessionId });
   return chatMessageHistories.get(sessionId);
 };
-export const createChat = (name: string, useKnowledgeBase: boolean): void => {
-  const lastSessionId = Math.max(...chatMessageHistories.keys(), 0);
-  chatMessageHistories.set(lastSessionId + 1, {
-    id: lastSessionId + 1,
+export const createChat = (name: string, useKnowledgeBase: boolean): ChatInfoType => {
+  const id = Math.max(...chatMessageHistories.keys(), 0) + 1;
+  const newChat: Chat = {
+    id: id,
     name: name,
     messageHistory: new ChatMessageHistory(),
     useKnowledgeBase: useKnowledgeBase
-  });
+  };
+  chatMessageHistories.set(id, newChat);
+  return { id, name, useKnowledgeBase };
 }

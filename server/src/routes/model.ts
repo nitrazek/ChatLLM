@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import ollama from "../services/ollama";
-import { Answer, ChatInfoType, ChatNotFound, ChatNotFoundType, Chats, ChatsType, CreateChat, CreateChatType, Messages, MessagesType, Question, QuestionParams, QuestionParamsType, QuestionType } from "../schemas/model";
+import { Answer, ChatInfo, ChatInfoType, ChatNotFound, ChatNotFoundType, Chats, ChatsType, CreateChat, CreateChatType, Messages, MessagesType, Question, QuestionParams, QuestionParamsType, QuestionType } from "../schemas/model";
 import { RunnablePassthrough, RunnableSequence, RunnableWithMessageHistory, RunnableConfig } from "@langchain/core/runnables";
 import { formatDocumentsAsString } from "langchain/util/document";
 import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
@@ -55,14 +55,18 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
 
   fastify.post<{
     Body: CreateChatType
+    Reply: ChatInfoType
   }>("/chats", {
     schema: {
-      body: CreateChat
+      body: CreateChat,
+      response: {
+        200: ChatInfo
+      }
     }
   }, async (request, response) => {
     const { name, useKnowledgeBase } = request.body;
-    createChat(name, useKnowledgeBase);
-    return response.status(204).send();
+    const chatInfo: ChatInfoType = createChat(name, useKnowledgeBase);
+    return response.status(200).send(chatInfo);
   });
 
   fastify.get<{
