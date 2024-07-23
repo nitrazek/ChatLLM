@@ -27,7 +27,7 @@ export type CreateChatType = Static<typeof CreateChat>;
 export const ChatInfo = Type.Object({
   id: Type.Number(),
   name: Type.String(),
-  useKnowledgeBase: Type.Boolean()
+  isUsingOnlyKnowledgeBase: Type.Boolean()
 });
 export type ChatInfoType = Static<typeof ChatInfo>;
 

@@ -9,8 +9,10 @@ import { getChromaConnection } from "../services/chroma";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { convertBaseMessageChunkStream } from "../handlers/model";
 import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
-import { Chat, createChat, getChats, getChatById } from "../repositories/chat";
+import { Chat, createChat, getChats, getChatById, getChatInfo } from "../repositories/chat";
 import { BaseMessage } from "langchain/schema";
+import { PromptTemplate } from "langchain/prompts";
+import { run } from "node:test";
 
 const RAG_TEMPLATE = `
 You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question.
@@ -25,21 +27,9 @@ const prompt = ChatPromptTemplate.fromMessages([
   ["human", "{input}"],
 ]);
 
-const runnable = prompt.pipe(ollama);
-const withHistory = new RunnableWithMessageHistory({
-  runnable,
-  getMessageHistory: (sessionId: number) => {
-    const optChat: Chat | undefined = getChatById(sessionId);
-    if(optChat === undefined) throw new Error();
-    return optChat.messageHistory;
-  },
-  inputMessagesKey: "input",
-  historyMessagesKey: "history"
-});
-
 const chatsRoutes = async (fastify: FastifyInstance) => {
   fastify.get<{
-    Reply: ChatsType
+    Reply: ChatInfoType[]
   }>("/chats", {
     schema: {
       response: {
@@ -48,9 +38,7 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
     }
   }, async (request, response) => {
     const chats: Chat[] = getChats();
-    return response.status(200).send(
-      chats.map(({ id, name, useKnowledgeBase }) => ({ id, name, useKnowledgeBase }))
-    );
+    return response.status(200).send(chats.map(getChatInfo));
   });
 
   fastify.post<{
@@ -109,29 +97,38 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
       }
     }
   }, async (request, response) => {
-    // const chroma: Chroma = await getChromaConnection();
-    // const retriever = chroma.asRetriever();
-    // const qaChain = RunnableSequence.from([
-    //   {
-    //     context: (input: { question: string }, callbacks) => {
-    //       const retrieverAndFormatter = retriever.pipe(formatDocumentsAsString);
-    //       return retrieverAndFormatter.invoke(input.question, callbacks);
-    //     },
-    //     question: new RunnablePassthrough(),
-    //   },
-    //   PromptTemplate.fromTemplate(RAG_TEMPLATE),
-    //   ollama,
-    //   new StringOutputParser(),
-    // ]);
+    const chroma: Chroma = await getChromaConnection();
+    const retriever = chroma.asRetriever();
+    
     const { question } = request.body;
     const { chatId } = request.params;
+
+    const chat: Chat | undefined = getChatById(chatId);
+    if(chat === undefined) return response.status(404).send({ errorMessage: "Chat with given id was not found." });
+
+    const runnableWithHistory = new RunnableWithMessageHistory({
+      runnable: prompt.pipe(ollama),
+      getMessageHistory: (sessionId: number) => chat.messageHistory,
+      inputMessagesKey: "input",
+      historyMessagesKey: "history"
+    });
+
+    const qaChain = RunnableSequence.from([
+      {
+        context: (input: { question: string }, callbacks) => {
+          const retrieverAndFormatter = retriever.pipe(formatDocumentsAsString);
+          return retrieverAndFormatter.invoke(input.question, callbacks);
+        },
+        question: new RunnablePassthrough(),
+      },
+      PromptTemplate.fromTemplate(RAG_TEMPLATE),
+      runnableWithHistory,
+      new StringOutputParser()
+    ]);
+
     const config: RunnableConfig = { configurable: { sessionId: chatId } };
-    try {
-      const stream: ReadableStream<string> = convertBaseMessageChunkStream(await withHistory.stream({ input: question }, config));
-      return response.status(200).send(stream);
-    } catch(error) {
-      return response.status(404).send({ errorMessage: "Chat with given id was not found." });
-    }
+    const stream: ReadableStream<string> = await qaChain.stream({ question }, config);
+    return response.status(200).send(stream);
   });
 };
 
