@@ -18,10 +18,7 @@ chatMessageHistories.set(1, {
 
 export const getChats = (): Chat[] => [...chatMessageHistories.values()];
 
-export const getChatById = (sessionId: number): Chat | undefined => {
-  console.log({ sessionId });
-  return chatMessageHistories.get(sessionId);
-};
+export const getChatById = (sessionId: number): Chat | undefined => chatMessageHistories.get(sessionId);
 
 export const getChatInfo = ({ id, name, isUsingOnlyKnowledgeBase }: Chat): ChatInfoType => ({ id, name, isUsingOnlyKnowledgeBase });
 

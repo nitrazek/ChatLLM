@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import ollama from "../services/ollama";
-import { Answer, ChatInfo, ChatInfoType, ChatNotFound, ChatNotFoundType, Chats, ChatsType, CreateChat, CreateChatType, Messages, MessagesType, Question, QuestionParams, QuestionParamsType, QuestionType } from "../schemas/model";
+import { ollamaLLM } from "../services/ollama";
+import { Answer, AnswerType, ChatInfo, ChatInfoType, ChatNotFound, ChatNotFoundType, Chats, ChatsType, CreateChat, CreateChatType, Messages, MessagesType, Question, QuestionParams, QuestionParamsType, QuestionType } from "../schemas/model";
 import { RunnablePassthrough, RunnableSequence, RunnableWithMessageHistory, RunnableConfig } from "@langchain/core/runnables";
 import { formatDocumentsAsString } from "langchain/util/document";
 import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
@@ -10,21 +10,25 @@ import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { convertBaseMessageChunkStream } from "../handlers/model";
 import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
 import { Chat, createChat, getChats, getChatById, getChatInfo } from "../repositories/chat";
-import { BaseMessage } from "langchain/schema";
+import { AIMessage, AIMessageChunk, BaseMessage, HumanMessage, SystemMessage } from "langchain/schema";
 import { PromptTemplate } from "langchain/prompts";
 import { run } from "node:test";
+import { ChatTogetherAI } from "@langchain/community/chat_models/togetherai";
+
+const TEMPLATE = `
+You are an assistant for question-answering tasks.
+`;
 
 const RAG_TEMPLATE = `
 You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question.
 Use three sentences maximum and keep the answer concise.
-Question: {question} 
-Context: {context}  
-Answer:`;
+Context: {context}
+`;
 
 const prompt = ChatPromptTemplate.fromMessages([
   ["system", RAG_TEMPLATE],
   new MessagesPlaceholder("history"),
-  ["human", "{input}"],
+  ["human", "{question}"],
 ]);
 
 const chatsRoutes = async (fastify: FastifyInstance) => {
@@ -108,25 +112,61 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
 
     const chain = RunnableSequence.from([
       {
-        context: retriever.pipe(formatDocumentsAsString),
+        context: async (question: string, callbacks) => {
+          const retrieverAndFormatter = retriever.pipe(formatDocumentsAsString);
+          return await retrieverAndFormatter.invoke(question, callbacks);
+        },
+        history: async () => await chat.messageHistory.getMessages(),
         question: new RunnablePassthrough(),
       },
-      prompt,
-      ollama,
+      async (input) => {
+        const { context, history, question } = input;
+        
+        let modifiedQuestion = "";
+        if(context.trim().length === 0) {
+          console.log("CONTEXT PUSTY");
+          modifiedQuestion = question;
+        } else {
+          console.log("W CONTEXCIE COŚ JEST");
+          console.log({ context });
+          console.log(context.trim().length);
+          modifiedQuestion = `
+            Here is some additional information I have found: ${context}
+            ${question}
+          `;
+        }
+
+        const systemMessage = new SystemMessage(TEMPLATE);
+        const humanMessage = new HumanMessage(modifiedQuestion);
+        const prompt = ChatPromptTemplate.fromMessages([
+          systemMessage,
+          ...history,
+          humanMessage
+        ]);
+
+        console.dir(prompt, { depth: null });
+        await chat.messageHistory.addMessage(humanMessage);
+        return prompt;
+      },
+      (input) => {
+        console.log("-------- PO ZWRÓCIENIU PROMPTA --------");
+        console.dir(input, { depth: null });
+        return input;
+      },
+      ollamaLLM,
+      async (input: AIMessageChunk) => {
+        console.log("-------- PO ODPOWIEDZI --------");
+        console.dir(input, { depth: null});
+        
+        await chat.messageHistory.addMessage(new AIMessage(input.content as string));
+        return input;
+      },
       new StringOutputParser()
     ]);
 
-    const chainWithHistory = new RunnableWithMessageHistory({
-      runnable: prompt.pipe(chain),
-      getMessageHistory: (sessionId: number) => chat.messageHistory,
-      inputMessagesKey: "input",
-      historyMessagesKey: "history"
-    });
-
-    const config: RunnableConfig = { configurable: { sessionId: chatId } };
-    const stream: ReadableStream<string> = await chainWithHistory.stream({ input: question }, config);
+    const stream: ReadableStream<string> = await chain.stream(question);
     return response.status(200).send(stream);
-  });
+  }); 
 };
 
 export default chatsRoutes;
