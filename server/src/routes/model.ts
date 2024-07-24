@@ -112,59 +112,40 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
 
     const chain = RunnableSequence.from([
       {
-        context: async (question: string, callbacks) => {
+        context: async (input, callbacks) => {
           const retrieverAndFormatter = retriever.pipe(formatDocumentsAsString);
-          return await retrieverAndFormatter.invoke(question, callbacks);
+          return await retrieverAndFormatter.invoke(input.question, callbacks);
         },
-        history: async () => await chat.messageHistory.getMessages(),
-        question: new RunnablePassthrough(),
+        question: (input) => input.question,
+        history: (input) => input.history
       },
       async (input) => {
-        const { context, history, question } = input;
-        
-        let modifiedQuestion = "";
-        if(context.trim().length === 0) {
-          console.log("CONTEXT PUSTY");
-          modifiedQuestion = question;
-        } else {
-          console.log("W CONTEXCIE COŚ JEST");
-          console.log({ context });
-          console.log(context.trim().length);
-          modifiedQuestion = `
-            Here is some additional information I have found: ${context}
-            ${question}
-          `;
-        }
+        const { context, question, history } = input;
+        if(context.trim().length === 0) return { question, history };
 
-        const systemMessage = new SystemMessage(TEMPLATE);
-        const humanMessage = new HumanMessage(modifiedQuestion);
-        const prompt = ChatPromptTemplate.fromMessages([
-          systemMessage,
-          ...history,
-          humanMessage
-        ]);
-
-        console.dir(prompt, { depth: null });
-        await chat.messageHistory.addMessage(humanMessage);
-        return prompt;
+        const modifiedQuestion = `
+          Here is some additional information I have found: ${context}
+          ${question}
+        `;
+        return { question: modifiedQuestion, history };
       },
-      (input) => {
-        console.log("-------- PO ZWRÓCIENIU PROMPTA --------");
-        console.dir(input, { depth: null });
-        return input;
-      },
-      ollamaLLM,
-      async (input: AIMessageChunk) => {
-        console.log("-------- PO ODPOWIEDZI --------");
-        console.dir(input, { depth: null});
-        
-        await chat.messageHistory.addMessage(new AIMessage(input.content as string));
-        return input;
-      },
-      new StringOutputParser()
+      ChatPromptTemplate.fromMessages([
+        ["system", TEMPLATE],
+        new MessagesPlaceholder("history"),
+        ["human", "{question}"]
+      ]),
+      ollamaLLM
     ]);
 
-    const stream: ReadableStream<string> = await chain.stream(question);
+    const chainWithHistory = new RunnableWithMessageHistory({
+      runnable: chain,
+      getMessageHistory: (sessionId: number) => chat.messageHistory,
+      inputMessagesKey: "question",
+      historyMessagesKey: "history"
+    });
+
+    const config: RunnableConfig = { configurable: { sessionId: chatId } };
+    const stream: ReadableStream<string> = convertBaseMessageChunkStream(await chainWithHistory.stream({ question }, config));
     return response.status(200).send(stream);
   }); 
 };
