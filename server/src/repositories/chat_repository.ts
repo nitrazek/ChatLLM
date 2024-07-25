@@ -1,5 +1,5 @@
 import { ChatMessageHistory } from "langchain/memory"
-import { ChatInfoType } from "../schemas/model";
+import { TChatInfo } from "../schemas/chats_schemas";
 
 export type Chat = {
   id: number,
@@ -20,7 +20,7 @@ export const getChats = (): Chat[] => [...chatMessageHistories.values()];
 
 export const getChatById = (sessionId: number): Chat | undefined => chatMessageHistories.get(sessionId);
 
-export const getChatInfo = ({ id, name, isUsingOnlyKnowledgeBase }: Chat): ChatInfoType => ({ id, name, isUsingOnlyKnowledgeBase });
+export const getChatInfo = ({ id, name, isUsingOnlyKnowledgeBase }: Chat): TChatInfo => ({ id, name, isUsingOnlyKnowledgeBase });
 
 export const createChat = (name: string, isUsingOnlyKnowledgeBase: boolean): Chat => {
   const id = Math.max(...chatMessageHistories.keys(), 0) + 1;

@@ -1,43 +1,49 @@
 import { FastifyInstance } from "fastify";
-import { ollamaLLM } from "../services/ollama";
-import { Answer, AnswerType, ChatInfo, ChatInfoType, ChatNotFound, ChatNotFoundType, Chats, ChatsType, CreateChat, CreateChatType, Messages, MessagesType, Question, QuestionParams, QuestionParamsType, QuestionType } from "../schemas/model";
+import { ollamaLLM } from "../services/ollama_service";
+import {
+  Answer,
+  ChatInfo,
+  ErrorChatNotFound,
+  GetChatsResponse,
+  GetMessagesParams,
+  GetMessagesResponse,
+  Message,
+  PostChat,
+  PostMessage,
+  PostMessageParams,
+  TChatInfo,
+  TErrorChatNotFound,
+  TGetChatsResponse,
+  TGetMessagesParams, 
+  TGetMessagesResponse, 
+  TMessage,
+  TPostChat,
+  TPostMessage,
+  TPostMessageParams
+} from "../schemas/chats_schemas";
 import { RunnablePassthrough, RunnableSequence, RunnableWithMessageHistory, RunnableConfig } from "@langchain/core/runnables";
 import { formatDocumentsAsString } from "langchain/util/document";
 import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
-import { getChromaConnection } from "../services/chroma";
+import { getChromaConnection } from "../services/chroma_service";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
-import { convertBaseMessageChunkStream } from "../handlers/model";
 import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
-import { Chat, createChat, getChats, getChatById, getChatInfo } from "../repositories/chat";
+import { Chat, createChat, getChats, getChatById, getChatInfo } from "../repositories/chat_repository";
 import { AIMessage, AIMessageChunk, BaseMessage, HumanMessage, SystemMessage } from "langchain/schema";
 import { PromptTemplate } from "langchain/prompts";
 import { run } from "node:test";
 import { ChatTogetherAI } from "@langchain/community/chat_models/togetherai";
-
-const TEMPLATE = `
-You are an assistant for question-answering tasks.
-`;
-
-const RAG_TEMPLATE = `
-You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question.
-Use three sentences maximum and keep the answer concise.
-Context: {context}
-`;
-
-const prompt = ChatPromptTemplate.fromMessages([
-  ["system", RAG_TEMPLATE],
-  new MessagesPlaceholder("history"),
-  ["human", "{question}"],
-]);
+import { ONLY_RAG_TEMPLATE, RAG_TEMPLATE } from "../prompts";
+import CustomTransformOutputParser from "../utils/CustomTransformOutputParser";
+import { Type } from "@sinclair/typebox";
 
 const chatsRoutes = async (fastify: FastifyInstance) => {
   fastify.get<{
-    Reply: ChatInfoType[]
-  }>("/chats", {
+    Reply: TGetChatsResponse
+  }>("", {
     schema: {
       response: {
-        200: Chats
+        200: GetChatsResponse
       }
     }
   }, async (request, response) => {
@@ -46,30 +52,30 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
   });
 
   fastify.post<{
-    Body: CreateChatType
-    Reply: ChatInfoType
-  }>("/chats", {
+    Body: TPostChat
+    Reply: TChatInfo
+  }>("", {
     schema: {
-      body: CreateChat,
+      body: PostChat,
       response: {
         200: ChatInfo
       }
     }
   }, async (request, response) => {
-    const { name, useKnowledgeBase } = request.body;
-    const chatInfo: ChatInfoType = createChat(name, useKnowledgeBase);
+    const { name, isUsingOnlyKnowledgeBase } = request.body;
+    const chatInfo: TChatInfo = createChat(name, isUsingOnlyKnowledgeBase);
     return response.status(200).send(chatInfo);
   });
 
   fastify.get<{
-    Params: QuestionParamsType
-    Reply: MessagesType | ChatNotFoundType
-  }>("/chats/:chatId", {
+    Params: TGetMessagesParams
+    Reply: TGetMessagesResponse | TErrorChatNotFound
+  }>("/:chatId", {
     schema: {
-      params: QuestionParams,
+      params: GetMessagesParams,
       response: {
-        200: Messages,
-        404: ChatNotFound
+        200: GetMessagesResponse,
+        404: ErrorChatNotFound
       }
     }
   }, async (request, response) => {
@@ -88,22 +94,19 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
   });
 
   fastify.post<{
-    Body: QuestionType,
-    Params: QuestionParamsType,
-    Reply: ReadableStream<string> | ChatNotFoundType
-  }>("/chats/:chatId", {
+    Body: TPostMessage,
+    Params: TPostMessageParams,
+    Reply: ReadableStream<string> | TErrorChatNotFound
+  }>("/:chatId", {
     schema: {
-      body: Question,
-      params: QuestionParams,
+      body: PostMessage,
+      params: PostMessageParams,
       response: {
         200: Answer,
-        404: ChatNotFound
+        404: ErrorChatNotFound
       }
     }
   }, async (request, response) => {
-    const chroma: Chroma = await getChromaConnection();
-    const retriever = chroma.asRetriever();
-    
     const { question } = request.body;
     const { chatId } = request.params;
 
@@ -113,28 +116,21 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
     const chain = RunnableSequence.from([
       {
         context: async (input, callbacks) => {
+          const chroma: Chroma = await getChromaConnection();
+          const retriever = chroma.asRetriever();
           const retrieverAndFormatter = retriever.pipe(formatDocumentsAsString);
           return await retrieverAndFormatter.invoke(input.question, callbacks);
         },
         question: (input) => input.question,
         history: (input) => input.history
       },
-      async (input) => {
-        const { context, question, history } = input;
-        if(context.trim().length === 0) return { question, history };
-
-        const modifiedQuestion = `
-          Here is some additional information I have found: ${context}
-          ${question}
-        `;
-        return { question: modifiedQuestion, history };
-      },
       ChatPromptTemplate.fromMessages([
-        ["system", TEMPLATE],
+        ["system", RAG_TEMPLATE],
         new MessagesPlaceholder("history"),
         ["human", "{question}"]
       ]),
-      ollamaLLM
+      ollamaLLM,
+      new CustomTransformOutputParser()
     ]);
 
     const chainWithHistory = new RunnableWithMessageHistory({
@@ -145,7 +141,7 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
     });
 
     const config: RunnableConfig = { configurable: { sessionId: chatId } };
-    const stream: ReadableStream<string> = convertBaseMessageChunkStream(await chainWithHistory.stream({ question }, config));
+    const stream: ReadableStream<string> = await chainWithHistory.stream({ question }, config);
     return response.status(200).send(stream);
   }); 
 };

@@ -1,7 +1,7 @@
 import { MultipartFile } from "@fastify/multipart";
 import { FastifyInstance } from "fastify";
-import { FileUploadError, FileUploadErrorType, FileUploadSuccess, FileUploadSuccessType } from "../schemas/base";
-import { getChromaConnection } from "../services/chroma";
+import { FileUploadError, FileUploadErrorType, FileUploadSuccess, FileUploadSuccessType } from "../schemas/base_schemas";
+import { getChromaConnection } from "../services/chroma_service";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
 
 const filesRoute = async (fastify: FastifyInstance) => {
