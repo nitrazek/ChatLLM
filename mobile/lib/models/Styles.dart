@@ -9,12 +9,12 @@ class AppColors {
 class AppTextStyles {
 
   static const String Manrope =  'Manrope-VariableFont_wght';
+  static const String Andada = 'AndadaSC-Regular';
   static TextStyle chatText(double fontSizeScale, int size) {
     return TextStyle(
-      fontFamily: Manrope,
+      fontFamily: Andada,
       color: Colors.white,
       fontSize: size * fontSizeScale,
-      fontWeight: FontWeight.bold,
     );
   }
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_markdown/flutter_markdown.dart' show MarkdownStyleSheet, MarkdownBody;
 import '../viewModels/MainChatViewModel.dart';
 import '../models/Styles.dart';
 import 'AdminPanel.dart';
@@ -149,8 +151,8 @@ class _MainChatPageState extends State<MainChatPage> {
                       );
                     }),
                     Text(
-                      'GENERATOR',
-                      style: AppTextStyles.chatText(fontSizeScale, 36)
+                        'GENERATOR',
+                        style: AppTextStyles.chatText(fontSizeScale, 36)
                     ),
                     Container(
                       decoration: const BoxDecoration(
@@ -223,16 +225,20 @@ class _MainChatPageState extends State<MainChatPage> {
                                       return Text('Error: ${snapshot.error}');
                                     }
 
-                                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                                      return Text(
-                                        chatMessage.response,
-                                        style: AppTextStyles.chatText(fontSizeScale, 20),
-                                      );
-                                    }
+                                    final data = snapshot.data ?? chatMessage.response;
 
-                                    return Text(
-                                      snapshot.data!,
-                                      style: AppTextStyles.chatText(fontSizeScale, 20),
+                                    return MarkdownBody(
+                                      data: data,
+                                      styleSheet: MarkdownStyleSheet(
+                                        p: AppTextStyles.chatText(fontSizeScale, 20),
+                                        a: AppTextStyles.chatText(fontSizeScale, 20).copyWith(decoration: TextDecoration.underline),
+                                        strong: AppTextStyles.chatText(fontSizeScale, 20).copyWith(fontWeight: FontWeight.bold),
+                                        em: AppTextStyles.chatText(fontSizeScale, 20).copyWith(fontStyle: FontStyle.italic),
+                                        h1: AppTextStyles.chatText(fontSizeScale, 34),
+                                        h2: AppTextStyles.chatText(fontSizeScale, 30),
+                                        h3: AppTextStyles.chatText(fontSizeScale, 26),
+                                        code: AppTextStyles.chatText(fontSizeScale, 20).copyWith(fontFamily: 'monospace', backgroundColor: Colors.grey[400]),
+                                      ),
                                     );
                                   },
                                 ),

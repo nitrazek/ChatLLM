@@ -19,7 +19,7 @@ class ChatService {
         await for (var chunk in response.transform(utf8.decoder)) {
           final answers = _parseConcatenatedJson(chunk);
           for (final answer in answers) {
-            yield answer;
+            yield _formatText(answer);
           }
         }
       } else {
@@ -48,6 +48,11 @@ class ChatService {
 
     return answers;
   }
+
+  String _formatText(String text) {
+    return text.replaceAll(r'\n', '\n');
+  }
+
 }
 
 class FetchDataException implements Exception {
