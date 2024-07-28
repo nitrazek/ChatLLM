@@ -3,6 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { Oval } from 'react-loader-spinner';
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -40,6 +41,7 @@ function App() {
     setIsLoading(true);
 
     try {
+
       const response = await fetch('http://localhost:3000/api/v1/model/questions', {
         method: 'POST',
         headers: {
@@ -50,6 +52,12 @@ function App() {
 
       const reader = response.body.getReader();
       let accumulatedText = '';
+      let botMessage = {
+        id: messages.length + 2,
+        text: '',
+        fromUser: false,
+        user: { name: "Bot", avatar: "./avatars/bot.png" }
+      };
 
       reader.read().then(function processText({ done, value }) {
         if (done) {
@@ -63,12 +71,7 @@ function App() {
 
         accumulatedText += answer;
 
-        const botMessage = {
-          id: messages.length + 2,
-          text: accumulatedText,
-          fromUser: false,
-          user: { name: "Bot", avatar: "./avatars/bot.png" }
-        };
+        botMessage.text = accumulatedText;
 
         setMessages(prevMessages => {
           const updatedMessages = [...prevMessages];
@@ -85,6 +88,9 @@ function App() {
 
           return updatedMessages;
         });
+
+        // Stop loading indicator after receiving the first chunk
+        setIsLoading(false);
 
         reader.read().then(processText);
       });
@@ -149,9 +155,22 @@ function App() {
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {message.text}
                 </ReactMarkdown>
-                </div>
+              </div>
             </div>
           ))}
+          {isLoading && (
+            <div className="botMessage">
+              <div className="messageHeader">
+                <img src="./avatars/bot.png" alt="Bot" className="avatar" />
+                <span className="username">Bot</span>
+              </div>
+              <div className="messageContent">
+                <div className="loadingOval">
+                  <Oval color="#00BFFF" secondaryColor="#484d52" height={30} width={30} />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         <div className="mainBottom">
           <div className="chatFooter">

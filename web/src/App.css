@@ -262,3 +262,8 @@ ul.chatHistory > li:hover {
 .messageContent {
   margin-top: 20px;
 }
+
+.loadingOval {
+  margin-bottom: 18px;
+  margin-left: 20px;
+}
