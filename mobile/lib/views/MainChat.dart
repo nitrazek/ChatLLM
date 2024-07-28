@@ -15,6 +15,7 @@ class MainChatPage extends StatefulWidget {
 
 class _MainChatPageState extends State<MainChatPage> {
   late TextEditingController textEditingController;
+  final ScrollController scrollController = ScrollController();
 
   @override
   void initState() {
@@ -176,6 +177,7 @@ class _MainChatPageState extends State<MainChatPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 10.0),
                   child: ListView.builder(
                     itemCount: context.watch<MainChatViewModel>().chatMessages.length,
+                    controller: scrollController,
                     itemBuilder: (context, index) {
                       final chatMessage = context.watch<MainChatViewModel>().chatMessages[index];
                       return Column(
@@ -221,6 +223,9 @@ class _MainChatPageState extends State<MainChatPage> {
                                 child: StreamBuilder<String>(
                                   stream: chatMessage.responseStream,
                                   builder: (context, snapshot) {
+                                    scrollController.animateTo(scrollController.position.maxScrollExtent,
+                                        duration: Duration(milliseconds: 300),
+                                        curve: Curves.easeOut);
                                     if (snapshot.hasError) {
                                       return Text('Error: ${snapshot.error}');
                                     }
