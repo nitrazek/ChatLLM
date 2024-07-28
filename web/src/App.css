@@ -258,3 +258,7 @@ ul.chatHistory > li:hover {
       transform: translate(0);
   }
 }
+
+.messageContent {
+  margin-top: 20px;
+}
