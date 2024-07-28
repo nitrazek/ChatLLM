@@ -79,7 +79,7 @@ class _LoginPageState extends State<LoginPage> {
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [BoxShadow(
-                                  color: Color(0xFF7289da),
+                                  color: Color(0xFFFFFFFA),
                                   blurRadius: 20,
                                   offset: const Offset(0, 10)
                               ),]
@@ -113,8 +113,21 @@ class _LoginPageState extends State<LoginPage> {
                                     ),
                                    // enabled: !_isLoading,
                                   ),
-                                )
+                                ),
                               ],
+                          ),
+                        ),
+                        SizedBox(height: 50,),
+                        ElevatedButton(
+                          onPressed: () {  },
+                          child: Text(
+                            "Login",
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {  },
+                          child: Text(
+                            "Register",
                           ),
                         ),
                       ],
