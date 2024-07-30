@@ -6,7 +6,7 @@ class ChatService {
 
   Stream<String> postQuestion(String question) async* {
     try {
-      final uri = Uri.parse("$baseUrl/api/v1/model/questions");
+      final uri = Uri.parse("$baseUrl/api/v1/chats/1");
       final httpClient = HttpClient();
       final request = await httpClient.postUrl(uri);
 

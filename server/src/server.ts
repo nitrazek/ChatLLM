@@ -4,8 +4,8 @@ import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import multipart from "@fastify/multipart";
 import dotenv from "dotenv";
-import baseRoutes from "./routes/base";
-import modelRoutes from "./routes/model";
+import baseRoutes from "./routes/base_routes";
+import chatsRoutes from "./routes/chats_routes";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 
 dotenv.config();
@@ -26,7 +26,7 @@ fastify.register(cors, {
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 });
-fastify.register(modelRoutes, { prefix: "/api/v1/model" });
+fastify.register(chatsRoutes, { prefix: "/api/v1/chats" });
 fastify.register(baseRoutes, { prefix: "/api/v1/base" });
 
 fastify.listen({ port: port, host: host }, (err, address) => {
