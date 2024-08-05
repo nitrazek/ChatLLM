@@ -13,6 +13,6 @@ CONTEXT: {context}
 
 export const ONLY_RAG_TEMPLATE = `
 You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question.
-Use three sentences maximum and keep the answer concise.
+If you cannot answer question based on given context, say that you don't have enough information for an answer.
 CONTEXT: {context}
 `;

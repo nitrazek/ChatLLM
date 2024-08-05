@@ -113,6 +113,7 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
     const chat: Chat | undefined = getChatById(chatId);
     if(chat === undefined) return response.status(404).send({ errorMessage: "Chat with given id was not found." });
 
+    const template: string = chat.isUsingOnlyKnowledgeBase ? ONLY_RAG_TEMPLATE : RAG_TEMPLATE;
     const chain = RunnableSequence.from([
       {
         context: async (input, callbacks) => {
@@ -125,7 +126,7 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
         history: (input) => input.history
       },
       ChatPromptTemplate.fromMessages([
-        ["system", RAG_TEMPLATE],
+        ["system", template],
         new MessagesPlaceholder("history"),
         ["human", "{question}"]
       ]),
