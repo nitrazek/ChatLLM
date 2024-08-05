@@ -29,13 +29,14 @@ import { getChromaConnection } from "../services/chroma_service";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
 import { Chat, createChat, getChats, getChatById, getChatInfo } from "../repositories/chat_repository";
-import { AIMessage, AIMessageChunk, BaseMessage, HumanMessage, SystemMessage } from "langchain/schema";
+import { AIMessage, AIMessageChunk, BaseMessage, BaseMessageChunk, HumanMessage, SystemMessage } from "langchain/schema";
 import { PromptTemplate } from "langchain/prompts";
 import { run } from "node:test";
 import { ChatTogetherAI } from "@langchain/community/chat_models/togetherai";
 import { ONLY_RAG_TEMPLATE, RAG_TEMPLATE } from "../prompts";
 import CustomTransformOutputParser from "../utils/CustomTransformOutputParser";
 import { Type } from "@sinclair/typebox";
+import { push } from "langchain/hub";
 
 const chatsRoutes = async (fastify: FastifyInstance) => {
   fastify.get<{
@@ -131,7 +132,7 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
         ["human", "{question}"]
       ]),
       ollamaLLM,
-      new CustomTransformOutputParser()
+      //new CustomTransformOutputParser()
     ]);
 
     const chainWithHistory = new RunnableWithMessageHistory({
@@ -142,8 +143,33 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
     });
 
     const config: RunnableConfig = { configurable: { sessionId: chatId } };
-    const stream: ReadableStream<string> = await chainWithHistory.stream({ question }, config);
-    return response.status(200).send(stream);
+    const stream: ReadableStream<BaseMessageChunk> = await chainWithHistory.stream({ question }, config);
+
+    const streamBuffer: BaseMessageChunk[] = [];
+    const reader = stream.getReader();
+    const newStream: ReadableStream<string> = new ReadableStream({
+      start: (controller) => {
+        const push = () => reader.read().then(({ done, value }) => {
+          if(done) {
+            controller.enqueue(JSON.stringify({ answer: streamBuffer[0].content, newChatName: "Nowy czat" }));
+            console.log("wysłano");
+            controller.close();
+            return;
+          }
+          streamBuffer.push(value!);
+          if(streamBuffer.length <= 1) {
+            push();
+            return;
+          }
+          controller.enqueue(JSON.stringify({ answer: streamBuffer[0].content }));
+          console.log("wysłano");
+          streamBuffer.shift();
+          push();
+        });
+        push();
+      }
+    });
+    return response.status(200).send(newStream);
   }); 
 };
 
