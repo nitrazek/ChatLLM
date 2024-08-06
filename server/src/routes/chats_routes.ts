@@ -28,7 +28,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { getChromaConnection } from "../services/chroma_service";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
-import { Chat, createChat, getChats, getChatById, getChatInfo } from "../repositories/chat_repository";
+import { Chat, createChat, getChats, getChatById, getChatInfo, editChatName } from "../repositories/chat_repository";
 import { AIMessage, AIMessageChunk, BaseMessage, BaseMessageChunk, HumanMessage, SystemMessage } from "langchain/schema";
 import { PromptTemplate } from "langchain/prompts";
 import { run } from "node:test";
@@ -132,7 +132,7 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
         ["human", "{question}"]
       ]),
       ollamaLLM,
-      //new CustomTransformOutputParser()
+      new CustomTransformOutputParser()
     ]);
 
     const chainWithHistory = new RunnableWithMessageHistory({
@@ -143,15 +143,21 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
     });
 
     const config: RunnableConfig = { configurable: { sessionId: chatId } };
-    const stream: ReadableStream<BaseMessageChunk> = await chainWithHistory.stream({ question }, config);
+    const stream: ReadableStream<string> = await chainWithHistory.stream({ question }, config);
+    if(chat.name != null) return response.status(200).send(stream);
 
-    const streamBuffer: BaseMessageChunk[] = [];
+    let answer: string = "";
+    const streamBuffer: string[] = [];
     const reader = stream.getReader();
     const newStream: ReadableStream<string> = new ReadableStream({
       start: (controller) => {
-        const push = () => reader.read().then(({ done, value }) => {
+        const push = () => reader.read().then(async ({ done, value }) => {
           if(done) {
-            controller.enqueue(JSON.stringify({ answer: streamBuffer[0].content, newChatName: "Nowy czat" }));
+            const json = JSON.parse(streamBuffer[0]);
+            answer += json.answer;
+            const summary: string = (await ollamaLLM.invoke(`Summarize this answer into 3 words: ${answer}`)).content as string;
+            editChatName(chatId, summary);
+            controller.enqueue(JSON.stringify({ answer: json.answer, newChatName: summary }));
             console.log("wysłano");
             controller.close();
             return;
@@ -161,7 +167,8 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
             push();
             return;
           }
-          controller.enqueue(JSON.stringify({ answer: streamBuffer[0].content }));
+          answer += JSON.parse(streamBuffer[0]).answer;
+          controller.enqueue(streamBuffer[0]);
           console.log("wysłano");
           streamBuffer.shift();
           push();

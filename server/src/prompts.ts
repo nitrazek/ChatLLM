@@ -12,7 +12,7 @@ CONTEXT: {context}
 `;
 
 export const ONLY_RAG_TEMPLATE = `
-You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question.
-If you cannot answer question based on given context, say that you don't have enough information for an answer.
+You are a model for retrieving data from knowledge base. Use given context to find relevant data in base and answer the question.
+If you cannot find any relevant data, return answer: "Not enough information"
 CONTEXT: {context}
 `;
