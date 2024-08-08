@@ -13,7 +13,7 @@ chatMessageHistories.set(1, {
   id: 1,
   name: "test",
   messageHistory: new ChatMessageHistory(),
-  isUsingOnlyKnowledgeBase: true
+  isUsingOnlyKnowledgeBase: false
 });
 
 export const getChats = (): Chat[] => [...chatMessageHistories.values()];

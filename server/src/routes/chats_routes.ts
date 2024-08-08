@@ -11,6 +11,7 @@ import {
   PostChat,
   PostMessage,
   PostMessageParams,
+  TAnswer,
   TChatInfo,
   TErrorChatNotFound,
   TGetChatsResponse,
@@ -31,12 +32,12 @@ import { ChatMessageHistory } from "@langchain/community/stores/message/in_memor
 import { Chat, createChat, getChats, getChatById, getChatInfo, editChatName } from "../repositories/chat_repository";
 import { AIMessage, AIMessageChunk, BaseMessage, BaseMessageChunk, HumanMessage, SystemMessage } from "langchain/schema";
 import { PromptTemplate } from "langchain/prompts";
-import { run } from "node:test";
 import { ChatTogetherAI } from "@langchain/community/chat_models/togetherai";
 import { ONLY_RAG_TEMPLATE, RAG_TEMPLATE } from "../prompts";
-import CustomTransformOutputParser from "../utils/CustomTransformOutputParser";
+import { getTransformStream, getTransformStreamNewChatName } from "../utils/custom_stream_transforms";
 import { Type } from "@sinclair/typebox";
 import { push } from "langchain/hub";
+import { TaggingChainOptions } from "langchain/chains";
 
 const chatsRoutes = async (fastify: FastifyInstance) => {
   fastify.get<{
@@ -131,8 +132,7 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
         new MessagesPlaceholder("history"),
         ["human", "{question}"]
       ]),
-      ollamaLLM,
-      new CustomTransformOutputParser()
+      ollamaLLM
     ]);
 
     const chainWithHistory = new RunnableWithMessageHistory({
@@ -143,38 +143,9 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
     });
 
     const config: RunnableConfig = { configurable: { sessionId: chatId } };
-    const stream: ReadableStream<string> = await chainWithHistory.stream({ question }, config);
-    if(chat.name != null) return response.status(200).send(stream);
-
-    let answer: string = "";
-    const streamBuffer: string[] = [];
-    const reader = stream.getReader();
-    const newStream: ReadableStream<string> = new ReadableStream({
-      start: (controller) => {
-        const push = () => reader.read().then(async ({ done, value }) => {
-          if(done) {
-            const json = JSON.parse(streamBuffer[0]);
-            answer += json.answer;
-            const summary: string = (await ollamaLLM.invoke(`Summarize this answer into 3 words: ${answer}`)).content as string;
-            editChatName(chatId, summary);
-            controller.enqueue(JSON.stringify({ answer: json.answer, newChatName: summary }));
-            controller.close();
-            return;
-          }
-          streamBuffer.push(value!);
-          if(streamBuffer.length <= 1) {
-            push();
-            return;
-          }
-          answer += JSON.parse(streamBuffer[0]).answer;
-          controller.enqueue(streamBuffer[0]);
-          streamBuffer.shift();
-          push();
-        });
-        push();
-      }
-    });
-    return response.status(200).send(newStream);
+    const stream: ReadableStream<BaseMessageChunk> = await chainWithHistory.stream({ question }, config);
+    const transformStream: TransformStream<BaseMessageChunk, string> = chat.name == null ? getTransformStreamNewChatName(chatId) : getTransformStream();
+    return response.status(200).send(stream.pipeThrough(transformStream));
   }); 
 };
 
