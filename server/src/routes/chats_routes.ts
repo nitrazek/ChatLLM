@@ -121,7 +121,7 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
           const chroma: Chroma = await getChromaConnection();
           const retriever = chroma.asRetriever();
           const retrieverAndFormatter = retriever.pipe(formatDocumentsAsString);
-          return await retrieverAndFormatter.invoke(input.question, callbacks);
+          return retrieverAndFormatter.invoke(input.question, callbacks);
         },
         question: (input) => input.question,
         history: (input) => input.history
@@ -158,7 +158,6 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
             const summary: string = (await ollamaLLM.invoke(`Summarize this answer into 3 words: ${answer}`)).content as string;
             editChatName(chatId, summary);
             controller.enqueue(JSON.stringify({ answer: json.answer, newChatName: summary }));
-            console.log("wysłano");
             controller.close();
             return;
           }
@@ -169,7 +168,6 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
           }
           answer += JSON.parse(streamBuffer[0]).answer;
           controller.enqueue(streamBuffer[0]);
-          console.log("wysłano");
           streamBuffer.shift();
           push();
         });

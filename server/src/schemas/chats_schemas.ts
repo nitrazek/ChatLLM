@@ -2,7 +2,7 @@ import { Static, Type } from "@sinclair/typebox"
 
 export const ChatInfo = Type.Object({
   id: Type.Number({ description: "Id of new chat." }),
-  name: Type.Union([Type.String({ description: "Name of new chat." }), Type.Null()]),
+  name: Type.Union([Type.Null(), Type.String({ description: "Name of new chat." })]),
   isUsingOnlyKnowledgeBase: Type.Boolean({ description: "If true, chat model will only use context from knowledge base, else it will use also its own knowledge." })
 }, {
   description: "Object containing information of single chat."
@@ -30,7 +30,7 @@ export const GetChatsResponse = Type.Array(ChatInfo, {
 export type TGetChatsResponse = Static<typeof GetChatsResponse>;
 
 export const PostChat = Type.Object({
-  name: Type.Union([Type.String({ description: "Name of new chat." }), Type.Null()]),
+  name: Type.Union([Type.Null(), Type.String({ description: "Name of new chat." })]),
   isUsingOnlyKnowledgeBase: Type.Boolean({ description: "If true, chat model will only use context from knowledge base, else it will use also its own knowledge." })
 }, {
   description: "Object containing information for creating new chat."
