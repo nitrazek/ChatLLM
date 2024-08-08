@@ -50,7 +50,7 @@ class ChatService {
   }
 
   String _formatText(String text) {
-    return text.replaceAll(r'\n', '\n');
+    return text.replaceAll(r'\n', '\n').replaceAll(r'\t', '    ');
   }
 
 }
