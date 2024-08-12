@@ -1,22 +1,46 @@
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import '../services/ChatService.dart';
 
 class MainChatViewModel extends ChangeNotifier {
-  final _chatService = ChatService();
+  final ChatService _chatService = ChatService();
+  final List<ChatMessage> _chatMessages = [];
 
-  String? _response;
-  String? get response => _response;
+  List<ChatMessage> get chatMessages => _chatMessages;
 
-  Future<void> sendPrompt(String question) async {
-    _response = await _chatService.postQuestion(question);
+  void sendPrompt(String question) async {
+    ChatMessage chatMessage = ChatMessage(question: question);
+    _chatMessages.add(chatMessage);
+    notifyListeners();
+
+    await for (var answer in _chatService.postQuestion(question)) {
+      chatMessage.addResponse(answer);
+    }
+
+    chatMessage.finalizeResponse();
     notifyListeners();
   }
-  Stream<String> getResponseStream() async* {
-    if (_response != null) {
-      for (int i = 0; i < _response!.length; i++) {
-        await Future.delayed(Duration(milliseconds: 50));
-        yield _response!.substring(0, i + 1);
-      }
-    }
+}
+
+class ChatMessage {
+  final String question;
+  String response = '';
+  final StreamController<String> _responseController = StreamController<String>.broadcast();
+
+  ChatMessage({required this.question});
+
+  Stream<String> get responseStream => _responseController.stream;
+
+  void addResponse(String response) {
+    this.response += response;
+    _responseController.sink.add(this.response);
+  }
+
+  void finalizeResponse() {
+    _responseController.sink.add(this.response);
+  }
+
+  void dispose() {
+    _responseController.close();
   }
 }

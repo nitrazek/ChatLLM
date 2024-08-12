@@ -21,6 +21,7 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
+    "@fastify/cors": "^8.0.0",
     "@fastify/multipart": "^8.3.0",
     "@fastify/swagger": "^8.14.0",
     "@fastify/swagger-ui": "^3.0.0",
@@ -30,7 +31,7 @@
     "chromadb": "^1.8.1",
     "chromadb-default-embed": "^2.13.2",
     "fastify": "^4.27.0",
-    "@fastify/cors": "^8.0.0",
+    "fix-has-install-script": "^1.0.2",
     "langchain": "^0.1.37"
   }
 }

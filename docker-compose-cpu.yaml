@@ -32,7 +32,7 @@ services:
         image: chromadb/chroma
         container_name: chroma
         ports:
-            - "9001:8000"
+            - "8000:8000"
 
 volumes:
     ollama:

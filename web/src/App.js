@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -38,7 +40,7 @@ function App() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3000/api/v1/model/questions', {
+      const response = await fetch('http://localhost:3000/api/v1/chats/1', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -143,7 +145,11 @@ function App() {
                 <img src={message.user.avatar} alt={message.user.name} className="avatar" />
                 <span className="username">{message.user.name}</span>
               </div>
-              <div className="messageContent">{message.text}</div>
+              <div className="messageContent">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {message.text}
+                </ReactMarkdown>
+                </div>
             </div>
           ))}
         </div>
