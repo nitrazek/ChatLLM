@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile/viewModels/MainChatViewModel.dart';
+import 'package:mobile/views/Login.dart';
 import 'package:mobile/views/MainChat.dart';
+import 'package:mobile/views/Register.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -18,7 +20,7 @@ class MyApp extends StatelessWidget {
           ChangeNotifierProvider(create: (context) => MainChatViewModel())
         ],
         child: const MaterialApp(
-          home: const LoginPage(),
+          home: const RegisterPage(),
         ));
   }
 }

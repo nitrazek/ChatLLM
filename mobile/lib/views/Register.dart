@@ -3,18 +3,18 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:mobile/models/Styles.dart';
 
-import 'Register.dart';
+import 'Login.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterPageState extends State<RegisterPage> {
 
-  final TextEditingController _loginController = TextEditingController();
+  final TextEditingController _registerController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   late double screenWidth;
@@ -30,20 +30,26 @@ class _LoginPageState extends State<LoginPage> {
   }
   @override
   void didChangeDependencies() {
-    _loginController.clear();
+    _registerController.clear();
     _passwordController.clear();
     super.didChangeDependencies();
   }
 
   void didPopNext() {
-    _loginController.clear();
+    _registerController.clear();
     _passwordController.clear();
   }
   bool _obscureText = true;
+  bool _repeatObscureText = true;
 
   void _togglePasswordVisibility() {
     setState(() {
       _obscureText = !_obscureText;
+    });
+  }
+  void _toggleRepeatPasswordVisibility() {
+    setState(() {
+      _repeatObscureText = !_repeatObscureText;
     });
   }
 
@@ -52,13 +58,13 @@ class _LoginPageState extends State<LoginPage> {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     double fontSizeScale = screenWidth / 400;
-    bool isKeyBoardOpen = MediaQuery.of(context).viewInsets.bottom != 0;
+    bool isKeyBoardOpen = MediaQuery.of(context).viewInsets.bottom!=0;
     return Scaffold(
         body: Stack(
           children: [
             Container(
-              height: double.infinity,
-              width: double.infinity,
+              height: screenHeight,
+              width: screenWidth,
               decoration: const BoxDecoration(
                 gradient: LinearGradient(colors: [
                   AppColors.dark,
@@ -68,8 +74,8 @@ class _LoginPageState extends State<LoginPage> {
               child: Padding(
                 padding: EdgeInsets.only(top: screenHeight * 0.085, left: screenWidth * 0.05),
                 child: Text(
-                  'Hello\nSign in!',
-                  style: AppTextStyles.colorText(fontSizeScale, 30, Colors.white)
+                    'Hello\nSign up!',
+                    style: AppTextStyles.colorText(fontSizeScale, 30, Colors.white)
                 ),
               ),
             ),
@@ -108,19 +114,26 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         obscureText: _obscureText,
                       ),
-                      SizedBox(height: screenHeight * 0.015),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Text('Forgot Password?',style: AppTextStyles.colorText(fontSizeScale, 16, AppColors.purple)
+                      TextField(
+                        decoration: InputDecoration(
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _repeatObscureText ? Icons.visibility_off : Icons.visibility,
+                                color: Colors.purple,
+                              ),
+                              onPressed: _toggleRepeatPasswordVisibility,
+                            ),
+                            label: Text('Repeat Password',style: AppTextStyles.colorText(fontSizeScale, 16, AppColors.purple),)
+                        ),
+                        obscureText: _repeatObscureText,
                       ),
-                      ),
-                      SizedBox(height: screenHeight * 0.07),
+                      SizedBox(height: screenHeight * 0.06),
                       InkWell(
                         onTap: () {
 
                         },
                       child: Container(
-                        height: screenHeight * 0.065,
+                        height: screenHeight * 0.06,
                         width: screenWidth * 0.81,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(30),
@@ -131,35 +144,39 @@ class _LoginPageState extends State<LoginPage> {
                               ]
                           ),
                         ),
-                        child: const Center(child: Text('SIGN IN',style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                            color: Colors.white
-                        ),),),
+                        child: Center(child: Text('SIGN UP',
+                          style: AppTextStyles.colorText(fontSizeScale, 20, Colors.white)
+                        ),),
                       ),
                       ),
-                      SizedBox(height: screenHeight * 0.02),
-                      Align(
-                        alignment: Alignment.bottomRight,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text("Don't have account?",style: AppTextStyles.colorText(fontSizeScale, 14, AppColors.purple),),
-                            InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const RegisterPage()),
-                                );
-                              },
-                            child: Text("Sign up",style: AppTextStyles.colorText(fontSizeScale, 16, AppColors.purple),)
+                      SizedBox(height: screenHeight * 0.01,),
+                      InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const LoginPage()),
+                          );
+                        },
+                        child: Container(
+                          height: screenHeight * 0.06,
+                          width: screenWidth * 0.81,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(30),
+                            gradient: const LinearGradient(
+                                colors: [
+                                  AppColors.dark,
+                                  AppColors.darkest,
+                                ]
                             ),
-                          ],
+                          ),
+                          child:  Center(child: Text('I already have account',
+                              style: AppTextStyles.colorText(fontSizeScale, 20, Colors.white)
+                          ),
+                          ),
                         ),
                       ),
                       if(!isKeyBoardOpen)
-                      SizedBox(height: screenHeight * 0.2),
+                      SizedBox(height: screenHeight * 0.2)
                     ],
                   ),
                 ),
