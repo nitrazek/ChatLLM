@@ -11,6 +11,7 @@ import {
   PostChat,
   PostMessage,
   PostMessageParams,
+  TAnswer,
   TChatInfo,
   TErrorChatNotFound,
   TGetChatsResponse,
@@ -28,14 +29,15 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { getChromaConnection } from "../services/chroma_service";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
-import { Chat, createChat, getChats, getChatById, getChatInfo } from "../repositories/chat_repository";
-import { AIMessage, AIMessageChunk, BaseMessage, HumanMessage, SystemMessage } from "langchain/schema";
+import { Chat, createChat, getChats, getChatById, getChatInfo, editChatName } from "../repositories/chat_repository";
+import { AIMessage, AIMessageChunk, BaseMessage, BaseMessageChunk, HumanMessage, SystemMessage } from "langchain/schema";
 import { PromptTemplate } from "langchain/prompts";
-import { run } from "node:test";
 import { ChatTogetherAI } from "@langchain/community/chat_models/togetherai";
 import { ONLY_RAG_TEMPLATE, RAG_TEMPLATE } from "../prompts";
-import CustomTransformOutputParser from "../utils/CustomTransformOutputParser";
+import { getTransformStream, getTransformStreamNewChatName } from "../utils/custom_stream_transforms";
 import { Type } from "@sinclair/typebox";
+import { push } from "langchain/hub";
+import { TaggingChainOptions } from "langchain/chains";
 
 const chatsRoutes = async (fastify: FastifyInstance) => {
   fastify.get<{
@@ -113,24 +115,24 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
     const chat: Chat | undefined = getChatById(chatId);
     if(chat === undefined) return response.status(404).send({ errorMessage: "Chat with given id was not found." });
 
+    const template: string = chat.isUsingOnlyKnowledgeBase ? ONLY_RAG_TEMPLATE : RAG_TEMPLATE;
     const chain = RunnableSequence.from([
       {
         context: async (input, callbacks) => {
           const chroma: Chroma = await getChromaConnection();
           const retriever = chroma.asRetriever();
           const retrieverAndFormatter = retriever.pipe(formatDocumentsAsString);
-          return await retrieverAndFormatter.invoke(input.question, callbacks);
+          return retrieverAndFormatter.invoke(input.question, callbacks);
         },
         question: (input) => input.question,
         history: (input) => input.history
       },
       ChatPromptTemplate.fromMessages([
-        ["system", RAG_TEMPLATE],
+        ["system", template],
         new MessagesPlaceholder("history"),
         ["human", "{question}"]
       ]),
-      ollamaLLM,
-      new CustomTransformOutputParser()
+      ollamaLLM
     ]);
 
     const chainWithHistory = new RunnableWithMessageHistory({
@@ -141,8 +143,9 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
     });
 
     const config: RunnableConfig = { configurable: { sessionId: chatId } };
-    const stream: ReadableStream<string> = await chainWithHistory.stream({ question }, config);
-    return response.status(200).send(stream);
+    const stream: ReadableStream<BaseMessageChunk> = await chainWithHistory.stream({ question }, config);
+    const transformStream: TransformStream<BaseMessageChunk, string> = chat.name == null ? getTransformStreamNewChatName(chatId) : getTransformStream();
+    return response.status(200).send(stream.pipeThrough(transformStream));
   }); 
 };
 

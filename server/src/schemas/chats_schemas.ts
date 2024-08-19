@@ -1,8 +1,9 @@
 import { Static, Type } from "@sinclair/typebox"
+import { describe } from "node:test";
 
 export const ChatInfo = Type.Object({
   id: Type.Number({ description: "Id of new chat." }),
-  name: Type.String({ description: "Name of new chat." }),
+  name: Type.Union([Type.Null(), Type.String()], { description: "Name of new chat. If null, chat will automatically name chat on first answer", default: "test" }),
   isUsingOnlyKnowledgeBase: Type.Boolean({ description: "If true, chat model will only use context from knowledge base, else it will use also its own knowledge." })
 }, {
   description: "Object containing information of single chat."
@@ -30,7 +31,7 @@ export const GetChatsResponse = Type.Array(ChatInfo, {
 export type TGetChatsResponse = Static<typeof GetChatsResponse>;
 
 export const PostChat = Type.Object({
-  name: Type.String({ description: "Name of new chat." }),
+  name: Type.Union([Type.Null(), Type.String()], { description: "Name of new chat. If null, chat will automatically name chat on first answer", default: "test" }),
   isUsingOnlyKnowledgeBase: Type.Boolean({ description: "If true, chat model will only use context from knowledge base, else it will use also its own knowledge." })
 }, {
   description: "Object containing information for creating new chat."
@@ -48,9 +49,10 @@ export const GetMessagesResponse = Type.Array(Message, {
 export type TGetMessagesResponse = Static<typeof GetMessagesResponse>;
 
 export const PostMessage = Type.Object({
-  question: Type.String({ description: "Content of question." })
+  question: Type.String({ description: "Content of question." }),
+  newChatName: Type.Optional(Type.String({ description: "New chat name, if sent null while creating chat." }))
 }, {
-  description: "Information about question sent by user."
+  description: "Information about question sent by user (newChatName field is optional)."
 });
 export type TPostMessage = Static<typeof PostMessage>;
 
@@ -62,3 +64,4 @@ export type TPostMessageParams = Static<typeof PostMessageParams>;
 export const Answer = Type.Object({ answer: Type.String({ description: "Content of answer."}) }, {
   description: "ReadableStream of stringified answer chunks in format specified below."
 });
+export type TAnswer = Static<typeof Answer>;
