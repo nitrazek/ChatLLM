@@ -3,6 +3,7 @@ import { FastifyInstance } from "fastify";
 import { FileUploadError, FileUploadErrorType, FileUploadSuccess, FileUploadSuccessType } from "../schemas/base_schemas";
 import { getChromaConnection } from "../services/chroma_service";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
+import { getFileHandler } from "../utils/file_handlers";
 
 const filesRoute = async (fastify: FastifyInstance) => {
   fastify.post<{ Reply: FileUploadSuccessType | FileUploadErrorType }>("/files", {
@@ -19,11 +20,14 @@ const filesRoute = async (fastify: FastifyInstance) => {
       return;
     }
     
-    const fileBuffer: Buffer = await file.toBuffer();
-    console.log(fileBuffer.toString());
+    const fileHandler: ((file: MultipartFile) => Promise<string>) | undefined = getFileHandler(file.mimetype);
+    if(fileHandler === undefined) {
+      response.status(400).send();
+      return;
+    }
 
     const chroma: Chroma = await getChromaConnection();
-    await chroma.addDocuments([{ pageContent: fileBuffer.toString(), metadata: { fileName: file.filename } }], {
+    await chroma.addDocuments([{ pageContent: await fileHandler(file), metadata: { fileName: file.filename } }], {
       ids: [file.filename]
     });
 
