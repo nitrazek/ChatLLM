@@ -1,0 +1,12 @@
+Produkt: Zawór kulowy mosiężny 0.75 cala
+Kategoria: Zawory
+Materiał: Mosiądz
+Rozmiar: 0.75 cala
+Zastosowanie: Kontrola przepływu wody w systemach hydraulicznych
+Cechy:
+- Pełny przelot dla maksymalnego przepływu
+- Korpus z mosiądzu odporny na korozję
+- Obrót o ćwierć obrotu dla łatwej regulacji
+Kompatybilność: Kompatybilny z rurami miedzianymi, CPVC i PEX
+Montaż: Nałożyć taśmę uszczelniającą na gwinty, dokręcić kluczem
+Bezpieczeństwo: Przed montażem upewnić się, że system jest pozbawiony ciśnienia
