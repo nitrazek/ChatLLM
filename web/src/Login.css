@@ -106,11 +106,10 @@ body {
 .container input {
     background-color: #424549;
     color: #fff;
-    border: none;
-    margin: 8px 0;
-    padding: 10px 15px;
+    margin: 6px;
+    padding: 7px 10px;
     font-size: 13px;
-    border-radius: 8px;
+    border-radius: 0.3rem;
     width: 100%;
     outline: none;
 }
@@ -225,4 +224,41 @@ body {
 
 .center-wrapper .container input {
     width: 240px;
+    border-radius: 0.3rem;
+}
+
+.error-tooltip {
+    background-color: #b40000; /* Kolor tła dla błędu */
+    color: #fff; /* Kolor tekstu */
+    padding: 4px 3px 4px 6px;
+    margin-top: 4px;
+    border-radius: 0.2rem;
+    font-size: 8px;
+    white-space: nowrap;
+    z-index: 10;
+    transform: translateY(-3px); /* Opcjonalne przesunięcie */
+    width: 65%;
+}
+
+.error-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 0; /* Trójkąt na dole dymka */
+    left: 15%;
+    transform: translateX(-25px) translateY(-16px);
+    border-width: 9px;
+    border-style: solid;
+    border-color:  transparent transparent #b40000 transparent; /* Tworzy trójkąt */
+}
+
+.input-error {
+    border: 2px solid #b40000;
+}
+
+.input-valid {
+    border: 2px solid #00b400;
+}
+
+.input-default {
+    border: 2px solid transparent;
 }
