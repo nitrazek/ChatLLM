@@ -1,121 +1,148 @@
 import { FastifyInstance } from "fastify";
-import { ollamaLLM } from "../services/ollama_service";
-import {
-  Answer,
-  ChatInfo,
-  ErrorChatNotFound,
-  GetChatsResponse,
-  GetMessagesParams,
-  GetMessagesResponse,
-  Message,
-  PostChat,
-  PostMessage,
-  PostMessageParams,
-  TAnswer,
-  TChatInfo,
-  TErrorChatNotFound,
-  TGetChatsResponse,
-  TGetMessagesParams, 
-  TGetMessagesResponse, 
-  TMessage,
-  TPostChat,
-  TPostMessage,
-  TPostMessageParams
-} from "../schemas/chats_schemas";
-import { RunnablePassthrough, RunnableSequence, RunnableWithMessageHistory, RunnableConfig } from "@langchain/core/runnables";
-import { formatDocumentsAsString } from "langchain/util/document";
-import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
-import { StringOutputParser } from "@langchain/core/output_parsers";
-import { getChromaConnection } from "../services/chroma_service";
-import { Chroma } from "@langchain/community/vectorstores/chroma";
-import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
-import { Chat, createChat, getChats, getChatById, getChatInfo, editChatName } from "../repositories/chat_repository";
-import { AIMessage, AIMessageChunk, BaseMessage, BaseMessageChunk, HumanMessage, SystemMessage } from "langchain/schema";
-import { PromptTemplate } from "langchain/prompts";
-import { ChatTogetherAI } from "@langchain/community/chat_models/togetherai";
 import { ONLY_RAG_TEMPLATE, RAG_TEMPLATE } from "../prompts";
+import {
+  TGetChatsParams,
+  TGetChatsResponse,
+  TGetMessagesParams,
+  TGetMessagesResponse,
+  TPostChatBody,
+  TPostChatResponse,
+  TPostMessageBody,
+  TPostMessageParams,
+  TErrorWithMessage,
+  GetChatsResponse,
+  GetMessagesResponse,
+  ErrorWithMessage,
+  PostChatResponse,
+  PostMessageResponse,
+  PostChatBody,
+  PostMessageBody,
+  TPostChatParams
+} from "../schemas/chats_schemas";
+import { getChatsByUserId, getChatById, createChat, addMessageToChat } from "../repositories/chat_repository";
+import { Chat } from "../models/chat";
+import { SenderType } from "../enums/sender_type";
+import { RunnableSequence } from "langchain/runnables";
+import { Chroma } from "langchain/vectorstores/chroma";
+import { getChromaConnection } from "../services/chroma_service";
+import { formatDocumentsAsString } from "langchain/util/document";
+import { ChatPromptTemplate } from "langchain/prompts";
+import { ollamaLLM } from "../services/ollama_service";
+import { BaseMessageChunk } from "langchain/schema";
 import { getTransformStream, getTransformStreamNewChatName } from "../utils/custom_stream_transforms";
-import { Type } from "@sinclair/typebox";
-import { push } from "langchain/hub";
-import { TaggingChainOptions } from "langchain/chains";
+import { getUserById } from "../repositories/user_repository";
 
 const chatsRoutes = async (fastify: FastifyInstance) => {
+
+  // Get a list of chats for a specific user
   fastify.get<{
+    Params: TGetChatsParams
     Reply: TGetChatsResponse
-  }>("", {
+  }>("/list/:userId", {
     schema: {
+      summary: "Get list of chats",
+      description: "Retrieves a list of chats associated with a specific user.",
+      tags: ["Chats"],
       response: {
         200: GetChatsResponse
       }
     }
   }, async (request, response) => {
-    const chats: Chat[] = getChats();
-    return response.status(200).send(chats.map(getChatInfo));
+    const { userId } = request.params;
+    const chats = await getChatsByUserId(userId);
+    return response.status(200).send(chats.map(chat => ({
+      id: chat.id,
+      name: chat.name,
+      isUsingOnlyKnowledgeBase: chat.isUsingOnlyKnowledgeBase
+    })));
   });
 
-  fastify.post<{
-    Body: TPostChat
-    Reply: TChatInfo
-  }>("", {
-    schema: {
-      body: PostChat,
-      response: {
-        200: ChatInfo
-      }
-    }
-  }, async (request, response) => {
-    const { name, isUsingOnlyKnowledgeBase } = request.body;
-    const chatInfo: TChatInfo = createChat(name, isUsingOnlyKnowledgeBase);
-    return response.status(200).send(chatInfo);
-  });
-
+  // Get chat history
   fastify.get<{
-    Params: TGetMessagesParams
-    Reply: TGetMessagesResponse | TErrorChatNotFound
+    Params: TGetMessagesParams,
+    Reply: TGetMessagesResponse | TErrorWithMessage
   }>("/:chatId", {
     schema: {
-      params: GetMessagesParams,
+      summary: "Get chat history",
+      description: "Retrieves the message history for a specific chat.",
+      tags: ["Chats"],
       response: {
         200: GetMessagesResponse,
-        404: ErrorChatNotFound
+        404: ErrorWithMessage
       }
     }
   }, async (request, response) => {
     const { chatId } = request.params;
-    console.log(chatId);
-    console.log(typeof chatId);
-    const optChat: Chat | undefined = getChatById(chatId);
-    console.log(optChat);
-    if(optChat === undefined) return response.status(404).send({ errorMessage: "Chat with given id was not found." });
-    const messages: BaseMessage[] = await optChat.messageHistory.getMessages();
-    return response.status(200).send(messages.map(baseMessage => {
-      const sender = baseMessage.lc_id.includes("HumanMessage") ? "human" : "ai";
-      const content = baseMessage.lc_kwargs.content;
-      return { sender, content };
-    }));
+    const chat = await getChatById(chatId);
+    if (!chat) return response.status(404).send({ errorMessage: "Chat with given id was not found." });
+
+    return response.status(200).send(chat.messageHistory.map(message => ({
+      sender: message.sender,
+      content: message.content
+    })));
   });
 
+  // Create a new chat
   fastify.post<{
-    Body: TPostMessage,
+    Params: TPostChatParams,
+    Body: TPostChatBody,
+    Reply: TPostChatResponse | TErrorWithMessage
+  }>("/new/:userId", {
+    schema: {
+      summary: "Create new chat",
+      description: "Creates a new chat for the user.",
+      body: PostChatBody,
+      tags: ["Chats"],
+      response: {
+        200: PostChatResponse,
+      }
+    }
+  }, async (request, response) => {
+    const { userId } = request.params;
+    const { name, isUsingOnlyKnowledgeBase } = request.body;
+
+    const user = await getUserById(userId);
+    if (!user) {
+      return response.status(401).send({ errorMessage: "User do not exists" });
+    }
+
+    const chat = await createChat(name, isUsingOnlyKnowledgeBase, user);
+    return response.status(200).send({
+      id: chat.id,
+      name: chat.name,
+      isUsingOnlyKnowledgeBase: chat.isUsingOnlyKnowledgeBase
+    });
+  });
+
+  // Send a message to existing chat
+  fastify.post<{
+    Body: TPostMessageBody,
     Params: TPostMessageParams,
-    Reply: ReadableStream<string> | TErrorChatNotFound
+    Reply: ReadableStream<string> | TErrorWithMessage
   }>("/:chatId", {
     schema: {
-      body: PostMessage,
-      params: PostMessageParams,
+      summary: "Send message to chat",
+      description: "Sends a new message to an existing chat and retrieves a response from the LLM.",
+      body: PostMessageBody,
+      tags: ["Chats"],
       response: {
-        200: Answer,
-        404: ErrorChatNotFound
+        200: PostMessageResponse,
+        404: ErrorWithMessage
       }
     }
   }, async (request, response) => {
     const { question } = request.body;
     const { chatId } = request.params;
 
-    const chat: Chat | undefined = getChatById(chatId);
-    if(chat === undefined) return response.status(404).send({ errorMessage: "Chat with given id was not found." });
+    const chat: Chat | null = await getChatById(chatId);
+    if (chat === null) {
+      return response.status(404).send({ errorMessage: "Chat with given id was not found." });
+    }
+
+    await addMessageToChat(chatId, SenderType.HUMAN, question);
 
     const template: string = chat.isUsingOnlyKnowledgeBase ? ONLY_RAG_TEMPLATE : RAG_TEMPLATE;
+
     const chain = RunnableSequence.from([
       {
         context: async (input, callbacks) => {
@@ -125,28 +152,28 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
           return retrieverAndFormatter.invoke(input.question, callbacks);
         },
         question: (input) => input.question,
-        history: (input) => input.history
       },
       ChatPromptTemplate.fromMessages([
         ["system", template],
-        new MessagesPlaceholder("history"),
-        ["human", "{question}"]
+        [SenderType.HUMAN.toString(), "{question}"]
       ]),
       ollamaLLM
     ]);
 
-    const chainWithHistory = new RunnableWithMessageHistory({
-      runnable: chain,
-      getMessageHistory: (sessionId: number) => chat.messageHistory,
-      inputMessagesKey: "question",
-      historyMessagesKey: "history"
-    });
-
-    const config: RunnableConfig = { configurable: { sessionId: chatId } };
-    const stream: ReadableStream<BaseMessageChunk> = await chainWithHistory.stream({ question }, config);
+    const stream: ReadableStream<BaseMessageChunk> = await chain.stream({ question });
     const transformStream: TransformStream<BaseMessageChunk, string> = chat.name == null ? getTransformStreamNewChatName(chatId) : getTransformStream();
-    return response.status(200).send(stream.pipeThrough(transformStream));
-  }); 
+
+    const responeStream = stream.pipeThrough(transformStream);
+
+    //let answer = "";
+    // TODO: Asynchronously collect entire message and after that add it to the database with the function below
+    //await addMessageToChat(chatId, SenderType.AI, answer);
+
+    return response.status(200).send(responeStream);
+
+    // TODO: Fix deprication
+    //---------------------->          [WARNING]: Importing from "langchain/runnables" is deprecated.          <----------------------
+  });
 };
 
 export default chatsRoutes;

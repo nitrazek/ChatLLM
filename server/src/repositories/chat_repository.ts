@@ -1,42 +1,48 @@
-import { ChatMessageHistory } from "langchain/memory"
-import { TChatInfo } from "../schemas/chats_schemas";
+import { AppDataSource } from "../services/database_service";
+import { SenderType } from "../enums/sender_type";
+import { Chat } from "../models/chat";
+import { ChatMessage } from "../models/chat_message";
+import { User } from "../models/user";
 
-export type Chat = {
-  id: number,
-  name: string | null,
-  messageHistory: ChatMessageHistory,
-  isUsingOnlyKnowledgeBase: boolean
+export const getChatsByUserId = async (userId: number): Promise<Chat[]> => {
+  return await AppDataSource.getRepository(Chat).find({
+    where: {
+      user: { id: userId }
+    },
+    relations: ["messageHistory"]
+  });
 };
 
-let chatMessageHistories = new Map<number, Chat>();
-chatMessageHistories.set(1, {
-  id: 1,
-  name: "test",
-  messageHistory: new ChatMessageHistory(),
-  isUsingOnlyKnowledgeBase: false
-});
+export const getChatById = async (chatId: number): Promise<Chat | null> => {
+  return await AppDataSource.getRepository(Chat).findOne({
+    where: { id: chatId },
+    relations: ["messageHistory"]
+  });
+};
 
-export const getChats = (): Chat[] => [...chatMessageHistories.values()];
+export const createChat = async (name: string | null, isUsingOnlyKnowledgeBase: boolean, user: User): Promise<Chat> => {
+  const chatRepository = AppDataSource.getRepository(Chat);
+  const newChat = chatRepository.create({ name, isUsingOnlyKnowledgeBase, user });
+  return await chatRepository.save(newChat);
+};
 
-export const getChatById = (id: number): Chat | undefined => chatMessageHistories.get(id);
+export const addMessageToChat = async (chatId: number, sender: SenderType, content: string): Promise<ChatMessage> => {
+  const chatRepository = AppDataSource.getRepository(Chat);
+  const chat = await chatRepository.findOne({ where: { id: chatId } });
 
-export const getChatInfo = ({ id, name, isUsingOnlyKnowledgeBase }: Chat): TChatInfo => ({ id, name, isUsingOnlyKnowledgeBase });
+  if (!chat) throw new Error("Chat not found");
 
-export const createChat = (name: string | null, isUsingOnlyKnowledgeBase: boolean): Chat => {
-  const id = Math.max(...chatMessageHistories.keys(), 0) + 1;
-  const newChat: Chat = {
-    id: id,
-    name: name,
-    messageHistory: new ChatMessageHistory(),
-    isUsingOnlyKnowledgeBase: isUsingOnlyKnowledgeBase
-  };
-  chatMessageHistories.set(id, newChat);
-  return newChat;
-}
+  const chatMessageRepository = AppDataSource.getRepository(ChatMessage);
+  const newMessage = chatMessageRepository.create({ sender, content, chat });
+  return await chatMessageRepository.save(newMessage);
+};
 
-export const editChatName = (id: number, name: string): void => {
-  const chat: Chat | undefined = getChatById(id);
-  if(chat === undefined) return;
+export const editChatName = async (chatId: number, name: string): Promise<Chat> => {
+  const chatRepository = AppDataSource.getRepository(Chat);
+  const chat = await getChatById(chatId);
+
+  if (!chat) throw new Error("Chat not found");
+
   chat.name = name;
-  chatMessageHistories.set(id, chat);
+  return await chatRepository.save(chat);
 }
