@@ -16,8 +16,13 @@ services:
             - HOST=0.0.0.0
             - OLLAMA_URL=http://ollama:11434
             - CHROMA_URL=http://chroma:8000
+            - POSTGRES_HOST=postgres
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres_pwd
+            - POSTGRES_DB=chatdb
         depends_on:
             - ollama
+            - postgres
             - chroma
 
     ollama:
@@ -30,14 +35,21 @@ services:
                         - capabilities: [ gpu ]
         volumes:
             - ollama:/root/.ollama
-        ports:
-            - "11434:11434"
 
     chroma:
         image: chromadb/chroma
         container_name: chroma
-        ports:
-            - "9001:8000"
+
+    postgres:
+        image: postgres
+        container_name: postgres
+        environment:
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres_pwd
+            - POSTGRES_DB=chatdb
+        volumes:
+            - postgres:/var/lib/postgresql/data
 
 volumes:
     ollama:
+    postgres:

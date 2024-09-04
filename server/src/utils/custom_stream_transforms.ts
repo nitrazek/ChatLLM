@@ -1,13 +1,13 @@
 import { Callbacks } from "langchain/callbacks";
 import { BaseTransformOutputParser, FormatInstructionsOptions } from "langchain/schema/output_parser";
-import { TAnswer } from "../schemas/chats_schemas";
+import { TPostMessageResponse } from "../schemas/chats_schemas";
 import { ollamaLLM } from "../services/ollama_service";
 import { editChatName } from "../repositories/chat_repository";
 import { BaseMessageChunk } from "langchain/schema";
 
 export const getTransformStream = (): TransformStream<BaseMessageChunk, string> => new TransformStream<BaseMessageChunk, string>({
   transform: (chunk, controller) => {
-    const answer: TAnswer = { answer: chunk.content as string };
+    const answer: TPostMessageResponse = { answer: chunk.content as string };
     controller.enqueue(JSON.stringify(answer));
   },
   flush: (controller) => {
@@ -17,12 +17,12 @@ export const getTransformStream = (): TransformStream<BaseMessageChunk, string> 
 
 export const getTransformStreamNewChatName = (chatId: number): TransformStream<BaseMessageChunk, string> => {
   let fullAnswer: string = "";
-  const streamBuffer: TAnswer[] = [];
+  const streamBuffer: TPostMessageResponse[] = [];
   return new TransformStream<BaseMessageChunk, string>({
     transform: (chunk, controller) => {
-      const answer: TAnswer = { answer: chunk.content as string };
+      const answer: TPostMessageResponse = { answer: chunk.content as string };
       streamBuffer.push(answer);
-      if(streamBuffer.length <= 1) return;
+      if (streamBuffer.length <= 1) return;
       fullAnswer += streamBuffer[0].answer;
       controller.enqueue(JSON.stringify(answer));
       streamBuffer.shift();
