@@ -1,67 +1,104 @@
-import { Static, Type } from "@sinclair/typebox"
-import { describe } from "node:test";
+import { Static, Type } from "@sinclair/typebox";
 
-export const ChatInfo = Type.Object({
-  id: Type.Number({ description: "Id of new chat." }),
-  name: Type.Union([Type.Null(), Type.String()], { description: "Name of new chat. If null, chat will automatically name chat on first answer", default: "test" }),
-  isUsingOnlyKnowledgeBase: Type.Boolean({ description: "If true, chat model will only use context from knowledge base, else it will use also its own knowledge." })
-}, {
-  description: "Object containing information of single chat."
-});
-export type TChatInfo = Static<typeof ChatInfo>;
+//////////////////// Schemas for GET requests ////////////////////
 
-export const Message = Type.Object({
-  sender: Type.String({ description: "Who sent message: human or ai." }),
-  content: Type.String({ description: "Content of message." })
+// Schema for getting a list of chats for a specific user
+export const GetChatsParams = Type.Object({
+  userId: Type.Number({ description: "ID of the user for whom to get the list of chats." })
 });
-export type TMessage = Static<typeof Message>;
+export type TGetChatsParams = Static<typeof GetChatsParams>;
 
-export const ErrorChatNotFound = Type.Object({
-  errorMessage: Type.String({
-    default: "Chat with given id was not found."
-  })
-}, {
-  description: "Chat with given id was not found."
-});
-export type TErrorChatNotFound = Static<typeof ErrorChatNotFound>;
 
-export const GetChatsResponse = Type.Array(ChatInfo, {
-  description: "List of information objects of available chats."
-});
+export const GetChatsResponse = Type.Array(
+  Type.Object({
+    id: Type.Number({ description: "Id of the chat." }),
+    name: Type.Union([Type.Null(), Type.String()], { description: "Name of the chat. If null, chat will be named automatically on first answer.", default: "test" }),
+    isUsingOnlyKnowledgeBase: Type.Boolean({ description: "If true, the chat model will only use context from the knowledge base; otherwise, it will use its own knowledge as well." }),
+  }, {
+    description: "Object containing information about a single chat."
+  }),
+  {
+    description: "List of information objects of available chats."
+  }
+);
 export type TGetChatsResponse = Static<typeof GetChatsResponse>;
 
-export const PostChat = Type.Object({
-  name: Type.Union([Type.Null(), Type.String()], { description: "Name of new chat. If null, chat will automatically name chat on first answer", default: "test" }),
-  isUsingOnlyKnowledgeBase: Type.Boolean({ description: "If true, chat model will only use context from knowledge base, else it will use also its own knowledge." })
-}, {
-  description: "Object containing information for creating new chat."
-});
-export type TPostChat = Static<typeof PostChat>;
-
+// Schema for getting chat messages
 export const GetMessagesParams = Type.Object({
-  chatId: Type.Number({ description: "Chat's id." })
+  chatId: Type.Number({ description: "The ID of the chat." }),
 });
 export type TGetMessagesParams = Static<typeof GetMessagesParams>;
 
-export const GetMessagesResponse = Type.Array(Message, {
-  description: "List of all messages in chat."
-});
+export const GetMessagesResponse = Type.Array(
+  Type.Object({
+    sender: Type.String({ description: "Who sent the message: human or ai." }),
+    content: Type.String({ description: "Content of the message." }),
+  }, {
+    description: "Object containing details of a single message."
+  }),
+  {
+    description: "List of all messages in the chat."
+  }
+);
 export type TGetMessagesResponse = Static<typeof GetMessagesResponse>;
 
-export const PostMessage = Type.Object({
-  question: Type.String({ description: "Content of question." }),
-  newChatName: Type.Optional(Type.String({ description: "New chat name, if sent null while creating chat." }))
-}, {
-  description: "Information about question sent by user (newChatName field is optional)."
+
+
+//////////////////// Schema for POST requests ////////////////////
+
+// Schema for creating a new chat
+export const PostChatParams = Type.Object({
+  userId: Type.Number({ description: "ID of the user for whom to create new chat." })
 });
-export type TPostMessage = Static<typeof PostMessage>;
+export type TPostChatParams = Static<typeof PostChatParams>;
+
+export const PostChatBody = Type.Object({
+  name: Type.Union([Type.Null(), Type.String()], { description: "Name of the new chat. If null, chat will be named automatically on the first answer.", default: "test" }),
+  isUsingOnlyKnowledgeBase: Type.Boolean({ description: "If true, the chat model will only use context from the knowledge base; otherwise, it will use its own knowledge as well." }),
+}, {
+  description: "Object containing information for creating a new chat."
+});
+export type TPostChatBody = Static<typeof PostChatBody>;
+
+
+export const PostChatResponse = Type.Object({
+  id: Type.Number({ description: "Id of the chat." }),
+  name: Type.Union([Type.Null(), Type.String()], { description: "Name of the chat. If null, chat will be named automatically on the first answer.", default: "test" }),
+  isUsingOnlyKnowledgeBase: Type.Boolean({ description: "If true, the chat model will only use context from the knowledge base; otherwise, it will use its own knowledge as well." }),
+}, {
+  description: "Object containing information about a single chat."
+});
+export type TPostChatResponse = Static<typeof PostChatResponse>;
+
+// Schema for sending a message to existing chat
+export const PostMessageBody = Type.Object({
+  question: Type.String({ description: "Content of the question." })
+}, {
+  description: "Information about the question sent by the user (newChatName field is optional)."
+});
+export type TPostMessageBody = Static<typeof PostMessageBody>;
 
 export const PostMessageParams = Type.Object({
-  chatId: Type.Number({ description: "Chat's id" })
+  chatId: Type.Number({ description: "The ID of the chat." }),
 });
 export type TPostMessageParams = Static<typeof PostMessageParams>;
 
-export const Answer = Type.Object({ answer: Type.String({ description: "Content of answer."}) }, {
-  description: "ReadableStream of stringified answer chunks in format specified below."
+export const PostMessageResponse = Type.Object({
+  answer: Type.String({ description: "Content of the answer." })
+}, {
+  description: "Stream of stringified answer chunks in the format specified."
 });
-export type TAnswer = Static<typeof Answer>;
+export type TPostMessageResponse = Static<typeof PostMessageResponse>;
+
+
+//////////////////// Schema for errors ////////////////////
+
+// Schema for chat not found error
+export const ErrorWithMessage = Type.Object({
+  errorMessage: Type.String({
+    description: "Reason of error that occured."
+  })
+}, {
+  description: "Error indicating that something was not right."
+});
+export type TErrorWithMessage = Static<typeof ErrorWithMessage>;
