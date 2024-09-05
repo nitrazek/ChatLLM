@@ -24,7 +24,7 @@ export type TRegisterUserResponse = Static<typeof RegisterUserResponse>;
 
 // Schema for user login
 export const LoginUserBody = Type.Object({
-    email: Type.String({ description: "Email address of the user." }),
+    name: Type.String({ description: "Name of the user." }),
     password: Type.String({ description: "Password for the user's account." })
 }, {
     description: "Object containing credentials for user login."

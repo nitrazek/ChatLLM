@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { createUser, getUserByEmail, activateUser, deleteUser, changeUserRole, getUserById } from "../repositories/user_repository";
+import { createUser, getUserByEmail, activateUser, deleteUser, changeUserRole, getUserById, getUserByName } from "../repositories/user_repository";
 import { UserRole } from "../enums/user_role";
 import {
     TActivateUserParams,
@@ -47,9 +47,13 @@ const userRoutes = async (fastify: FastifyInstance) => {
         }
     }, async (request, response) => {
         const { name, email, password } = request.body;
-        const existingUser = await getUserByEmail(email);
-        if (existingUser) {
-            return response.status(400).send({ errorMessage: "User already exists" });
+        const existingEmailUser = await getUserByEmail(email);
+        if (existingEmailUser) {
+            return response.status(400).send({ errorMessage: "User with this email already exists" });
+        }
+        const existingNameUser = await getUserByName(name);
+        if (existingNameUser) {
+            return response.status(400).send({ errorMessage: "User with this name already exists" });
         }
 
         const user = await createUser(name, email, password);
@@ -73,8 +77,8 @@ const userRoutes = async (fastify: FastifyInstance) => {
             }
         }
     }, async (request, response) => {
-        const { email, password } = request.body;
-        const user = await getUserByEmail(email);
+        const { name, password } = request.body;
+        const user = await getUserByName(name);
         if (!user || user.password !== password) {
             return response.status(400).send({ errorMessage: "Invalid credentials" });
         }

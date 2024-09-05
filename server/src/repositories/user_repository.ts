@@ -6,6 +6,10 @@ export const getUserById = async (userId: number): Promise<User | null> => {
     return await AppDataSource.getRepository(User).findOne({ where: { id: userId } });
 };
 
+export const getUserByName = async (name: string): Promise<User | null> => {
+    return await AppDataSource.getRepository(User).findOne({ where: { name } });
+};
+
 export const getUserByEmail = async (email: string): Promise<User | null> => {
     return await AppDataSource.getRepository(User).findOne({ where: { email } });
 };
