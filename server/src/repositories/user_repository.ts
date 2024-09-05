@@ -14,6 +14,10 @@ export const getUserByEmail = async (email: string): Promise<User | null> => {
     return await AppDataSource.getRepository(User).findOne({ where: { email } });
 };
 
+export const getAllUsers = async (): Promise<User[]> => {
+    return await AppDataSource.getRepository(User).find();
+}
+
 export const createUser = async (name: string, email: string, password: string): Promise<User> => {
     const userRepo = AppDataSource.getRepository(User);
     const newUser = userRepo.create({ name, email, password });
@@ -34,11 +38,6 @@ export const deleteUser = async (userId: number): Promise<void> => {
     await userRepo.delete({ id: userId });
 };
 
-export const changeUserRole = async (userId: number, role: UserRole): Promise<User | null> => {
-    const userRepo = AppDataSource.getRepository(User);
-    const user = await userRepo.findOne({ where: { id: userId } });
-    if (!user) return null;
-
-    user.role = role;
-    return await userRepo.save(user);
+export const saveUserDetails = async (user: User): Promise<User | null> => {
+    return await AppDataSource.getRepository(User).save(user);
 };

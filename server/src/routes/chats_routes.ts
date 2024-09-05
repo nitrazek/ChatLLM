@@ -37,18 +37,24 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
   // Get a list of chats for a specific user
   fastify.get<{
     Params: TGetChatsParams
-    Reply: TGetChatsResponse
+    Reply: TGetChatsResponse | TErrorWithMessage
   }>("/list/:userId", {
     schema: {
       summary: "Get list of chats",
       description: "Retrieves a list of chats associated with a specific user.",
       tags: ["Chats"],
       response: {
-        200: GetChatsResponse
+        200: GetChatsResponse,
+        404: ErrorWithMessage
       }
     }
   }, async (request, response) => {
     const { userId } = request.params;
+    const user = await getUserById(userId)
+    if (!user) {
+      return response.status(404).send({ errorMessage: "User do not exists" });
+    }
+
     const chats = await getChatsByUserId(userId);
     return response.status(200).send(chats.map(chat => ({
       id: chat.id,

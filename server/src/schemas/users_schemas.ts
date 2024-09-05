@@ -1,4 +1,28 @@
 import { Static, Type } from "@sinclair/typebox";
+//////////////////// Schemas for GET requests ////////////////////
+
+// Schema for getting list of users
+export const GetUsersBody = Type.Object({
+    loggedUserId: Type.Number({ description: "ID of logged user that made request." })
+});
+export type TGetUsersBody = Static<typeof GetUsersBody>;
+
+export const GetUsersResponse = Type.Array(
+    Type.Object({
+        id: Type.Number({ description: "Id of the user." }),
+        name: Type.String({ description: "Name of the user." }),
+        email: Type.String({ description: "Email address of the user." }),
+        role: Type.String({ description: "Role of the user." }),
+        activated: Type.Boolean({ description: "Activation status of user." })
+    }, {
+        description: "Object containing information about a single user."
+    }),
+    {
+        description: "List of information objects of available users."
+    }
+);
+export type TGetUsersResponse = Static<typeof GetUsersResponse>;
+
 
 //////////////////// Schemas for POST requests ////////////////////
 
@@ -16,7 +40,8 @@ export const RegisterUserResponse = Type.Object({
     id: Type.Number({ description: "Id of the newly registered user." }),
     name: Type.String({ description: "Name of the newly registered user." }),
     email: Type.String({ description: "Email address of the newly registered user." }),
-    role: Type.String({ description: "Role of the newly registered user." })
+    role: Type.String({ description: "Role of the newly registered user." }),
+    activated: Type.Boolean({ description: "Activation status of the newly registered user." })
 }, {
     description: "Response containing details of the newly registered user."
 });
@@ -35,7 +60,8 @@ export const LoginUserResponse = Type.Object({
     id: Type.Number({ description: "Id of the logged-in user." }),
     name: Type.String({ description: "Name of the logged-in user." }),
     email: Type.String({ description: "Email address of the logged-in user." }),
-    role: Type.String({ description: "Role of the logged-in user." })
+    role: Type.String({ description: "Role of the logged-in user." }),
+    activated: Type.Boolean({ description: "Activation status of the logged-in user." })
 }, {
     description: "Response containing details of the logged-in user."
 });
@@ -59,36 +85,45 @@ export const ActivateUserResponse = Type.Object({
     id: Type.Number({ description: "Id of the activated user." }),
     name: Type.String({ description: "Name of the activated user." }),
     email: Type.String({ description: "Email address of the activated user." }),
-    role: Type.String({ description: "Role of the logged-in user." })
+    role: Type.String({ description: "Role of the activated user." }),
+    activated: Type.Boolean({ description: "Activation status of the activated user." })
 }, {
     description: "Response containing details of the activated user."
 });
 export type TActivateUserResponse = Static<typeof ActivateUserResponse>;
 
 
-// Schema for changing user role
-export const ChangeUserRoleParams = Type.Object({
+// Schema for changing user details
+export const ChangeUserDetailsParams = Type.Object({
     userId: Type.Number({ description: "ID of the user whose role is to be changed." })
 });
-export type TChangeUserRoleParams = Static<typeof ChangeUserRoleParams>;
+export type TChangeUserDetailsParams = Static<typeof ChangeUserDetailsParams>;
 
-export const ChangeUserRoleBody = Type.Object({
-    role: Type.String({ description: "New role for the user." }),
+export const ChangeUserDetailsBody = Type.Object({
+    changes: Type.Object({
+        name: Type.String({ description: "Changed name of the user." }) || undefined,
+        email: Type.String({ description: "Changed email address of the user." }) || undefined,
+        role: Type.String({ description: "Changed role of the user." }) || undefined,
+        password: Type.String({ description: "Changed password of the user." }) || undefined
+    }, {
+        description: "Object containing user details to change (if something not provided, it will not be changed)."
+    }),
     loggedUserId: Type.Number({ description: "ID of logged user that made request." })
 }, {
     description: "Object containing the new role for the user."
 });
-export type TChangeUserRoleBody = Static<typeof ChangeUserRoleBody>;
+export type TChangeUserDetailsBody = Static<typeof ChangeUserDetailsBody>;
 
-export const ChangeUserRoleResponse = Type.Object({
-    id: Type.Number({ description: "Id of the user whose role was changed." }),
-    name: Type.String({ description: "Name of the user whose role was changed." }),
-    email: Type.String({ description: "Email address of the user whose role was changed." }),
-    role: Type.String({ description: "New role of the user." })
+export const ChangeUserDetailsResponse = Type.Object({
+    id: Type.Number({ description: "Id of the user whose details was changed." }),
+    name: Type.String({ description: "Current name of the user after changes." }),
+    email: Type.String({ description: "Current email address of the user after changes." }),
+    role: Type.String({ description: "Current role of the user after changes." }),
+    activated: Type.Boolean({ description: "Activation of the user whose details was changed." })
 }, {
-    description: "Response containing details of the user with the updated role."
+    description: "Response containing details of the user with the updates."
 });
-export type TChangeUserRoleResponse = Static<typeof ChangeUserRoleResponse>;
+export type TChangeUserDetailsResponse = Static<typeof ChangeUserDetailsResponse>;
 
 
 //////////////////// Schemas for DELETE requests ////////////////////
