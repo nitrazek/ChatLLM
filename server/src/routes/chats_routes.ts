@@ -28,8 +28,8 @@ import { getChromaConnection } from "../services/chroma_service";
 import { formatDocumentsAsString } from "langchain/util/document";
 import { ChatPromptTemplate } from "langchain/prompts";
 import { ollamaLLM } from "../services/ollama_service";
-import { BaseMessageChunk } from "langchain/schema";
-import { getTransformStream, getTransformStreamNewChatName } from "../utils/custom_stream_transforms";
+import { AIMessage, BaseMessageChunk, ChatMessage, HumanMessage } from "langchain/schema";
+import { getNewChatNameStream, getTransformStream } from "../utils/custom_stream_transforms";
 import { getUserById } from "../repositories/user_repository";
 
 const chatsRoutes = async (fastify: FastifyInstance) => {
@@ -155,21 +155,25 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
       },
       ChatPromptTemplate.fromMessages([
         ["system", template],
+        ...chat.messageHistory.map(message => {
+          switch(message.sender) {
+            case SenderType.AI: return new AIMessage(message.content);
+            case SenderType.HUMAN: return new HumanMessage(message.content);
+          }
+        }),
         [SenderType.HUMAN.toString(), "{question}"]
       ]),
       ollamaLLM
     ]);
 
     const stream: ReadableStream<BaseMessageChunk> = await chain.stream({ question });
-    const transformStream: TransformStream<BaseMessageChunk, string> = chat.name == null ? getTransformStreamNewChatName(chatId) : getTransformStream();
+    let transformedStream: ReadableStream<string> = stream.pipeThrough(getTransformStream(chatId));
 
-    const responeStream = stream.pipeThrough(transformStream);
+    if(chat.name === null) {
+      transformedStream = transformedStream.pipeThrough(getNewChatNameStream(chatId));
+    }
 
-    //let answer = "";
-    // TODO: Asynchronously collect entire message and after that add it to the database with the function below
-    //await addMessageToChat(chatId, SenderType.AI, answer);
-
-    return response.status(200).send(responeStream);
+    return response.status(200).send(transformedStream);
 
     // TODO: Fix deprication
     //---------------------->          [WARNING]: Importing from "langchain/runnables" is deprecated.          <----------------------
