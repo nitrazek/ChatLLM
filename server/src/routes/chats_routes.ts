@@ -22,13 +22,13 @@ import {
 import { getChatsByUserId, getChatById, createChat, addMessageToChat } from "../repositories/chat_repository";
 import { Chat } from "../models/chat";
 import { SenderType } from "../enums/sender_type";
-import { RunnableSequence } from "langchain/runnables";
+import { RunnableSequence } from "@langchain/core/runnables";
 import { Chroma } from "langchain/vectorstores/chroma";
 import { getChromaConnection } from "../services/chroma_service";
 import { formatDocumentsAsString } from "langchain/util/document";
-import { ChatPromptTemplate } from "langchain/prompts";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ollamaLLM } from "../services/ollama_service";
-import { AIMessage, BaseMessageChunk, ChatMessage, HumanMessage } from "langchain/schema";
+import { AIMessage, BaseMessageChunk, HumanMessage } from "@langchain/core/messages";
 import { getNewChatNameStream, getTransformStream } from "../utils/custom_stream_transforms";
 import { getUserById } from "../repositories/user_repository";
 
@@ -174,9 +174,6 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
     }
 
     return response.status(200).send(transformedStream);
-
-    // TODO: Fix deprication
-    //---------------------->          [WARNING]: Importing from "langchain/runnables" is deprecated.          <----------------------
   });
 };
 
