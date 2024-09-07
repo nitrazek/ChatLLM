@@ -26,8 +26,8 @@ import {
     ActivateUserBody,
     ChangeUserDetailsBody,
     DeleteUserBody,
-    TGetUsersBody,
-    GetUsersBody,
+    TGetUsersParams,
+    GetUsersParams,
     TGetUsersResponse,
     GetUsersResponse
 } from "../schemas/users_schemas";
@@ -35,13 +35,13 @@ import {
 const userRoutes = async (fastify: FastifyInstance) => {
     // Get list of users (only admin)
     fastify.get<{
-        Body: TGetUsersBody,
+        Params: TGetUsersParams,
         Reply: TGetUsersResponse | TErrorWithMessage
-    }>("/list", {
+    }>("/list/:loggedUserId", {
         schema: {
             summary: "Get list of users",
             description: "Retrieves a list of users",
-            body: GetUsersBody,
+            params: GetUsersParams,
             tags: ["Users"],
             response: {
                 200: GetUsersResponse,
@@ -50,7 +50,7 @@ const userRoutes = async (fastify: FastifyInstance) => {
             }
         }
     }, async (request, response) => {
-        const { loggedUserId } = request.body;
+        const { loggedUserId } = request.params;
         const loggedUser = await getUserById(loggedUserId);
         if (!loggedUser) {
             return response.status(401).send({ errorMessage: "User performing action do not exists" });

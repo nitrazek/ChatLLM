@@ -2,10 +2,10 @@ import { Static, Type } from "@sinclair/typebox";
 //////////////////// Schemas for GET requests ////////////////////
 
 // Schema for getting list of users
-export const GetUsersBody = Type.Object({
+export const GetUsersParams = Type.Object({
     loggedUserId: Type.Number({ description: "ID of logged user that made request." })
 });
-export type TGetUsersBody = Static<typeof GetUsersBody>;
+export type TGetUsersParams = Static<typeof GetUsersParams>;
 
 export const GetUsersResponse = Type.Array(
     Type.Object({
