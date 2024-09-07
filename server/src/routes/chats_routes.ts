@@ -106,7 +106,7 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
       return response.status(401).send({ errorMessage: "User do not exists" });
     }
 
-    const chat = await createChat(name, isUsingOnlyKnowledgeBase, user);
+    const chat = await createChat(name, isUsingOnlyKnowledgeBase || false, user);
     return response.status(200).send({
       id: chat.id,
       name: chat.name,
