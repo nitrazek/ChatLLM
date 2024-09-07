@@ -2,7 +2,9 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:mobile/models/Styles.dart';
-
+import 'package:mobile/viewModels/RegisterViewModel.dart';
+import 'package:mobile/views/MainChat.dart';
+import 'package:provider/provider.dart';
 import 'Login.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -14,11 +16,14 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
 
-  final TextEditingController _registerController = TextEditingController();
+  final TextEditingController _loginController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
 
   late double screenWidth;
   late double screenHeight;
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -30,13 +35,11 @@ class _RegisterPageState extends State<RegisterPage> {
   }
   @override
   void didChangeDependencies() {
-    _registerController.clear();
-    _passwordController.clear();
     super.didChangeDependencies();
   }
 
   void didPopNext() {
-    _registerController.clear();
+    _loginController.clear();
     _passwordController.clear();
   }
   bool _obscureText = true;
@@ -67,8 +70,8 @@ class _RegisterPageState extends State<RegisterPage> {
               width: screenWidth,
               decoration: const BoxDecoration(
                 gradient: LinearGradient(colors: [
-                  AppColors.dark,
-                  AppColors.darkest,
+                  AppColors.theDarkest,
+                  AppColors.theDarkest,
                 ]),
               ),
               child: Padding(
@@ -85,52 +88,142 @@ class _RegisterPageState extends State<RegisterPage> {
                 decoration: const BoxDecoration(
                   borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(40), topRight: Radius.circular(40)),
-                  color: Colors.white,
+                  color: AppColors.darkest,
                 ),
                 height: double.infinity,
                 width: double.infinity,
                 child:  Padding(
                   padding:  EdgeInsets.only(left:screenWidth * 0.045,right: screenWidth * 0.045),
+                  child: Form(
+                    key: _formKey,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       SizedBox(height: screenHeight * 0.05),
-                      TextField(
+                      TextFormField(
+                        style: AppTextStyles.chatText(fontSizeScale, 17),
+                        controller: _emailController,
                         decoration: InputDecoration(
-                            suffixIcon: const Icon(Icons.check,color: AppColors.purple,),
-                            label: Text('Login',style: AppTextStyles.colorText(fontSizeScale, 16, AppColors.purple),)
+                          suffixIcon: const Icon(Icons.check, color: Colors.white),
+                          label: Text(
+                            'Email',
+                            style: TextStyle(fontSize: 16 * fontSizeScale, color: Colors.white),
+                          ),
                         ),
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Wprowadź swój email';
+                          }
+                          bool emailValid = RegExp(
+                              r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]+\.[a-zA-Z]+"
+                          ).hasMatch(value);
+
+                          if(!emailValid){
+                            return 'Zły format maila';
+                          }
+                          return null;
+                        },
                       ),
-                      TextField(
+                      TextFormField(
+                        style: AppTextStyles.chatText(fontSizeScale, 17),
+                        controller: _loginController,
                         decoration: InputDecoration(
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscureText ? Icons.visibility_off : Icons.visibility,
-                                color: Colors.purple,
-                              ),
-                              onPressed: _togglePasswordVisibility,
+                          suffixIcon: const Icon(Icons.check, color: Colors.white),
+                          label: Text(
+                            'Login',
+                            style: TextStyle(fontSize: 16 * fontSizeScale, color: Colors.white),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Wprowadź swój login';
+                          }
+                          if(value.length < 6){
+                            return 'Login musi mieć conajmniej 6 znaków';
+                          }
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                        style: AppTextStyles.chatText(fontSizeScale, 17),
+                        controller: _passwordController,
+                        decoration: InputDecoration(
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureText ? Icons.visibility_off : Icons.visibility,
+                              color: Colors.white,
                             ),
-                            label: Text('Password',style: AppTextStyles.colorText(fontSizeScale, 16, AppColors.purple),)
+                            onPressed: _togglePasswordVisibility,
+                          ),
+                          label: Text(
+                            'Password',
+                            style: TextStyle(fontSize: 16 * fontSizeScale, color: Colors.white),
+                          ),
                         ),
                         obscureText: _obscureText,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Wprowadź hasło';
+                          }
+                          if (value.length < 6 && value.contains('1')) {
+                            return 'Hasło musi mieć conajmniej 6 znaków';
+                          }
+                          bool hasDigits = value.contains(RegExp(r'[0-9]'));
+                          bool hasSpecialCharacters = value.contains(RegExp(r'[!@#\$&*~]'));
+
+                          if(!hasDigits || !hasSpecialCharacters){
+                            return 'Hasło musi zawierać literę, cyfrę i znak specjalny';
+                          }
+                          return null;
+                        },
                       ),
-                      TextField(
+                      TextFormField(
+                        style: AppTextStyles.chatText(fontSizeScale, 17),
+                        controller: _confirmPasswordController,
                         decoration: InputDecoration(
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _repeatObscureText ? Icons.visibility_off : Icons.visibility,
-                                color: Colors.purple,
-                              ),
-                              onPressed: _toggleRepeatPasswordVisibility,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureText ? Icons.visibility_off : Icons.visibility,
+                              color: Colors.white,
                             ),
-                            label: Text('Repeat Password',style: AppTextStyles.colorText(fontSizeScale, 16, AppColors.purple),)
+                            onPressed: _togglePasswordVisibility,
+                          ),
+                          label: Text(
+                            'Repeat Password',
+                            style: TextStyle(fontSize: 16 * fontSizeScale, color: Colors.white),
+                          ),
                         ),
-                        obscureText: _repeatObscureText,
+                        obscureText: _obscureText,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Wprowadź ponownie hasło';
+                          }
+                          if(value != _passwordController.text) {
+                            return 'Hasła nie są identyczhe';
+                          }
+                          return null;
+                        },
                       ),
                       SizedBox(height: screenHeight * 0.06),
                       InkWell(
-                        onTap: () {
+                        onTap: () async{
+                          String login = _loginController.text;
+                          String email = _emailController.text;
+                          String password = _passwordController.text;
+                          String confirmPassword = _confirmPasswordController.text;
 
+                          if (_formKey.currentState!.validate()) {
+                          bool isRegistered = await context.read<RegisterviewModel>().register(login, email, password);
+
+                          if(isRegistered) {
+                            Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const LoginPage())
+                            );
+                          }
+                          }
                         },
                       child: Container(
                         height: screenHeight * 0.06,
@@ -140,7 +233,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           gradient: const LinearGradient(
                               colors: [
                                 AppColors.purple,
-                                AppColors.darkest,
+                                AppColors.purple,
                               ]
                           ),
                         ),
@@ -165,7 +258,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             gradient: const LinearGradient(
                                 colors: [
                                   AppColors.dark,
-                                  AppColors.darkest,
+                                  AppColors.dark,
                                 ]
                             ),
                           ),
@@ -178,6 +271,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       if(!isKeyBoardOpen)
                       SizedBox(height: screenHeight * 0.2)
                     ],
+                  ),
                   ),
                 ),
               ),

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mobile/viewModels/ActivateUserViewModel.dart';
+import 'package:mobile/viewModels/LoginViewModel.dart';
 import 'package:mobile/viewModels/MainChatViewModel.dart';
+import 'package:mobile/viewModels/RegisterViewModel.dart';
 import 'package:mobile/views/Login.dart';
 import 'package:mobile/views/MainChat.dart';
 import 'package:mobile/views/Register.dart';
@@ -17,7 +20,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
         providers: [
-          ChangeNotifierProvider(create: (context) => MainChatViewModel())
+          ChangeNotifierProvider(create: (context) => MainChatViewModel()),
+          ChangeNotifierProvider(create: (context) => RegisterviewModel()),
+          ChangeNotifierProvider(create: (context) => LoginViewModel()),
+          ChangeNotifierProvider(create: (context) => Activateuserviewmodel())
         ],
         child: const MaterialApp(
           home: const RegisterPage(),

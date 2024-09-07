@@ -2,7 +2,10 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:mobile/models/Styles.dart';
+import 'package:mobile/viewModels/LoginViewModel.dart';
+import 'package:provider/provider.dart';
 
+import 'MainChat.dart';
 import 'Register.dart';
 
 class LoginPage extends StatefulWidget {
@@ -12,7 +15,7 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage> with RouteAware{
 
   final TextEditingController _loginController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -20,18 +23,14 @@ class _LoginPageState extends State<LoginPage> {
   late double screenWidth;
   late double screenHeight;
 
+  final _formKey = GlobalKey<FormState>();
+
   @override
   void initState() {
     super.initState();
-    FlutterView view = WidgetsBinding.instance.platformDispatcher.views.first;
-    Size size = view.physicalSize;
-    screenWidth = size.width;
-    screenHeight = size.height;
   }
   @override
   void didChangeDependencies() {
-    _loginController.clear();
-    _passwordController.clear();
     super.didChangeDependencies();
   }
 
@@ -53,6 +52,8 @@ class _LoginPageState extends State<LoginPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     double fontSizeScale = screenWidth / 400;
     bool isKeyBoardOpen = MediaQuery.of(context).viewInsets.bottom != 0;
+    bool isLogged = false;
+
     return Scaffold(
         body: Stack(
           children: [
@@ -60,10 +61,7 @@ class _LoginPageState extends State<LoginPage> {
               height: double.infinity,
               width: double.infinity,
               decoration: const BoxDecoration(
-                gradient: LinearGradient(colors: [
-                  AppColors.dark,
-                  AppColors.darkest,
-                ]),
+                color: AppColors.theDarkest,
               ),
               child: Padding(
                 padding: EdgeInsets.only(top: screenHeight * 0.085, left: screenWidth * 0.05),
@@ -79,57 +77,95 @@ class _LoginPageState extends State<LoginPage> {
                 decoration: const BoxDecoration(
                   borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(40), topRight: Radius.circular(40)),
-                  color: Colors.white,
+                  color: AppColors.darkest,
                 ),
                 height: double.infinity,
                 width: double.infinity,
                 child:  Padding(
                   padding:  EdgeInsets.only(left:screenWidth * 0.045,right: screenWidth * 0.045),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(height: screenHeight * 0.05),
-                      TextField(
-                        decoration: InputDecoration(
-                            suffixIcon: const Icon(Icons.check,color: AppColors.purple,),
-                            label: Text('Login',style: AppTextStyles.colorText(fontSizeScale, 16, AppColors.purple),)
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(height: screenHeight * 0.05),
+                        TextFormField(
+                          style: AppTextStyles.chatText(fontSizeScale, 17),
+                          controller: _loginController,
+                          decoration: InputDecoration(
+                            suffixIcon: const Icon(Icons.check, color: Colors.white),
+                            label: Text(
+                              'Login',
+                              style: TextStyle(fontSize: 16 * fontSizeScale, color: Colors.white),
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter your login';
+                            }
+                            if(value.length < 6){
+                              return 'Login is too short';
+                            }
+                            return null;
+                          },
                         ),
-                      ),
-                      TextField(
-                        decoration: InputDecoration(
+                        TextFormField(
+                          style: AppTextStyles.chatText(fontSizeScale, 17),
+                          controller: _passwordController,
+                          decoration: InputDecoration(
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscureText ? Icons.visibility_off : Icons.visibility,
-                                color: Colors.purple,
+                                color: Colors.white,
                               ),
                               onPressed: _togglePasswordVisibility,
                             ),
-                            label: Text('Password',style: AppTextStyles.colorText(fontSizeScale, 16, AppColors.purple),)
+                            label: Text(
+                              'Password',
+                              style: TextStyle(fontSize: 16 * fontSizeScale, color: Colors.white),
+                            ),
+                          ),
+                          obscureText: _obscureText,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter your password';
+                            }
+                            if (value.length < 6 && value.contains('1')) {
+                              return 'Password must be at least 6 characters long';
+                            }
+                            return null;
+                          },
                         ),
-                        obscureText: _obscureText,
-                      ),
                       SizedBox(height: screenHeight * 0.015),
                       Align(
                         alignment: Alignment.centerRight,
-                        child: Text('Forgot Password?',style: AppTextStyles.colorText(fontSizeScale, 16, AppColors.purple)
+                        child: Text('Forgot Password?',style: AppTextStyles.colorText(fontSizeScale, 16, Colors.white)
                       ),
                       ),
                       SizedBox(height: screenHeight * 0.07),
                       InkWell(
-                        onTap: () {
-
+                        onTap: () async {
+                          String login = _loginController.text;
+                          String password = _passwordController.text;
+                          if (_formKey.currentState!.validate()) {
+                            isLogged = await context.read<LoginViewModel>().login(login, password);
+                            if (isLogged) {
+                              Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const MainChatPage())
+                              );
+                            } else {
+                              // Handle login failure
+                            }
+                          }
                         },
                       child: Container(
                         height: screenHeight * 0.065,
                         width: screenWidth * 0.81,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(30),
-                          gradient: const LinearGradient(
-                              colors: [
-                                AppColors.purple,
-                                AppColors.darkest,
-                              ]
-                          ),
+                          color: AppColors.purple
                         ),
                         child: const Center(child: Text('SIGN IN',style: TextStyle(
                             fontWeight: FontWeight.bold,
@@ -145,7 +181,7 @@ class _LoginPageState extends State<LoginPage> {
                           mainAxisAlignment: MainAxisAlignment.end,
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text("Don't have account?",style: AppTextStyles.colorText(fontSizeScale, 14, AppColors.purple),),
+                            Text("Don't have account?",style: AppTextStyles.colorText(fontSizeScale, 14, Colors.white),),
                             InkWell(
                               onTap: () {
                                 Navigator.push(
@@ -153,7 +189,7 @@ class _LoginPageState extends State<LoginPage> {
                                   MaterialPageRoute(builder: (context) => const RegisterPage()),
                                 );
                               },
-                            child: Text("Sign up",style: AppTextStyles.colorText(fontSizeScale, 16, AppColors.purple),)
+                            child: Text("Sign up",style: AppTextStyles.colorText(fontSizeScale, 16, Colors.white),)
                             ),
                           ],
                         ),
@@ -161,6 +197,7 @@ class _LoginPageState extends State<LoginPage> {
                       if(!isKeyBoardOpen)
                       SizedBox(height: screenHeight * 0.2),
                     ],
+                  ),
                   ),
                 ),
               ),
