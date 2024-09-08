@@ -4,15 +4,25 @@ import './Chat.css';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Oval } from 'react-loader-spinner';
-import { Link } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
+import Cookies from 'js-cookie';
 
 function Chat() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [lastUserMessage, setLastUserMessage] = useState(null);
-
+  const role = Cookies.get("userRole"); // Pobierz rolę z ciasteczka
   const mainTopRef = useRef(null);
+
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    Cookies.remove("userId");
+    Cookies.remove("userName");
+    Cookies.remove("userRole");
+    navigate("/");
+  };
 
   const chatHistory = [
     "Adam Małysz",
@@ -33,7 +43,7 @@ function Chat() {
       id: messages.length + 1,
       text: input,
       fromUser: true,
-      user: { name: "Ty", avatar: "./avatars/user.png" }
+      user: { name: Cookies.get('userName'), avatar: "./avatars/user.png" }
     };
 
     setMessages(prevMessages => [...prevMessages, userMessage]);
@@ -90,7 +100,6 @@ function Chat() {
           return updatedMessages;
         });
 
-        // Stop loading indicator after receiving the first chunk
         setIsLoading(false);
 
         reader.read().then(processText);
@@ -140,8 +149,8 @@ function Chat() {
         </div>
         <div className="lowerSide">
           <button className="button">Ustawienia</button>
-          <button className="button">Panel administratora</button>
-          <Link to="/"><button className="button">Wyloguj się</button></Link>
+          {role ==="admin" && <button className="button">Panel administratora</button>}
+          <button className="button" onClick={handleLogout}>Wyloguj się</button>
         </div>
       </div>
       <div className="main">

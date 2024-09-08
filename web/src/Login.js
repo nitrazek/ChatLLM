@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import { Link } from 'react-router-dom';
 import './Login.css';
-import Chat from "./Chat";
 import { useNavigate } from "react-router-dom";
+import Cookies from 'js-cookie';
 
 function Login() {
     const [isRegister, setIsRegister] = useState(false);
@@ -184,11 +183,14 @@ function Login() {
                 },
                 body: JSON.stringify({name: login, password: password}),
             });
-            const data = await response.json(); // Parsowanie odpowiedzi
+            const data = await response.json();
 
-            if (response.ok) { // Sprawdzanie, czy odpowiedź jest poprawna
-                console.log("Zalogowano pomyślnie:", data);
-                navigate('/chat'); // Przejście do czatu
+            if (response.ok) { 
+                navigate('/chat');
+                console.log(data);
+                Cookies.set("userId", data.id);
+                Cookies.set("userName", data.name);
+                Cookies.set("userRole", data.role);
             } else {
                 alert(data.errorMessage || "Błąd logowania");
             }
