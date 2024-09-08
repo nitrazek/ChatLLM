@@ -143,7 +143,7 @@ class _MainChatPageState extends State<MainChatPage> {
                             color: AppColors.purple,
                           ),
                           padding: EdgeInsets.all(screenWidth * 0.035),
-                          margin: EdgeInsets.only(right: screenWidth * 0.1),
+                          margin: EdgeInsets.only(right: screenWidth * 0.08),
                           child: const Icon(
                             Icons.menu,
                             color: Colors.white,
@@ -161,7 +161,7 @@ class _MainChatPageState extends State<MainChatPage> {
                         color: AppColors.purple,
                       ),
                       padding: EdgeInsets.all(screenWidth * 0.035),
-                      margin: EdgeInsets.only(left: screenWidth * 0.1),
+                      margin: EdgeInsets.only(left: screenWidth * 0.08),
                       child: const Icon(
                         Icons.add,
                         color: Colors.white,
