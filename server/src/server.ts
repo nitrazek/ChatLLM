@@ -4,9 +4,11 @@ import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import multipart from "@fastify/multipart";
 import dotenv from "dotenv";
-import baseRoutes from "./routes/base";
-import modelRoutes from "./routes/model";
+import userRoutes from "./routes/users_routes";
+import filesRoute from "./routes/files_routes";
+import chatsRoutes from "./routes/chats_routes";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
+import { AppDataSource } from "./services/database_service";
 
 dotenv.config();
 
@@ -15,23 +17,28 @@ const fastify: FastifyInstance = Fastify({ logger: true })
 const port: number = process.env.PORT ? +process.env.PORT : 3000;
 const host: string = process.env.HOST ?? "localhost";
 
-fastify.register(swagger);
-fastify.register(swaggerUi, {
-  routePrefix: "/api/v1/documentation"
-});
-fastify.register(multipart);
-fastify.register(cors, {
-  origin: "*",
-  methods: ["GET", "POST"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
-});
-fastify.register(modelRoutes, { prefix: "/api/v1/model" });
-fastify.register(baseRoutes, { prefix: "/api/v1/base" });
+AppDataSource.initialize().then(() => {
+  fastify.register(swagger);
+  fastify.register(swaggerUi, {
+    routePrefix: "/api/v1/documentation"
+  });
+  fastify.register(multipart);
+  fastify.register(cors, {
+    origin: "*",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
+  });
+  fastify.register(userRoutes, { prefix: "/api/v1/users" });
+  fastify.register(chatsRoutes, { prefix: "/api/v1/chats" });
+  fastify.register(filesRoute, { prefix: "/api/v1/files" });
 
-fastify.listen({ port: port, host: host }, (err, address) => {
-  console.log(`[server]: Server is running at ${address}`);
-});
+  fastify.listen({ port: port, host: host }, (err, address) => {
+    console.log(`[server]: Server is running at ${address}`);
+  });
 
-fastify.ready()
-  .then(() => { fastify.swagger(); });
+  fastify.ready()
+    .then(() => { fastify.swagger(); });
+}).catch((reason: string) => {
+  console.log(reason)
+})
