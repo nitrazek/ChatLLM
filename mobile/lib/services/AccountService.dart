@@ -20,7 +20,6 @@ class AccountService {
       })));
       final response = await request.close();
 
-      // Sprawdzenie statusu odpowiedzi
       if (response.statusCode == 200) {
         final responseBody = await response.transform(utf8.decoder).join();
         Map<String, dynamic> json = jsonDecode(responseBody);
@@ -40,27 +39,22 @@ class AccountService {
     try {
       final uri = Uri.parse("$baseUrl/api/v1/users/register");
       final request = await httpClient.postUrl(uri);
-      // Ustaw nagłówki
       request.headers.set(HttpHeaders.contentTypeHeader, "application/json");
 
-      // Dodaj body w formacie JSON
       request.add(utf8.encode(jsonEncode({
         'name': name,
         'email': email,
         'password': password,
       })));
 
-      // Wysłanie zapytania i odebranie odpowiedzi
       final response = await request.close();
 
-      // Sprawdzenie statusu odpowiedzi
       if (response.statusCode == 201) {
         final responseBody = await response.transform(utf8.decoder).join();
         Map<String, dynamic> json = jsonDecode(responseBody);
         return Account.fromJson(json);
       }
 
-      // Tutaj możesz obsłużyć inne statusy odpowiedzi
       throw HttpException('Failed to register user with status code: ${response.statusCode}');
     } catch (e) {
       if (e is SocketException) {
@@ -76,19 +70,15 @@ class AccountService {
       final uri = Uri.parse("$baseUrl/api/v1/users/login");
       final request = await httpClient.postUrl(uri);
 
-      // Ustaw nagłówki
       request.headers.set(HttpHeaders.contentTypeHeader, "application/json");
 
-      // Dodaj body w formacie JSON
       request.add(utf8.encode(jsonEncode({
         'name': name,
         'password': password,
       })));
 
-      // Wysłanie zapytania i odebranie odpowiedzi
       final response = await request.close();
 
-      // Sprawdzenie statusu odpowiedzi
       if (response.statusCode == 200) {
         final responseBody = await response.transform(utf8.decoder).join();
         Map<String, dynamic> json = jsonDecode(responseBody);
