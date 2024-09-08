@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Link } from 'react-router-dom';
 import './Login.css';
+import Chat from "./Chat";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
     const [isRegister, setIsRegister] = useState(false);
@@ -24,6 +26,8 @@ function Login() {
         password: false,
         confirmPassword: false
     });
+
+    const navigate = useNavigate(); // Initialize useNavigate
 
     // Validation functions
     const validateEmail = (email) => {
@@ -99,7 +103,7 @@ function Login() {
         setConfirmPasswordError(confirmPasswordError);
 
         if (!emailError && !loginError && !passwordError && !confirmPasswordError) {
-            // Proceed with registration
+            registerUser();
             console.log("Registration successful");
         }
     };
@@ -112,7 +116,7 @@ function Login() {
         setPasswordError(passwordError);
 
         if (!loginError && !passwordError) {
-            // Proceed with login
+            loginUser();
             console.log("Login successful");
         }
     };
@@ -149,6 +153,50 @@ function Login() {
         if (error) return 'input-error';
         return isTouched && value ? 'input-valid' : 'input-default';
     };
+
+    const registerUser = async () => {
+        try {
+            const response = await fetch('http://localhost:3000/api/v1/users/register', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name: login, email: email, password: password}),
+              });
+              if (response.status === 201)
+                {
+                    alert("Pomyślnie zarejestrowano konto. Oczekuj na aktywację konta przez administratora.");
+                    resetForm();
+                    handleToggleLogin();
+                }
+        }
+        catch (error) {
+            alert(error.errorMessage);
+        }
+    };
+
+    const loginUser = async () => {
+        try {
+            const response = await fetch('http://localhost:3000/api/v1/users/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({name: login, password: password}),
+            });
+            const data = await response.json(); // Parsowanie odpowiedzi
+
+            if (response.ok) { // Sprawdzanie, czy odpowiedź jest poprawna
+                console.log("Zalogowano pomyślnie:", data);
+                navigate('/chat'); // Przejście do czatu
+            } else {
+                alert(data.errorMessage || "Błąd logowania");
+            }
+        } catch (error) {
+            console.error("Błąd podczas logowania:", error);
+            alert("Wystąpił błąd. Spróbuj ponownie później.");
+        }
+    }
 
     return (
         <div className="center-wrapper">
@@ -207,7 +255,7 @@ function Login() {
                         <input
                             type="text"
                             placeholder="Login lub Email"
-                            className={getInputClass(loginError, login, touched.login)}
+                            className='input-default'
                             value={login}
                             onChange={handleLoginChange}
                             onBlur={handleLoginBlur}
@@ -216,16 +264,14 @@ function Login() {
                         <input
                             type="password"
                             placeholder="Hasło"
-                            className={getInputClass(passwordError, password, touched.password)}
+                            className='input-default'
                             value={password}
                             onChange={handlePasswordChange}
                             onBlur={handlePasswordBlur}
                         />
                         {passwordError && <span className="error-tooltip">{passwordError}</span>}
                         <br />
-                        <Link to="/chat">
                             <button type="button" onClick={handleLogin}>Zaloguj się</button>
-                        </Link>
                     </form>
                 </div>
                 <div className="toggle-container">
