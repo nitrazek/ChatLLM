@@ -26,17 +26,17 @@ services:
             - chroma
 
     ollama:
-        image: ollama/ollama
+        image: ollama/ollama:0.3.9
         container_name: ollama
         volumes:
             - ollama:/root/.ollama
 
     chroma:
-        image: chromadb/chroma
+        image: chromadb/chroma:0.5.5
         container_name: chroma
 
     postgres:
-        image: postgres
+        image: postgres:16-alpine
         container_name: postgres
         environment:
             - POSTGRES_USER=postgres
