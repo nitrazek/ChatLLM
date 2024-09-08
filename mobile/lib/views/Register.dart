@@ -24,6 +24,8 @@ class _RegisterPageState extends State<RegisterPage> {
   late double screenWidth;
   late double screenHeight;
   final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
+  bool badValues = false;
 
   @override
   void initState() {
@@ -77,7 +79,7 @@ class _RegisterPageState extends State<RegisterPage> {
               child: Padding(
                 padding: EdgeInsets.only(top: screenHeight * 0.085, left: screenWidth * 0.05),
                 child: Text(
-                    'Hello\nSign up!',
+                    'Witaj\nZarejestruj się!',
                     style: AppTextStyles.colorText(fontSizeScale, 30, Colors.white)
                 ),
               ),
@@ -101,6 +103,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     children: [
                       SizedBox(height: screenHeight * 0.05),
                       TextFormField(
+                        enabled: !_isLoading,
                         style: AppTextStyles.chatText(fontSizeScale, 17),
                         controller: _emailController,
                         decoration: InputDecoration(
@@ -126,6 +129,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         },
                       ),
                       TextFormField(
+                        enabled: !_isLoading,
                         style: AppTextStyles.chatText(fontSizeScale, 17),
                         controller: _loginController,
                         decoration: InputDecoration(
@@ -146,6 +150,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         },
                       ),
                       TextFormField(
+                        enabled: !_isLoading,
                         style: AppTextStyles.chatText(fontSizeScale, 17),
                         controller: _passwordController,
                         decoration: InputDecoration(
@@ -157,7 +162,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             onPressed: _togglePasswordVisibility,
                           ),
                           label: Text(
-                            'Password',
+                            'Hasło',
                             style: TextStyle(fontSize: 16 * fontSizeScale, color: Colors.white),
                           ),
                         ),
@@ -179,6 +184,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         },
                       ),
                       TextFormField(
+                        enabled: !_isLoading,
                         style: AppTextStyles.chatText(fontSizeScale, 17),
                         controller: _confirmPasswordController,
                         decoration: InputDecoration(
@@ -190,7 +196,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             onPressed: _togglePasswordVisibility,
                           ),
                           label: Text(
-                            'Repeat Password',
+                            'Powtórz hasło',
                             style: TextStyle(fontSize: 16 * fontSizeScale, color: Colors.white),
                           ),
                         ),
@@ -200,18 +206,36 @@ class _RegisterPageState extends State<RegisterPage> {
                             return 'Wprowadź ponownie hasło';
                           }
                           if(value != _passwordController.text) {
-                            return 'Hasła nie są identyczhe';
+                            return 'Hasła nie są identyczne';
                           }
                           return null;
                         },
                       ),
                       SizedBox(height: screenHeight * 0.06),
                       InkWell(
-                        onTap: () async{
+                        onTap: _isLoading ? null : () async {
+                          setState((){
+                            _isLoading = true;
+                          });
                           String login = _loginController.text;
                           String email = _emailController.text;
                           String password = _passwordController.text;
-                          String confirmPassword = _confirmPasswordController.text;
+
+                          Future.delayed(Duration(seconds: 7), () {
+                            if (_isLoading) {
+                              setState(() {
+                                _isLoading = false;
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Brak odpowiedzi z serwera')),
+                              );
+                            }
+                          });
+                          if (!_formKey.currentState!.validate()) {
+                            _isLoading = false;
+                            badValues = true;
+
+                          }
 
                           if (_formKey.currentState!.validate()) {
                           bool isRegistered = await context.read<RegisterviewModel>().register(login, email, password);
@@ -237,7 +261,11 @@ class _RegisterPageState extends State<RegisterPage> {
                               ]
                           ),
                         ),
-                        child: Center(child: Text('SIGN UP',
+                        child: Center(child: _isLoading
+                            ? CircularProgressIndicator(
+                          color: Colors.white,
+                        )
+                            : Text('Zarejestruj się',
                           style: AppTextStyles.colorText(fontSizeScale, 20, Colors.white)
                         ),),
                       ),
@@ -262,14 +290,14 @@ class _RegisterPageState extends State<RegisterPage> {
                                 ]
                             ),
                           ),
-                          child:  Center(child: Text('I already have account',
+                          child:  Center(child: Text('Mam już konto',
                               style: AppTextStyles.colorText(fontSizeScale, 20, Colors.white)
                           ),
                           ),
                         ),
                       ),
-                      if(!isKeyBoardOpen)
-                      SizedBox(height: screenHeight * 0.2)
+                      if(!isKeyBoardOpen && !badValues)
+                      SizedBox(height: screenHeight * 0.2),
                     ],
                   ),
                   ),

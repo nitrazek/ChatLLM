@@ -25,6 +25,8 @@ class _LoginPageState extends State<LoginPage> with RouteAware{
 
   final _formKey = GlobalKey<FormState>();
 
+  bool _isLoading = false;
+
   @override
   void initState() {
     super.initState();
@@ -66,7 +68,7 @@ class _LoginPageState extends State<LoginPage> with RouteAware{
               child: Padding(
                 padding: EdgeInsets.only(top: screenHeight * 0.085, left: screenWidth * 0.05),
                 child: Text(
-                  'Hello\nSign in!',
+                  'Witaj\nZaloguj się!',
                   style: AppTextStyles.colorText(fontSizeScale, 30, Colors.white)
                 ),
               ),
@@ -90,6 +92,7 @@ class _LoginPageState extends State<LoginPage> with RouteAware{
                       children: [
                         SizedBox(height: screenHeight * 0.05),
                         TextFormField(
+                          enabled: !_isLoading,
                           style: AppTextStyles.chatText(fontSizeScale, 17),
                           controller: _loginController,
                           decoration: InputDecoration(
@@ -101,15 +104,16 @@ class _LoginPageState extends State<LoginPage> with RouteAware{
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter your login';
+                              return 'Wprowadź swój login';
                             }
                             if(value.length < 6){
-                              return 'Login is too short';
+                              return 'Login jest zbyt krótki';
                             }
                             return null;
                           },
                         ),
                         TextFormField(
+                          enabled: !_isLoading,
                           style: AppTextStyles.chatText(fontSizeScale, 17),
                           controller: _passwordController,
                           decoration: InputDecoration(
@@ -121,17 +125,14 @@ class _LoginPageState extends State<LoginPage> with RouteAware{
                               onPressed: _togglePasswordVisibility,
                             ),
                             label: Text(
-                              'Password',
+                              'Hasło',
                               style: TextStyle(fontSize: 16 * fontSizeScale, color: Colors.white),
                             ),
                           ),
                           obscureText: _obscureText,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter your password';
-                            }
-                            if (value.length < 6 && value.contains('1')) {
-                              return 'Password must be at least 6 characters long';
+                              return 'Wprowadź swoje hasło';
                             }
                             return null;
                           },
@@ -139,16 +140,34 @@ class _LoginPageState extends State<LoginPage> with RouteAware{
                       SizedBox(height: screenHeight * 0.015),
                       Align(
                         alignment: Alignment.centerRight,
-                        child: Text('Forgot Password?',style: AppTextStyles.colorText(fontSizeScale, 16, Colors.white)
+                        child: Text('Zapomniałeś hasła?',style: AppTextStyles.colorText(fontSizeScale, 16, Colors.white)
                       ),
                       ),
                       SizedBox(height: screenHeight * 0.07),
                       InkWell(
                         onTap: () async {
+                          setState(() {
+                            _isLoading = true;
+                          });
                           String login = _loginController.text;
                           String password = _passwordController.text;
+
+                          Future.delayed(Duration(seconds: 7), () {
+                            if (_isLoading) {
+                              setState(() {
+                                _isLoading = false;
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Brak odpowiedzi z serwera')),
+                              );
+                            }
+                          });
+                          if (!_formKey.currentState!.validate()) {
+                            _isLoading = false;
+                          }
                           if (_formKey.currentState!.validate()) {
                             isLogged = await context.read<LoginViewModel>().login(login, password);
+
                             if (isLogged) {
                               Navigator.pushReplacement(
                                   context,
@@ -167,7 +186,9 @@ class _LoginPageState extends State<LoginPage> with RouteAware{
                           borderRadius: BorderRadius.circular(30),
                           color: AppColors.purple
                         ),
-                        child: const Center(child: Text('SIGN IN',style: TextStyle(
+                        child: Center(child: _isLoading ? CircularProgressIndicator(
+                          color: Colors.white,
+                        ) : Text('Zaloguj się',style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 20,
                             color: Colors.white
@@ -181,15 +202,15 @@ class _LoginPageState extends State<LoginPage> with RouteAware{
                           mainAxisAlignment: MainAxisAlignment.end,
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text("Don't have account?",style: AppTextStyles.colorText(fontSizeScale, 14, Colors.white),),
+                            Text("Nie masz konta?",style: AppTextStyles.colorText(fontSizeScale, 14, Colors.white),),
                             InkWell(
-                              onTap: () {
+                              onTap: _isLoading ? null : () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(builder: (context) => const RegisterPage()),
                                 );
                               },
-                            child: Text("Sign up",style: AppTextStyles.colorText(fontSizeScale, 16, Colors.white),)
+                            child: Text("Zarejestruj się",style: AppTextStyles.colorText(fontSizeScale, 16, Colors.white),)
                             ),
                           ],
                         ),
