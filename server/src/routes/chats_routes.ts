@@ -22,14 +22,14 @@ import {
 import { getChatsByUserId, getChatById, createChat, addMessageToChat } from "../repositories/chat_repository";
 import { Chat } from "../models/chat";
 import { SenderType } from "../enums/sender_type";
-import { RunnableSequence } from "langchain/runnables";
+import { RunnableSequence } from "@langchain/core/runnables";
 import { Chroma } from "langchain/vectorstores/chroma";
 import { getChromaConnection } from "../services/chroma_service";
 import { formatDocumentsAsString } from "langchain/util/document";
-import { ChatPromptTemplate } from "langchain/prompts";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ollamaLLM } from "../services/ollama_service";
-import { BaseMessageChunk } from "langchain/schema";
-import { getTransformStream, getTransformStreamNewChatName } from "../utils/custom_stream_transforms";
+import { AIMessage, BaseMessageChunk, HumanMessage } from "@langchain/core/messages";
+import { getNewChatNameStream, getTransformStream } from "../utils/custom_stream_transforms";
 import { getUserById } from "../repositories/user_repository";
 
 const chatsRoutes = async (fastify: FastifyInstance) => {
@@ -37,18 +37,24 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
   // Get a list of chats for a specific user
   fastify.get<{
     Params: TGetChatsParams
-    Reply: TGetChatsResponse
+    Reply: TGetChatsResponse | TErrorWithMessage
   }>("/list/:userId", {
     schema: {
       summary: "Get list of chats",
       description: "Retrieves a list of chats associated with a specific user.",
       tags: ["Chats"],
       response: {
-        200: GetChatsResponse
+        200: GetChatsResponse,
+        404: ErrorWithMessage
       }
     }
   }, async (request, response) => {
     const { userId } = request.params;
+    const user = await getUserById(userId)
+    if (!user) {
+      return response.status(404).send({ errorMessage: "User do not exists" });
+    }
+
     const chats = await getChatsByUserId(userId);
     return response.status(200).send(chats.map(chat => ({
       id: chat.id,
@@ -106,7 +112,7 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
       return response.status(401).send({ errorMessage: "User do not exists" });
     }
 
-    const chat = await createChat(name, isUsingOnlyKnowledgeBase, user);
+    const chat = await createChat(name, isUsingOnlyKnowledgeBase || false, user);
     return response.status(200).send({
       id: chat.id,
       name: chat.name,
@@ -155,24 +161,25 @@ const chatsRoutes = async (fastify: FastifyInstance) => {
       },
       ChatPromptTemplate.fromMessages([
         ["system", template],
+        ...chat.messageHistory.map(message => {
+          switch(message.sender) {
+            case SenderType.AI: return new AIMessage(message.content);
+            case SenderType.HUMAN: return new HumanMessage(message.content);
+          }
+        }),
         [SenderType.HUMAN.toString(), "{question}"]
       ]),
       ollamaLLM
     ]);
 
     const stream: ReadableStream<BaseMessageChunk> = await chain.stream({ question });
-    const transformStream: TransformStream<BaseMessageChunk, string> = chat.name == null ? getTransformStreamNewChatName(chatId) : getTransformStream();
+    let transformedStream: ReadableStream<string> = stream.pipeThrough(getTransformStream(chatId));
 
-    const responeStream = stream.pipeThrough(transformStream);
+    if(chat.name === null) {
+      transformedStream = transformedStream.pipeThrough(getNewChatNameStream(chatId));
+    }
 
-    //let answer = "";
-    // TODO: Asynchronously collect entire message and after that add it to the database with the function below
-    //await addMessageToChat(chatId, SenderType.AI, answer);
-
-    return response.status(200).send(responeStream);
-
-    // TODO: Fix deprication
-    //---------------------->          [WARNING]: Importing from "langchain/runnables" is deprecated.          <----------------------
+    return response.status(200).send(transformedStream);
   });
 };
 

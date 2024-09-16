@@ -1,12 +1,12 @@
 import { FastifyInstance } from "fastify";
-import { createUser, getUserByEmail, activateUser, deleteUser, changeUserRole, getUserById, getUserByName } from "../repositories/user_repository";
+import { createUser, getUserByEmail, activateUser, deleteUser, getUserById, getUserByName, getAllUsers, saveUserDetails } from "../repositories/user_repository";
 import { UserRole } from "../enums/user_role";
 import {
     TActivateUserParams,
     TActivateUserResponse,
-    TChangeUserRoleBody,
-    TChangeUserRoleParams,
-    TChangeUserRoleResponse,
+    TChangeUserDetailsBody,
+    TChangeUserDetailsParams,
+    TChangeUserDetailsResponse,
     TDeleteUserParams,
     TLoginUserBody,
     TLoginUserResponse,
@@ -19,16 +19,56 @@ import {
     ErrorWithMessage,
     LoginUserResponse,
     ActivateUserResponse,
-    ChangeUserRoleResponse,
+    ChangeUserDetailsResponse,
     DeleteUserResponse,
     LoginUserBody,
     RegisterUserBody,
     ActivateUserBody,
-    ChangeUserRoleBody,
-    DeleteUserBody
+    ChangeUserDetailsBody,
+    DeleteUserBody,
+    TGetUsersParams,
+    GetUsersParams,
+    TGetUsersResponse,
+    GetUsersResponse
 } from "../schemas/users_schemas";
 
 const userRoutes = async (fastify: FastifyInstance) => {
+    // Get list of users (only admin)
+    fastify.get<{
+        Params: TGetUsersParams,
+        Reply: TGetUsersResponse | TErrorWithMessage
+    }>("/list/:loggedUserId", {
+        schema: {
+            summary: "Get list of users",
+            description: "Retrieves a list of users",
+            params: GetUsersParams,
+            tags: ["Users"],
+            response: {
+                200: GetUsersResponse,
+                401: ErrorWithMessage,
+                403: ErrorWithMessage
+            }
+        }
+    }, async (request, response) => {
+        const { loggedUserId } = request.params;
+        const loggedUser = await getUserById(loggedUserId);
+        if (!loggedUser) {
+            return response.status(401).send({ errorMessage: "User performing action do not exists" });
+        }
+
+        if (loggedUser.role !== UserRole.ADMIN) {
+            return response.status(403).send({ errorMessage: "Insufficient permissions" });
+        }
+
+        const users = await getAllUsers();
+        return response.status(200).send(users.map(user => ({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            activated: user.activated
+        })))
+    });
 
     // Register new user
     fastify.post<{
@@ -57,7 +97,7 @@ const userRoutes = async (fastify: FastifyInstance) => {
         }
 
         const user = await createUser(name, email, password);
-        return response.status(201).send({ id: user.id, name: user.name, email: user.email, role: user.role });
+        return response.status(201).send({ id: user.id, name: user.name, email: user.email, role: user.role, activated: user.activated });
     });
 
     // Login user
@@ -87,10 +127,10 @@ const userRoutes = async (fastify: FastifyInstance) => {
             return response.status(403).send({ errorMessage: "Account not activated" });
         }
 
-        return response.status(200).send({ id: user.id, name: user.name, email: user.email, role: user.role });
+        return response.status(200).send({ id: user.id, name: user.name, email: user.email, role: user.role, activated: user.activated });
     });
 
-    // Activate specific user
+    // Activate specific user (only admin)
     fastify.put<{
         Params: TActivateUserParams,
         Body: TActivateUserBody,
@@ -131,22 +171,22 @@ const userRoutes = async (fastify: FastifyInstance) => {
             return response.status(404).send({ errorMessage: "User not found" });
         }
 
-        return response.status(200).send({ id: user.id, name: user.name, email: user.email, role: user.role });
+        return response.status(200).send({ id: user.id, name: user.name, email: user.email, role: user.role, activated: user.activated });
     });
 
-    // Change role of specific user
+    // Change datails of specific user (only admin)
     fastify.put<{
-        Params: TChangeUserRoleParams,
-        Body: TChangeUserRoleBody,
-        Reply: TChangeUserRoleResponse | TErrorWithMessage
+        Params: TChangeUserDetailsParams,
+        Body: TChangeUserDetailsBody,
+        Reply: TChangeUserDetailsResponse | TErrorWithMessage
     }>("/:userId/role", {
         schema: {
-            summary: "Change user role",
-            description: "Updates the role of a user with the provided user ID.",
-            body: ChangeUserRoleBody,
+            summary: "Change user details",
+            description: "Updates the details of a user with the provided user ID.",
+            body: ChangeUserDetailsBody,
             tags: ["Users"],
             response: {
-                200: ChangeUserRoleResponse,
+                200: ChangeUserDetailsResponse,
                 400: ErrorWithMessage,
                 401: ErrorWithMessage,
                 403: ErrorWithMessage,
@@ -155,7 +195,7 @@ const userRoutes = async (fastify: FastifyInstance) => {
         }
     }, async (request, response) => {
         const { userId } = request.params;
-        const { role, loggedUserId } = request.body;
+        const { changes, loggedUserId } = request.body;
         const loggedUser = await getUserById(loggedUserId)
 
         if (!loggedUser) {
@@ -166,23 +206,32 @@ const userRoutes = async (fastify: FastifyInstance) => {
             return response.status(403).send({ errorMessage: "Insufficient permissions" });
         }
 
-        if (!Object.values(UserRole).includes(role as UserRole)) {
-            return response.status(400).send({ errorMessage: "Role does not exist" });
-        }
-
         if (loggedUserId === userId) {
             return response.status(400).send({ errorMessage: "Cannot change your own role" });
         }
 
-        const user = await changeUserRole(userId, role as UserRole);
+        const user = await getUserById(userId);
         if (!user) {
             return response.status(404).send({ errorMessage: "User not found" });
         }
 
-        return response.status(200).send({ id: user.id, name: user.name, email: user.email, role: user.role });
+        if (changes.role && !Object.values(UserRole).includes(changes.role as UserRole)) {
+            return response.status(404).send({ errorMessage: "Role does not exist" });
+        }
+
+        if (changes.name) user.name = changes.name;
+        if (changes.email) user.email = changes.email;
+        if (changes.role) user.role = changes.role as UserRole;
+        if (changes.password) user.password = changes.password;
+
+        const newUser = await saveUserDetails(user);
+        if (!newUser) {
+            return response.status(400).send({ errorMessage: "Some values are wrong" });
+        }
+        return response.status(200).send({ id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role, activated: newUser.activated });
     });
 
-    // Delete specific user
+    // Delete specific user (only admin)
     fastify.delete<{
         Params: TDeleteUserParams,
         Body: TDeleteUserBody,
