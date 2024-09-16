@@ -18,7 +18,7 @@ Future<bool> login (String name, String password) async {
   }
   catch (e) {
     if (e is BadRequestException) {
-      errorMessage = e.message; // Nieprawidłowe dane rejestracyjne
+      errorMessage = e.message;
     } else if (e is ServerException) {
       errorMessage = 'Błąd serwera: ${e.message}';
     } else if (e is FetchDataException) {
@@ -28,8 +28,8 @@ Future<bool> login (String name, String password) async {
     } else {
       errorMessage = 'Nieznany błąd. Spróbuj ponownie później.';
     }
-    notifyListeners(); // Powiadomienie UI o zmianach
-    return false; // Rejestracja nie powiodła się
+    notifyListeners();
+    return false;
   }
 }
 }

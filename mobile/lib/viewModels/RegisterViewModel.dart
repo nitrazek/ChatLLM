@@ -12,10 +12,10 @@ class RegisterviewModel extends ChangeNotifier {
   Future<bool> register(String name, String email, String password) async {
     try {
       _account = await _accountService.register(name, email, password);
-      return true; // Rejestracja zakończona sukcesem
+      return true;
     } catch (e) {
       if (e is BadRequestException) {
-        errorMessage = e.message; // Nieprawidłowe dane rejestracyjne
+        errorMessage = e.message;
       } else if (e is ServerException) {
         errorMessage = 'Błąd serwera: ${e.message}';
       } else if (e is FetchDataException) {
@@ -23,8 +23,8 @@ class RegisterviewModel extends ChangeNotifier {
       } else {
         errorMessage = 'Nieznany błąd. Spróbuj ponownie później.';
       }
-      notifyListeners(); // Powiadomienie UI o zmianach
-      return false; // Rejestracja nie powiodła się
+      notifyListeners();
+      return false;
     }
   }
 

@@ -269,7 +269,6 @@ class _RegisterPageState extends State<RegisterPage> {
                                 });
                               }
                             } catch (e) {
-                              // W przypadku, gdy wystąpił problem z połączeniem (np. brak odpowiedzi z serwera)
                               setState(() {
                                 _isLoading = false;
                               });
