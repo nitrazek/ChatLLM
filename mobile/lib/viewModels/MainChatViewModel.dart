@@ -20,6 +20,10 @@ class MainChatViewModel extends ChangeNotifier {
     chatMessage.finalizeResponse();
     notifyListeners();
   }
+
+  void createChat(String name, bool isUsingOnlyKnowledgeBase ) async {
+
+  }
 }
 
 class ChatMessage {

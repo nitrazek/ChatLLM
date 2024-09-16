@@ -155,18 +155,25 @@ class _MainChatPageState extends State<MainChatPage> {
                         'GENERATOR',
                         style: AppTextStyles.chatText(fontSizeScale, 36)
                     ),
-                    Container(
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.purple,
-                      ),
-                      padding: EdgeInsets.all(screenWidth * 0.035),
-                      margin: EdgeInsets.only(left: screenWidth * 0.1),
-                      child: const Icon(
-                        Icons.add,
-                        color: Colors.white,
-                      ),
-                    ),
+                    Builder(builder: (context) {
+                      return InkWell(
+                        onTap: () {
+
+                        },
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.purple,
+                          ),
+                          padding: EdgeInsets.all(screenWidth * 0.035),
+                          margin: EdgeInsets.only(left: screenWidth * 0.1),
+                          child: const Icon(
+                            Icons.add,
+                            color: Colors.white,
+                          ),
+                        ),
+                      );
+                    })
                   ],
                 ),
               ),

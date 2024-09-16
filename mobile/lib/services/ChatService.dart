@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import '../models/Chat.dart';
+
 class ChatService {
   final String baseUrl = "http://10.0.2.2:3000";
 
@@ -51,6 +53,24 @@ class ChatService {
 
   String _formatText(String text) {
     return text.replaceAll(r'\n', '\n').replaceAll(r'\t', '    ');
+  }
+  Future<Chat> createChat(String name, bool isUsingOnlyKnowledgeBase, int userId) async {
+    try {
+      final uri = Uri.parse("$baseUrl/api/v1/chats/new/$userId");
+      final httpClient = HttpClient();
+      final request = await httpClient.postUrl(uri);
+
+      request.headers.set('Content-Type', 'application/json');
+      request.add(utf8.encode(jsonEncode({
+        'name': name,
+        'isUsingOnlyKnowledgeBase' : isUsingOnlyKnowledgeBase})));
+
+      final response = await request.close();
+
+      if(response.statusCode == 200) {
+        return Chat.fromJson(json);
+      }
+    }
   }
 
 }
