@@ -3,19 +3,33 @@ import 'package:provider/provider.dart';
 
 import '../models/Account.dart';
 import '../services/AccountService.dart';
+import '../services/ChatService.dart';
 
 class LoginViewModel extends ChangeNotifier {
   late Account _account;
   final AccountService _accountService = AccountService();
 
-Future<bool> login (String name, String password) async{
+  String errorMessage = '';
+
+Future<bool> login (String name, String password) async {
   try {
     _account = await _accountService.login(name, password);
     return true;
   }
-  catch(e){
-    return false;
-
+  catch (e) {
+    if (e is BadRequestException) {
+      errorMessage = e.message; // Nieprawidłowe dane rejestracyjne
+    } else if (e is ServerException) {
+      errorMessage = 'Błąd serwera: ${e.message}';
+    } else if (e is FetchDataException) {
+      errorMessage = e.message;
+    } else if (e is NotFoundException) {
+      errorMessage = e.message;
+    } else {
+      errorMessage = 'Nieznany błąd. Spróbuj ponownie później.';
+    }
+    notifyListeners(); // Powiadomienie UI o zmianach
+    return false; // Rejestracja nie powiodła się
   }
 }
 }

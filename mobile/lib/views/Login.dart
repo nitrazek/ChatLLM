@@ -162,20 +162,41 @@ class _LoginPageState extends State<LoginPage> with RouteAware{
                               );
                             }
                           });
+
                           if (!_formKey.currentState!.validate()) {
                             _isLoading = false;
                           }
                           if (_formKey.currentState!.validate()) {
-                            isLogged = await context.read<LoginViewModel>().login(login, password);
+                            try {
+                              isLogged = await context.read<LoginViewModel>().login(login, password);
 
-                            if (isLogged) {
-                              Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => const MainChatPage())
+                              if (isLogged) {
+                                Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => const MainChatPage())
+                                );
+                              } else {
+                                String errorMessage = context.read<LoginViewModel>().errorMessage;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(errorMessage),
+                                  ),
+                                );
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                            }
+                            }
+                            catch (e) {
+                              setState(() {
+                                _isLoading = false;
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Nie udało się połączyć z serwerem. Spróbuj ponownie później.'),
+                                ),
                               );
-                            } else {
-                              // Handle login failure
                             }
                           }
                         },

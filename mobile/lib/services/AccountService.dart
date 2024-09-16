@@ -4,6 +4,29 @@ import 'dart:io';
 import '../models/Account.dart';
 import 'ChatService.dart';
 
+class BadRequestException implements Exception {
+  final String message;
+  BadRequestException(this.message);
+
+  @override
+  String toString() => "BadRequestException: $message";
+}
+
+class ServerException implements Exception {
+  final String message;
+  ServerException(this.message);
+
+  @override
+  String toString() => "ServerException: $message";
+}
+class NotFoundException implements Exception {
+  final String message;
+  NotFoundException(this.message);
+
+  @override
+  String toString() => "NotFoundException: $message";
+}
+
 class AccountService {
   final String baseUrl = "http://10.0.2.2:3000";
   final httpClient = HttpClient();
@@ -39,6 +62,7 @@ class AccountService {
     try {
       final uri = Uri.parse("$baseUrl/api/v1/users/register");
       final request = await httpClient.postUrl(uri);
+
       request.headers.set(HttpHeaders.contentTypeHeader, "application/json");
 
       request.add(utf8.encode(jsonEncode({
@@ -49,16 +73,19 @@ class AccountService {
 
       final response = await request.close();
 
-      if (response.statusCode == 201) {
-        final responseBody = await response.transform(utf8.decoder).join();
-        Map<String, dynamic> json = jsonDecode(responseBody);
-        return Account.fromJson(json);
+      switch (response.statusCode) {
+        case 201:
+          final responseBody = await response.transform(utf8.decoder).join();
+          Map<String, dynamic> json = jsonDecode(responseBody);
+          return Account.fromJson(json);
+        case 400:
+          throw BadRequestException('Dane są już zajęte.');
+        default:
+          throw ServerException('Błąd serwera: ${response.statusCode}');
       }
-
-      throw HttpException('Failed to register user with status code: ${response.statusCode}');
     } catch (e) {
       if (e is SocketException) {
-        throw FetchDataException(e.message);
+        throw FetchDataException('Błąd sieci: ${e.message}');
       } else {
         rethrow;
       }
@@ -79,18 +106,22 @@ class AccountService {
 
       final response = await request.close();
 
-      if (response.statusCode == 200) {
-        final responseBody = await response.transform(utf8.decoder).join();
-        Map<String, dynamic> json = jsonDecode(responseBody);
-        return Account.fromJson(json);
-      } else {
-        final responseBody = await response.transform(utf8.decoder).join();
-        print("Error response: $responseBody");
-        throw HttpException('Failed to log in user with status code: ${response.statusCode}');
+      switch (response.statusCode) {
+        case 200:
+          final responseBody = await response.transform(utf8.decoder).join();
+          Map<String, dynamic> json = jsonDecode(responseBody);
+          return Account.fromJson(json);
+        case 400:
+          final responseBody = await response.transform(utf8.decoder).join();
+          throw BadRequestException('Nieprawidłowe dane logowania.');
+        case 403:
+          throw NotFoundException('Konto nie zostało aktywowane. Poczekaj na aktywacje');
+        default:
+          throw ServerException('Błąd serwera: ${response.statusCode}');
       }
     } catch (e) {
       if (e is SocketException) {
-        throw FetchDataException(e.message);
+        throw FetchDataException('Błąd sieci: ${e.message}');
       } else {
         rethrow;
       }

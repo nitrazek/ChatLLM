@@ -190,17 +190,17 @@ class _RegisterPageState extends State<RegisterPage> {
                         decoration: InputDecoration(
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscureText ? Icons.visibility_off : Icons.visibility,
+                              _repeatObscureText ? Icons.visibility_off : Icons.visibility,
                               color: Colors.white,
                             ),
-                            onPressed: _togglePasswordVisibility,
+                            onPressed: _toggleRepeatPasswordVisibility,
                           ),
                           label: Text(
                             'Powtórz hasło',
                             style: TextStyle(fontSize: 16 * fontSizeScale, color: Colors.white),
                           ),
                         ),
-                        obscureText: _obscureText,
+                        obscureText: _repeatObscureText,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Wprowadź ponownie hasło';
@@ -231,22 +231,55 @@ class _RegisterPageState extends State<RegisterPage> {
                               );
                             }
                           });
+
                           if (!_formKey.currentState!.validate()) {
                             _isLoading = false;
                             badValues = true;
-
                           }
+                          if(_formKey.currentState!.validate()) {
+                            try {
+                              bool isRegistered = await context.read<
+                                  RegisterviewModel>().register(
+                                login,
+                                email,
+                                password,
+                              );
 
-                          if (_formKey.currentState!.validate()) {
-                          bool isRegistered = await context.read<RegisterviewModel>().register(login, email, password);
-
-                          if(isRegistered) {
-                            Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const LoginPage())
-                            );
-                          }
+                              if (isRegistered) {
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const LoginPage(),
+                                  ),
+                                );
+                              } else {
+                                String errorMessage = context
+                                    .read<RegisterviewModel>()
+                                    .errorMessage;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(errorMessage),
+                                  ),
+                                );
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              }
+                            } catch (e) {
+                              // W przypadku, gdy wystąpił problem z połączeniem (np. brak odpowiedzi z serwera)
+                              setState(() {
+                                _isLoading = false;
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                      'Nie udało się połączyć z serwerem. Spróbuj ponownie później.'),
+                                ),
+                              );
+                            }
                           }
                         },
                       child: Container(
