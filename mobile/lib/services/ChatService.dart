@@ -68,7 +68,16 @@ class ChatService {
       final response = await request.close();
 
       if(response.statusCode == 200) {
+        final responseBody = await response.transform(utf8.decoder).join();
+        Map<String, dynamic> json = jsonDecode(responseBody);
         return Chat.fromJson(json);
+      }
+    }
+    catch(e) {
+      if (e is SocketException) {
+        throw FetchDataException('No Internet Connection');
+      } else {
+        rethrow;
       }
     }
   }
