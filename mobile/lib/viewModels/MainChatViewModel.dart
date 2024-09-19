@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
+import '../models/Chat.dart';
 import '../services/ChatService.dart';
 
 class MainChatViewModel extends ChangeNotifier {
   final ChatService _chatService = ChatService();
   final List<ChatMessage> _chatMessages = [];
+  late Chat _currentChat;
 
   List<ChatMessage> get chatMessages => _chatMessages;
 
@@ -21,8 +23,12 @@ class MainChatViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void createChat(String name, bool isUsingOnlyKnowledgeBase ) async {
-
+  Future<bool> createChat(String name, bool isUsingOnlyKnowledgeBase, int userId ) async {
+    _currentChat = await _chatService.createChat(name, isUsingOnlyKnowledgeBase, userId);
+    if(_currentChat != null)
+      return true;
+    else
+      return false;
   }
 }
 

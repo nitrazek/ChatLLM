@@ -54,6 +54,7 @@ class ChatService {
   String _formatText(String text) {
     return text.replaceAll(r'\n', '\n').replaceAll(r'\t', '    ');
   }
+
   Future<Chat> createChat(String name, bool isUsingOnlyKnowledgeBase, int userId) async {
     try {
       final uri = Uri.parse("$baseUrl/api/v1/chats/new/$userId");
@@ -71,6 +72,9 @@ class ChatService {
         final responseBody = await response.transform(utf8.decoder).join();
         Map<String, dynamic> json = jsonDecode(responseBody);
         return Chat.fromJson(json);
+      }
+      else {
+        throw Exception('Nie udało się utworzyć czatu: ${response.statusCode}');
       }
     }
     catch(e) {

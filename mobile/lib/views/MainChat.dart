@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:mobile/viewModels/LoginViewModel.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_markdown/flutter_markdown.dart' show MarkdownStyleSheet, MarkdownBody;
+import '../models/Account.dart';
 import '../viewModels/MainChatViewModel.dart';
 import '../models/Styles.dart';
 import 'AdminPanel.dart';
@@ -16,6 +18,9 @@ class MainChatPage extends StatefulWidget {
 class _MainChatPageState extends State<MainChatPage> {
   late TextEditingController textEditingController;
   final ScrollController scrollController = ScrollController();
+
+  bool chatForm = false;
+  bool isUsingOnlyKnowledgeBase=false;
 
   @override
   void initState() {
@@ -34,6 +39,9 @@ class _MainChatPageState extends State<MainChatPage> {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     double fontSizeScale = screenWidth / 400;
+
+    late String name;
+    Account _account = context.read<LoginViewModel>().getAccount();
 
     return Scaffold(
       drawer: Drawer(
@@ -143,7 +151,7 @@ class _MainChatPageState extends State<MainChatPage> {
                             color: AppColors.purple,
                           ),
                           padding: EdgeInsets.all(screenWidth * 0.035),
-                          margin: EdgeInsets.only(right: screenWidth * 0.1),
+                          margin: EdgeInsets.only(right: screenWidth * 0.085),
                           child: const Icon(
                             Icons.menu,
                             color: Colors.white,
@@ -156,22 +164,72 @@ class _MainChatPageState extends State<MainChatPage> {
                         style: AppTextStyles.chatText(fontSizeScale, 36)
                     ),
                     Builder(builder: (context) {
-                      return InkWell(
-                        onTap: () {
-
-                        },
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.purple,
+                      return Stack(
+                        children: [
+                          InkWell(
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(15.0),
+                                    ),
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        TextField(
+                                          decoration: InputDecoration(labelText: 'Nazwa chatu'),
+                                          onChanged: (value) {
+                                            setState(() {
+                                              name = value;
+                                            });
+                                          },
+                                        ),
+                                        SizedBox(height: 16),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text("Używaj tylko bazy wiedzy"),
+                                            Switch(
+                                              value: isUsingOnlyKnowledgeBase,
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  isUsingOnlyKnowledgeBase = value;
+                                                });
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                        SizedBox(height: 16),
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            bool isCreated = context.read<MainChatViewModel>().createChat(name, isUsingOnlyKnowledgeBase, _account.id) as bool;
+                                            if(isCreated)
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: Text('Stwórz'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppColors.purple,
+                              ),
+                              padding: EdgeInsets.all(screenWidth * 0.035),
+                              margin: EdgeInsets.only(left: screenWidth * 0.085),
+                              child: const Icon(
+                                Icons.add,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
-                          padding: EdgeInsets.all(screenWidth * 0.035),
-                          margin: EdgeInsets.only(left: screenWidth * 0.1),
-                          child: const Icon(
-                            Icons.add,
-                            color: Colors.white,
-                          ),
-                        ),
+                        ]
                       );
                     })
                   ],

@@ -32,4 +32,7 @@ Future<bool> login (String name, String password) async {
     return false;
   }
 }
+  Account getAccount() {
+    return _account;
+  }
 }
