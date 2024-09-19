@@ -305,10 +305,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       SizedBox(height: screenHeight * 0.01,),
                       InkWell(
                         onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const LoginPage()),
-                          );
+                          Navigator.pop(context);
                         },
                         child: Container(
                           height: screenHeight * 0.06,

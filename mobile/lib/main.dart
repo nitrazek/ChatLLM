@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
           ChangeNotifierProvider(create: (context) => Activateuserviewmodel())
         ],
         child: const MaterialApp(
-          home: const RegisterPage(),
+          home: const LoginPage(),
         ));
   }
 }
