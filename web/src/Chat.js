@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { Oval } from 'react-loader-spinner';
 import { useNavigate, useParams } from "react-router-dom";
 import Cookies from 'js-cookie';
+import NewChatPopup from './NewChatPopup'; 
 
 function Chat() {
   const { chatId } = useParams(); 
@@ -14,6 +15,7 @@ function Chat() {
   const [isLoading, setIsLoading] = useState(false);
   const [lastUserMessage, setLastUserMessage] = useState(null);
   const [chatHistory, setChatHistory] = useState([]);
+  const [showNewChatPopup, setShowNewChatPopup] = useState(false);
   const role = Cookies.get("userRole"); 
   const mainTopRef = useRef(null);
   const navigate = useNavigate();
@@ -23,43 +25,6 @@ function Chat() {
     Cookies.remove("userName");
     Cookies.remove("userRole");
     navigate("/");
-  };
-
-  const createNewChat = async () => {
-    const data = new Date();
-    const userId = Cookies.get("userId");
-  
-    try {
-      const response = await fetch(`http://localhost:3000/api/v1/chats/new/${userId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name: data.toUTCString(), isUsingOnlyKnowledgeBase: false })
-      });
-  
-      if (!response.body) {
-        throw new Error("Brak odpowiedzi w strumieniu");
-      }
-  
-      const reader = response.body.getReader();
-      let decoder = new TextDecoder('utf-8');
-      let result = '';
-      
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        result += decoder.decode(value, { stream: true });
-      }
-  
-      const parsedResult = JSON.parse(result); 
-      const newChatId = parsedResult.id;
-      
-      navigate(`/chat/${newChatId}`); 
-  
-    } catch (error) {
-      console.error("Error creating new chat:", error);
-    }
   };
 
   const sendMessage = async () => {
@@ -129,7 +94,7 @@ function Chat() {
       });
 
     } catch (error) {
-      console.error('Error sending message:', error);
+      alert(error.errorMessage);
       setIsLoading(false);
     }
   };
@@ -164,7 +129,7 @@ function Chat() {
         const data = await response.json();
         setChatHistory(data); 
       } catch (error) {
-        console.error('Error fetching chat history:', error);
+        alert(error.errorMessage);
       }
     };
 
@@ -191,12 +156,12 @@ useEffect(() => {
         id: index + 1, // Generate a unique ID for the message
         text: msg.content, // Set the content from the API response
         fromUser: msg.sender === "human", // Determine if the message is from the user
-        user: { name: msg.sender === "human" ? `${Cookies.get("userName")}`: "Bot", avatar: msg.sender === "human" ? "/avatars/user.png" : "/avatars/bot.png" } // Set avatar based on sender
+        user: { name: msg.sender === "human" ? `${Cookies.get("userName")}`: "Bot", avatar: msg.sender === "human" ? "./avatars/user.png" : "./avatars/bot.png" } // Set avatar based on sender
       }));
 
       setMessages(formattedMessages); // Update state with formatted messages
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      alert(error.errorMessage);
     }
   };
 
@@ -206,10 +171,11 @@ useEffect(() => {
 
   return (
     <div className="App">
+      {showNewChatPopup && <NewChatPopup/>}
       <div className="sideBar">
         <div className="generatorContainer">
           <div className="upperSideTop">C o k o l w i e k</div>
-          <button className="button" onClick={createNewChat}>Rozpocznij nowy czat</button>
+          <button className="button" onClick={() => setShowNewChatPopup(true)}>Rozpocznij nowy czat</button>
         </div>
         <div className="upperSide">
           <span className="chatHistorySpan">Historia czatów:</span>
@@ -220,7 +186,7 @@ useEffect(() => {
               .sort((a,b) => b.id - a.id)
               .map((chat, index) => (
                 <li key={chat.id}>
-                  <button className="chatHistoryButton" onClick={() => navigate(`/chat/${chat.id}`)}>{chat.id}. {chat.name}</button>
+                  <button className="chatHistoryButton" onClick={() => navigate(`/chat/${chat.id}`)}>{chat.name}</button>
                 </li>
               ))}
             </ul>
