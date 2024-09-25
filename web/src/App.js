@@ -14,6 +14,7 @@ function App() {
         <Routes location={location}>
           <Route path="/" element={<Login />} />
           <Route path="/chat" element={<Chat />} />
+          <Route path="/chat/:chatId" element={<Chat />} />
         </Routes>
       </CSSTransition>
     </TransitionGroup>

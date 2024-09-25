@@ -4,17 +4,18 @@ import './Chat.css';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Oval } from 'react-loader-spinner';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Cookies from 'js-cookie';
 
 function Chat() {
+  const { chatId } = useParams(); 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [lastUserMessage, setLastUserMessage] = useState(null);
-  const role = Cookies.get("userRole"); // Pobierz rolę z ciasteczka
+  const [chatHistory, setChatHistory] = useState([]);
+  const role = Cookies.get("userRole"); 
   const mainTopRef = useRef(null);
-
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -24,17 +25,42 @@ function Chat() {
     navigate("/");
   };
 
-  const chatHistory = [
-    "Adam Małysz",
-    "Co jest cięższe?",
-    "Powitanie",
-    "test1test1test1test1ttest1test1test1test1test1test1test1est1",
-    "test2",
-    "test3",
-    "test4",
-    "test5",
-    "test6"
-  ];
+  const createNewChat = async () => {
+    const data = new Date();
+    const userId = Cookies.get("userId");
+  
+    try {
+      const response = await fetch(`http://localhost:3000/api/v1/chats/new/${userId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: data.toUTCString(), isUsingOnlyKnowledgeBase: false })
+      });
+  
+      if (!response.body) {
+        throw new Error("Brak odpowiedzi w strumieniu");
+      }
+  
+      const reader = response.body.getReader();
+      let decoder = new TextDecoder('utf-8');
+      let result = '';
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        result += decoder.decode(value, { stream: true });
+      }
+  
+      const parsedResult = JSON.parse(result); 
+      const newChatId = parsedResult.id;
+      
+      navigate(`/chat/${newChatId}`); 
+  
+    } catch (error) {
+      console.error("Error creating new chat:", error);
+    }
+  };
 
   const sendMessage = async () => {
     if (input.trim() === '') return;
@@ -52,8 +78,7 @@ function Chat() {
     setIsLoading(true);
 
     try {
-
-      const response = await fetch('http://localhost:3000/api/v1/model/questions', {
+      const response = await fetch(`http://localhost:3000/api/v1/chats/${chatId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -81,7 +106,6 @@ function Chat() {
         const answer = parsedChunk.answer;
 
         accumulatedText += answer;
-
         botMessage.text = accumulatedText;
 
         setMessages(prevMessages => {
@@ -101,7 +125,6 @@ function Chat() {
         });
 
         setIsLoading(false);
-
         reader.read().then(processText);
       });
 
@@ -128,20 +151,76 @@ function Chat() {
     }
   }, [messages]);
 
+  useEffect(() => {
+    const fetchChatHistory = async () => {
+      const userId = Cookies.get('userId');
+      try {
+        const response = await fetch(`http://localhost:3000/api/v1/chats/list/${userId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        const data = await response.json();
+        setChatHistory(data); 
+      } catch (error) {
+        console.error('Error fetching chat history:', error);
+      }
+    };
+
+    fetchChatHistory();
+  }, []);
+
+  // Now add another useEffect to load messages when chatId is available
+useEffect(() => {
+  const fetchMessages = async () => {
+    if (!chatId) return; // Exit if chatId is not available
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/v1/chats/${chatId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const data = await response.json(); // Assuming data is an array of messages
+      
+      // Format the messages according to your application's structure
+      const formattedMessages = data.map((msg, index) => ({
+        id: index + 1, // Generate a unique ID for the message
+        text: msg.content, // Set the content from the API response
+        fromUser: msg.sender === "human", // Determine if the message is from the user
+        user: { name: msg.sender === "human" ? `${Cookies.get("userName")}`: "Bot", avatar: msg.sender === "human" ? "/avatars/user.png" : "/avatars/bot.png" } // Set avatar based on sender
+      }));
+
+      setMessages(formattedMessages); // Update state with formatted messages
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
+
+  fetchMessages();
+}, [chatId]); // Only run this effect when chatId changes
+
+
   return (
     <div className="App">
       <div className="sideBar">
         <div className="generatorContainer">
           <div className="upperSideTop">C o k o l w i e k</div>
-          <button className="button">Rozpocznij nowy czat</button>
+          <button className="button" onClick={createNewChat}>Rozpocznij nowy czat</button>
         </div>
         <div className="upperSide">
           <span className="chatHistorySpan">Historia czatów:</span>
           <div className="upperSideBottom">
             <ul className="chatHistory" style={{ textAlign: "center", alignContent: "center" }}>
-              {chatHistory.map((option, index) => (
-                <li key={index}>
-                  <button className="chatHistoryButton">{option}</button>
+              {chatHistory
+              .slice()
+              .sort((a,b) => b.id - a.id)
+              .map((chat, index) => (
+                <li key={chat.id}>
+                  <button className="chatHistoryButton" onClick={() => navigate(`/chat/${chat.id}`)}>{chat.id}. {chat.name}</button>
                 </li>
               ))}
             </ul>
@@ -149,25 +228,32 @@ function Chat() {
         </div>
         <div className="lowerSide">
           <button className="button">Ustawienia</button>
-          {role ==="admin" && <button className="button">Panel administratora</button>}
+          {role === "admin" && <button className="button">Panel administratora</button>}
           <button className="button" onClick={handleLogout}>Wyloguj się</button>
         </div>
       </div>
+
       <div className="main">
         <div className="mainTop" ref={mainTopRef}>
-          {messages.map(message => (
-            <div key={message.id} className={message.fromUser ? "userMessage" : "botMessage"}>
-              <div className="messageHeader">
-                <img src={message.user.avatar} alt={message.user.name} className="avatar" />
-                <span className="username">{message.user.name}</span>
-              </div>
-              <div className="messageContent">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {message.text}
-                </ReactMarkdown>
-              </div>
+          {!chatId ? (
+            <div className="noChatSelected">
+              <h3>Nie wybrano czatu</h3>
+              <p>Proszę wybrać istniejący czat lub rozpocząć nowy.</p>
             </div>
-          ))}
+          ) : (
+            messages.map(message => (
+              <div key={message.id} className={message.fromUser ? "userMessage" : "botMessage"}>
+                <div className="messageHeader">
+                  <img src={message.user.avatar} alt={message.user.name} className="avatar" />
+                  <span className="username">{message.user.name}</span>
+                </div>
+                <div className="messageContent">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.text}</ReactMarkdown>
+                </div>
+              </div>
+            ))
+          )}
+
           {isLoading && (
             <div className="botMessage">
               <div className="messageHeader">
@@ -182,18 +268,21 @@ function Chat() {
             </div>
           )}
         </div>
+
         <div className="mainBottom">
           <div className="chatFooter">
-            <div className="input">
-              <input
-                type="text"
-                placeholder="Napisz wiadomość..."
-                value={input}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyDown}
-                disabled={isLoading}
-              />
-            </div>
+            {chatId && (
+              <div className="input">
+                <input
+                  type="text"
+                  placeholder="Napisz wiadomość..."
+                  value={input}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  disabled={isLoading}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
