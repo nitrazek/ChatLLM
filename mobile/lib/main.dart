@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
           ChangeNotifierProvider(create: (context) => AccountState())
         ],
         child: const MaterialApp(
-          home: const RegisterPage(),
+          home: const LoginPage(),
         ));
   }
 }
