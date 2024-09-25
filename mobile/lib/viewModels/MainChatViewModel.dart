@@ -10,12 +10,12 @@ class MainChatViewModel extends ChangeNotifier {
 
   List<ChatMessage> get chatMessages => _chatMessages;
 
-  void sendPrompt(String question) async {
+  void sendPrompt(String question, int currentChatId) async {
     ChatMessage chatMessage = ChatMessage(question: question);
     _chatMessages.add(chatMessage);
     notifyListeners();
 
-    await for (var answer in _chatService.postQuestion(question)) {
+    await for (var answer in _chatService.postQuestion(question, currentChatId)) {
       chatMessage.addResponse(answer);
     }
 
@@ -23,13 +23,7 @@ class MainChatViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> createChat(String name, bool isUsingOnlyKnowledgeBase, int userId ) async {
-    _currentChat = await _chatService.createChat(name, isUsingOnlyKnowledgeBase, userId);
-    if(_currentChat != null)
-      return true;
-    else
-      return false;
-  }
+
 }
 
 class ChatMessage {

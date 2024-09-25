@@ -5,6 +5,7 @@ import 'package:mobile/models/Styles.dart';
 import 'package:mobile/viewModels/LoginViewModel.dart';
 import 'package:provider/provider.dart';
 
+import '../states/AccountState.dart';
 import 'MainChat.dart';
 import 'Register.dart';
 
@@ -153,7 +154,7 @@ class _LoginPageState extends State<LoginPage> with RouteAware{
                           String password = _passwordController.text;
 
                           Future.delayed(Duration(seconds: 7), () {
-                            if (_isLoading) {
+                            if (_isLoading && mounted) {
                               setState(() {
                                 _isLoading = false;
                               });
@@ -171,6 +172,7 @@ class _LoginPageState extends State<LoginPage> with RouteAware{
                               isLogged = await context.read<LoginViewModel>().login(login, password);
 
                               if (isLogged) {
+                                context.read<AccountState>().setAccount(context.read<LoginViewModel>().getAccount());
                                 Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(

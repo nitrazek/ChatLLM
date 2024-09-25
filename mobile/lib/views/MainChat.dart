@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:mobile/services/ChatService.dart';
+import 'package:mobile/states/ChatState.dart';
 import 'package:mobile/viewModels/LoginViewModel.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_markdown/flutter_markdown.dart' show MarkdownStyleSheet, MarkdownBody;
 import '../models/Account.dart';
+import 'ChatDialog.dart';
 import '../viewModels/MainChatViewModel.dart';
 import '../models/Styles.dart';
 import 'AdminPanel.dart';
@@ -40,10 +43,8 @@ class _MainChatPageState extends State<MainChatPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     double fontSizeScale = screenWidth / 400;
 
-    late String name;
-    Account _account = context.read<LoginViewModel>().getAccount();
-
-    return Scaffold(
+    return PopScope (
+        child:Scaffold(
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -167,54 +168,20 @@ class _MainChatPageState extends State<MainChatPage> {
                       return Stack(
                         children: [
                           InkWell(
-                            onTap: () {
-                              showDialog(
+                            onTap: () async {
+                              bool? isCreated = await showDialog(
                                 context: context,
                                 builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(15.0),
-                                    ),
-                                    content: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        TextField(
-                                          decoration: InputDecoration(labelText: 'Nazwa chatu'),
-                                          onChanged: (value) {
-                                            setState(() {
-                                              name = value;
-                                            });
-                                          },
-                                        ),
-                                        SizedBox(height: 16),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text("Używaj tylko bazy wiedzy"),
-                                            Switch(
-                                              value: isUsingOnlyKnowledgeBase,
-                                              onChanged: (value) {
-                                                setState(() {
-                                                  isUsingOnlyKnowledgeBase = value;
-                                                });
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                        SizedBox(height: 16),
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            bool isCreated = context.read<MainChatViewModel>().createChat(name, isUsingOnlyKnowledgeBase, _account.id) as bool;
-                                            if(isCreated)
-                                            Navigator.of(context).pop();
-                                          },
-                                          child: Text('Stwórz'),
-                                        ),
-                                      ],
-                                    ),
-                                  );
+                                  return ChatDialog();
                                 },
                               );
+                              if(isCreated == true){
+                                context.read<MainChatViewModel>().chatMessages.clear();
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const MainChatPage()),
+                                );
+                              }
                             },
                             child: Container(
                               decoration: const BoxDecoration(
@@ -336,7 +303,10 @@ class _MainChatPageState extends State<MainChatPage> {
                         style: AppTextStyles.chatText(fontSizeScale, 18),
                         controller: textEditingController,
                         onSubmitted: (message) async {
-                          context.read<MainChatViewModel>().sendPrompt(message);
+                          context.read<MainChatViewModel>().sendPrompt(
+                              message,
+                              context.read<ChatState>().currentChat!.id
+                              );
                           textEditingController.clear();
                         },
                         decoration: const InputDecoration(
@@ -354,7 +324,10 @@ class _MainChatPageState extends State<MainChatPage> {
                       onPressed: () {
                         if (textEditingController.text.isNotEmpty) {
                           final message = textEditingController.text;
-                          context.read<MainChatViewModel>().sendPrompt(message);
+                          context.read<MainChatViewModel>().sendPrompt(
+                              message,
+                              context.read<ChatState>().currentChat!.id
+                          );
                           textEditingController.clear();
                         }
                       },
@@ -370,6 +343,10 @@ class _MainChatPageState extends State<MainChatPage> {
           ),
         ),
       ),
+    ),
     );
   }
 }
+
+
+

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mobile/states/AccountState.dart';
+import 'package:mobile/states/ChatState.dart';
 import 'package:mobile/viewModels/ActivateUserViewModel.dart';
+import 'package:mobile/viewModels/ChatDialogViewModel.dart';
 import 'package:mobile/viewModels/LoginViewModel.dart';
 import 'package:mobile/viewModels/MainChatViewModel.dart';
 import 'package:mobile/viewModels/RegisterViewModel.dart';
@@ -23,7 +26,10 @@ class MyApp extends StatelessWidget {
           ChangeNotifierProvider(create: (context) => MainChatViewModel()),
           ChangeNotifierProvider(create: (context) => RegisterviewModel()),
           ChangeNotifierProvider(create: (context) => LoginViewModel()),
-          ChangeNotifierProvider(create: (context) => Activateuserviewmodel())
+          ChangeNotifierProvider(create: (context) => Activateuserviewmodel()),
+          ChangeNotifierProvider(create: (context) => ChatDialogViewModel()),
+          ChangeNotifierProvider(create: (context) => ChatState()),
+          ChangeNotifierProvider(create: (context) => AccountState())
         ],
         child: const MaterialApp(
           home: const RegisterPage(),

@@ -1,14 +1,19 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
+import 'package:mobile/viewModels/MainChatViewModel.dart';
+import 'package:provider/provider.dart';
+
 import '../models/Chat.dart';
 
-class ChatService {
+class ChatService extends ChangeNotifier{
   final String baseUrl = "http://10.0.2.2:3000";
 
-  Stream<String> postQuestion(String question) async* {
+
+  Stream<String> postQuestion(String question, int chatId) async* {
     try {
-      final uri = Uri.parse("$baseUrl/api/v1/chats/1");
+      final uri = Uri.parse("$baseUrl/api/v1/chats/$chatId");
       final httpClient = HttpClient();
       final request = await httpClient.postUrl(uri);
 
