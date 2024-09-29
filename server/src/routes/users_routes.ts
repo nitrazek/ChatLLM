@@ -31,6 +31,7 @@ import {
     TGetUsersResponse,
     GetUsersResponse
 } from "../schemas/users_schemas";
+import { hash, compare } from "bcryptjs";
 
 const userRoutes = async (fastify: FastifyInstance) => {
     // Get list of users (only admin)
@@ -96,7 +97,9 @@ const userRoutes = async (fastify: FastifyInstance) => {
             return response.status(400).send({ errorMessage: "User with this name already exists" });
         }
 
-        const user = await createUser(name, email, password);
+        const hashedPassword = await hash(password, 12);
+
+        const user = await createUser(name, email, hashedPassword);
         return response.status(201).send({ id: user.id, name: user.name, email: user.email, role: user.role, activated: user.activated });
     });
 
@@ -119,7 +122,7 @@ const userRoutes = async (fastify: FastifyInstance) => {
     }, async (request, response) => {
         const { name, password } = request.body;
         const user = await getUserByName(name);
-        if (!user || user.password !== password) {
+        if (!user || !(await compare(password, user.password))) {
             return response.status(400).send({ errorMessage: "Invalid credentials" });
         }
 
