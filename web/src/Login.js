@@ -6,19 +6,16 @@ import Cookies from 'js-cookie';
 function Login() {
     const [isRegister, setIsRegister] = useState(false);
 
-    // State variables for form inputs
     const [email, setEmail] = useState("");
     const [login, setLogin] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
-    // State variables for errors
     const [emailError, setEmailError] = useState("");
     const [loginError, setLoginError] = useState("");
     const [passwordError, setPasswordError] = useState("");
     const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
-    // State variables to track blur
     const [touched, setTouched] = useState({
         email: false,
         login: false,
@@ -26,9 +23,8 @@ function Login() {
         confirmPassword: false
     });
 
-    const navigate = useNavigate(); // Initialize useNavigate
+    const navigate = useNavigate(); 
 
-    // Validation functions
     const validateEmail = (email) => {
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!email) {
@@ -64,13 +60,11 @@ function Login() {
         return "";
     };
 
-    // Handle input changes
     const handleEmailChange = (e) => setEmail(e.target.value);
     const handleLoginChange = (e) => setLogin(e.target.value);
     const handlePasswordChange = (e) => setPassword(e.target.value);
     const handleConfirmPasswordChange = (e) => setConfirmPassword(e.target.value);
 
-    // Handle blur events for validation
     const handleEmailBlur = () => {
         setTouched((prev) => ({ ...prev, email: true }));
         setEmailError(validateEmail(email));
@@ -90,7 +84,6 @@ function Login() {
     };
 
     const handleRegister = () => {
-        // Perform final validation on submit
         const emailError = validateEmail(email);
         const loginError = validateLogin(login);
         const passwordError = validatePassword(password);
@@ -147,7 +140,6 @@ function Login() {
         resetForm();
     };
 
-    // Determine the classes for inputs based on errors
     const getInputClass = (error, value, isTouched) => {
         if (error) return 'input-error';
         return isTouched && value ? 'input-valid' : 'input-default';

@@ -54,7 +54,7 @@ h4 {
 }
 
 .popup-container input[type="checkbox"] {
-    transform: scale(2); /* Skaluje checkbox do 1.5x większego rozmiaru */
+    transform: scale(2); /* Skaluje checkbox do 1.5x*/
     -webkit-transform: scale(2); /* Dla wsparcia w przeglądarkach WebKit (Safari, Chrome) */
     -moz-transform: scale(2); /* Dla Firefox */
 }

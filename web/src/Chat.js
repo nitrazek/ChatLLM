@@ -136,10 +136,9 @@ function Chat() {
     fetchChatHistory();
   }, []);
 
-  // Now add another useEffect to load messages when chatId is available
 useEffect(() => {
   const fetchMessages = async () => {
-    if (!chatId) return; // Exit if chatId is not available
+    if (!chatId) return; 
 
     try {
       const response = await fetch(`http://localhost:3000/api/v1/chats/${chatId}`, {
@@ -149,25 +148,22 @@ useEffect(() => {
         },
       });
       
-      const data = await response.json(); // Assuming data is an array of messages
-      
-      // Format the messages according to your application's structure
+      const data = await response.json(); 
       const formattedMessages = data.map((msg, index) => ({
-        id: index + 1, // Generate a unique ID for the message
-        text: msg.content, // Set the content from the API response
-        fromUser: msg.sender === "human", // Determine if the message is from the user
-        user: { name: msg.sender === "human" ? `${Cookies.get("userName")}`: "Bot", avatar: msg.sender === "human" ? "./avatars/user.png" : "./avatars/bot.png" } // Set avatar based on sender
+        id: index + 1, 
+        text: msg.content, 
+        fromUser: msg.sender === "human", 
+        user: { name: msg.sender === "human" ? `${Cookies.get("userName")}`: "Bot", avatar: msg.sender === "human" ? "./avatars/user.png" : "./avatars/bot.png" } 
       }));
 
-      setMessages(formattedMessages); // Update state with formatted messages
+      setMessages(formattedMessages);
     } catch (error) {
       alert(error.errorMessage);
     }
   };
 
   fetchMessages();
-}, [chatId]); // Only run this effect when chatId changes
-
+}, [chatId]); 
 
   return (
     <div className="App">
