@@ -23,6 +23,12 @@ class MainChatViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<List<Chat>> getChatList(int userId) async{
+
+      List<Chat> chatList = await _chatService.getChatList(userId);
+      return chatList;
+  }
+
 
 }
 

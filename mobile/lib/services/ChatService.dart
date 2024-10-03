@@ -91,7 +91,28 @@ class ChatService extends ChangeNotifier{
     }
   }
 
-}
+  Future<List<Chat>> getChatList(int userId) async {
+    try {
+      final uri = Uri.parse("$baseUrl/api/v1/chats/list/$userId");
+      final httpClient = HttpClient();
+      final request = await httpClient.getUrl(uri);
+
+      final response = await request.close();
+
+      if(response.statusCode == 200) {
+        final responseBody = await response.transform(utf8.decoder).join();
+        List<dynamic> jsonList = jsonDecode(responseBody);
+        return jsonList.map((json) => Chat.fromJson(json)).toList();
+      }
+      else {
+        throw Exception('Failed to load chats');
+      }
+    } catch (e) {
+      print("Error: $e");
+      return [];
+    }
+    }
+  }
 
 class FetchDataException implements Exception {
   final String message;

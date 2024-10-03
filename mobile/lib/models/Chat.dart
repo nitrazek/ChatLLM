@@ -26,4 +26,8 @@ class Chat  {
     };
   }
 
+  static List<Chat> fromJsonList(List<dynamic> jsonList) {
+    return jsonList.map((json) => Chat.fromJson(json)).toList();
+  }
+
 }
