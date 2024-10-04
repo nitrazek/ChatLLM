@@ -298,6 +298,15 @@ class _MainChatPageState extends State<MainChatPage> {
                         color: Colors.grey,
                       ),
                     ),
+                    IconButton(
+                      onPressed: context.watch<MainChatViewModel>().isLoading ? () {
+                        context.read<MainChatViewModel>().cancelAnswer();
+                      } : null,
+                      icon: const Icon(
+                        Icons.stop,
+                        color: Colors.grey
+                      ),
+                    )
                   ],
                 ),
               ),
