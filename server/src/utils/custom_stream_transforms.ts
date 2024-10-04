@@ -10,6 +10,7 @@ export const getTransformStream = (chatId: number): TransformStream<BaseMessageC
   let fullAnswer: string = "";
   return new TransformStream<BaseMessageChunk, string>({
     transform: (chunk, controller) => {
+      console.log(chunk.content as string)
       const answer: TPostMessageResponse = { answer: chunk.content as string };
       fullAnswer += answer.answer;
       controller.enqueue(JSON.stringify(answer));

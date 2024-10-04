@@ -11,6 +11,7 @@ function App() {
   const [lastUserMessage, setLastUserMessage] = useState(null);
 
   const mainTopRef = useRef(null);
+  const controller = useRef(null);
 
   const chatHistory = [
     "Adam Małysz",
@@ -38,6 +39,7 @@ function App() {
     setLastUserMessage(userMessage);
     setInput('');
     setIsLoading(true);
+    controller.current = new AbortController();
 
     try {
       const response = await fetch('http://localhost:3000/api/v1/chats/1', {
@@ -46,20 +48,26 @@ function App() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ question: input }),
+        signal: controller.current.signal,
+        cache: "no-store"
       });
+
+      console.log("Request sent");
 
       const reader = response.body.getReader();
       let accumulatedText = '';
 
-      reader.read().then(function processText({ done, value }) {
-        if (done) {
+      while(true) {
+        const { done, value } = await reader.read();
+        if(done) {
           setIsLoading(false);
-          return;
+          break;
         }
 
         const chunk = new TextDecoder().decode(value);
         const parsedChunk = JSON.parse(chunk);
         const answer = parsedChunk.answer;
+        console.log(chunk)
 
         accumulatedText += answer;
 
@@ -85,14 +93,18 @@ function App() {
 
           return updatedMessages;
         });
-
-        reader.read().then(processText);
-      });
-
+      }
     } catch (error) {
-      console.error('Error sending message:', error);
       setIsLoading(false);
+      controller.current = null;
+      if (error.name !== "AbortError")
+        console.error('Error sending message:', error);
     }
+  };
+
+  const cancelAnswer = (e) => {
+    if(controller.current) controller.current.abort();
+    console.log("ABORT!!")
   };
 
   const handleInputChange = (e) => {
@@ -165,6 +177,7 @@ function App() {
                 disabled={isLoading}
               />
             </div>
+            <button className="cancelButton" onClick={cancelAnswer} disabled={!isLoading}>STOP</button>
           </div>
         </div>
       </div>
