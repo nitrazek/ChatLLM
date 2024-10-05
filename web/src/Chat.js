@@ -6,19 +6,26 @@ import remarkGfm from 'remark-gfm';
 import { Oval } from 'react-loader-spinner';
 import { useNavigate, useParams } from "react-router-dom";
 import Cookies from 'js-cookie';
-import NewChatPopup from './NewChatPopup'; 
+import NewChatPopup from './NewChatPopup';
 
 function Chat() {
-  const { chatId } = useParams(); 
+  const { chatId } = useParams();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [lastUserMessage, setLastUserMessage] = useState(null);
   const [chatHistory, setChatHistory] = useState([]);
   const [showNewChatPopup, setShowNewChatPopup] = useState(false);
-  const role = Cookies.get("userRole"); 
+  const role = Cookies.get("userRole");
   const mainTopRef = useRef(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const userId = Cookies.get("userId");
+    if (!userId) {
+      navigate('/');
+    }
+  })
 
   const handleLogout = async () => {
     Cookies.remove("userId");
@@ -127,7 +134,7 @@ function Chat() {
           },
         });
         const data = await response.json();
-        setChatHistory(data); 
+        setChatHistory(data);
       } catch (error) {
         alert(error.errorMessage);
       }
@@ -136,38 +143,38 @@ function Chat() {
     fetchChatHistory();
   }, []);
 
-useEffect(() => {
-  const fetchMessages = async () => {
-    if (!chatId) return; 
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!chatId) return;
 
-    try {
-      const response = await fetch(`http://localhost:3000/api/v1/chats/${chatId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      const data = await response.json(); 
-      const formattedMessages = data.map((msg, index) => ({
-        id: index + 1, 
-        text: msg.content, 
-        fromUser: msg.sender === "human", 
-        user: { name: msg.sender === "human" ? `${Cookies.get("userName")}`: "Bot", avatar: msg.sender === "human" ? "./avatars/user.png" : "./avatars/bot.png" } 
-      }));
+      try {
+        const response = await fetch(`http://localhost:3000/api/v1/chats/${chatId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
-      setMessages(formattedMessages);
-    } catch (error) {
-      alert(error.errorMessage);
-    }
-  };
+        const data = await response.json();
+        const formattedMessages = data.map((msg, index) => ({
+          id: index + 1,
+          text: msg.content,
+          fromUser: msg.sender === "human",
+          user: { name: msg.sender === "human" ? `${Cookies.get("userName")}` : "Bot", avatar: msg.sender === "human" ? "./avatars/user.png" : "./avatars/bot.png" }
+        }));
 
-  fetchMessages();
-}, [chatId]); 
+        setMessages(formattedMessages);
+      } catch (error) {
+        alert(error.errorMessage);
+      }
+    };
+
+    fetchMessages();
+  }, [chatId]);
 
   return (
     <div className="App">
-      {showNewChatPopup && <NewChatPopup/>}
+      {showNewChatPopup && <NewChatPopup />}
       <div className="sideBar">
         <div className="generatorContainer">
           <div className="upperSideTop">C o k o l w i e k</div>
@@ -177,15 +184,20 @@ useEffect(() => {
           <span className="chatHistorySpan">Historia czatów:</span>
           <div className="upperSideBottom">
             <ul className="chatHistory" style={{ textAlign: "center", alignContent: "center" }}>
-              {chatHistory
-              .slice()
-              .sort((a,b) => b.id - a.id)
-              .map((chat, index) => (
-                <li key={chat.id}>
-                  <button className="chatHistoryButton" onClick={() => navigate(`/chat/${chat.id}`)}>{chat.name}</button>
-                </li>
-              ))}
+              {chatHistory.length > 0 && (
+                chatHistory
+                  .slice()
+                  .sort((a, b) => b.id - a.id)
+                  .map((chat) => (
+                    <li key={chat.id}>
+                      <button className="chatHistoryButton" onClick={() => navigate(`/chat/${chat.id}`)}>
+                        {chat.name}
+                      </button>
+                    </li>
+                  ))
+              )}
             </ul>
+
           </div>
         </div>
         <div className="lowerSide">

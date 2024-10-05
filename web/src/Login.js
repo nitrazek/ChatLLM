@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import './Login.css';
 import { useNavigate } from "react-router-dom";
 import Cookies from 'js-cookie';
@@ -24,6 +24,13 @@ function Login() {
     });
 
     const navigate = useNavigate(); 
+
+    useEffect(() => {
+        const userId = Cookies.get("userId");
+        if (userId) {
+            navigate('/chat');
+        }
+    })
 
     const validateEmail = (email) => {
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -96,7 +103,6 @@ function Login() {
 
         if (!emailError && !loginError && !passwordError && !confirmPasswordError) {
             registerUser();
-            console.log("Registration successful");
         }
     };
 
@@ -109,7 +115,6 @@ function Login() {
 
         if (!loginError && !passwordError) {
             loginUser();
-            console.log("Login successful");
         }
     };
 
@@ -156,7 +161,7 @@ function Login() {
               });
               if (response.status === 201)
                 {
-                    alert("Pomyślnie zarejestrowano konto. Oczekuj na aktywację konta przez administratora.");
+                    alert("You have successfully registered your account. Wait for administrator to activate your account.");
                     resetForm();
                     handleToggleLogin();
                 }
@@ -179,16 +184,14 @@ function Login() {
 
             if (response.ok) { 
                 navigate('/chat');
-                console.log(data);
                 Cookies.set("userId", data.id);
                 Cookies.set("userName", data.name);
                 Cookies.set("userRole", data.role);
             } else {
-                alert(data.errorMessage || "Błąd logowania");
+                alert(data.errorMessage);
             }
         } catch (error) {
-            console.error("Błąd podczas logowania:", error);
-            alert("Wystąpił błąd. Spróbuj ponownie później.");
+            alert("An error occurred. Try again later");
         }
     }
 
@@ -248,7 +251,7 @@ function Login() {
                         <br />
                         <input
                             type="text"
-                            placeholder="Login lub Email"
+                            placeholder="Login"
                             className='input-default'
                             value={login}
                             onChange={handleLoginChange}
