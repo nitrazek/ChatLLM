@@ -41,7 +41,7 @@ function Chat() {
       id: messages.length + 1,
       text: input,
       fromUser: true,
-      user: { name: Cookies.get('userName'), avatar: "./avatars/user.png" }
+      user: { name: Cookies.get('userName'), avatar: "/avatars/user.png" }
     };
 
     setMessages(prevMessages => [...prevMessages, userMessage]);
@@ -64,7 +64,7 @@ function Chat() {
         id: messages.length + 2,
         text: '',
         fromUser: false,
-        user: { name: "Bot", avatar: "./avatars/bot.png" }
+        user: { name: "Bot", avatar: "/avatars/bot.png" }
       };
 
       reader.read().then(function processText({ done, value }) {
@@ -160,7 +160,7 @@ function Chat() {
           id: index + 1,
           text: msg.content,
           fromUser: msg.sender === "human",
-          user: { name: msg.sender === "human" ? `${Cookies.get("userName")}` : "Bot", avatar: msg.sender === "human" ? "./avatars/user.png" : "./avatars/bot.png" }
+          user: { name: msg.sender === "human" ? `${Cookies.get("userName")}` : "Bot", avatar: msg.sender === "human" ? "/avatars/user.png" : "/avatars/bot.png" }
         }));
 
         setMessages(formattedMessages);
