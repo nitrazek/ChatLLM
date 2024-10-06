@@ -23,7 +23,7 @@ function Login() {
         confirmPassword: false
     });
 
-    const navigate = useNavigate(); 
+    const navigate = useNavigate();
 
     useEffect(() => {
         const userId = Cookies.get("userId");
@@ -150,21 +150,30 @@ function Login() {
         return isTouched && value ? 'input-valid' : 'input-default';
     };
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            if (isRegister) {
+                handleRegister();
+            } else {
+                handleLogin();
+            }
+        }
+    };
+
     const registerUser = async () => {
         try {
             const response = await fetch('http://localhost:3000/api/v1/users/register', {
                 method: 'POST',
                 headers: {
-                  'Content-Type': 'application/json',
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ name: login, email: email, password: password}),
-              });
-              if (response.status === 201)
-                {
-                    alert("You have successfully registered your account. Wait for administrator to activate your account.");
-                    resetForm();
-                    handleToggleLogin();
-                }
+                body: JSON.stringify({ name: login, email: email, password: password }),
+            });
+            if (response.status === 201) {
+                alert("You have successfully registered your account. Wait for administrator to activate your account.");
+                resetForm();
+                handleToggleLogin();
+            }
         }
         catch (error) {
             alert(error.errorMessage);
@@ -178,11 +187,11 @@ function Login() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({name: login, password: password}),
+                body: JSON.stringify({ name: login, password: password }),
             });
             const data = await response.json();
 
-            if (response.ok) { 
+            if (response.ok) {
                 navigate('/chat');
                 Cookies.set("userId", data.id);
                 Cookies.set("userName", data.name);
@@ -199,10 +208,11 @@ function Login() {
         <div className="center-wrapper">
             <div className={`container ${isRegister ? 'active' : ''}`}>
                 <div className="form-container sign-up">
-                    <form onSubmit={(e) => e.preventDefault()}>
+                    <form onSubmit={(e) => e.preventDefault()} onKeyDown={handleKeyDown}>
                         <h5>Załóż konto</h5>
                         <br />
                         <input
+                            tabIndex={isRegister ? 0 : -1}
                             type="email"
                             placeholder="Email"
                             className={getInputClass(emailError, email, touched.email)}
@@ -213,6 +223,7 @@ function Login() {
                         {emailError && <span className="error-tooltip">{emailError}</span>}
 
                         <input
+                            tabIndex={isRegister ? 0 : -1}
                             type="text"
                             placeholder="Login"
                             className={getInputClass(loginError, login, touched.login)}
@@ -222,6 +233,7 @@ function Login() {
                         />
                         {loginError && <span className="error-tooltip">{loginError}</span>}
                         <input
+                            tabIndex={isRegister ? 0 : -1}
                             type="password"
                             placeholder="Hasło"
                             className={getInputClass(passwordError, password, touched.password)}
@@ -231,6 +243,7 @@ function Login() {
                         />
                         {passwordError && <span className="error-tooltip">{passwordError}</span>}
                         <input
+                            tabIndex={isRegister ? 0 : -1}
                             type="password"
                             placeholder="Powtórz hasło"
                             className={getInputClass(confirmPasswordError, confirmPassword, touched.confirmPassword)}
@@ -240,16 +253,17 @@ function Login() {
                         />
                         {confirmPasswordError && <span className="error-tooltip">{confirmPasswordError}</span>}
                         <br />
-                        <button type="button" onClick={handleRegister}>
+                        <button tabIndex={isRegister ? 0 : -1} type="button" onClick={handleRegister}>
                             Zarejestruj się
                         </button>
                     </form>
                 </div>
                 <div className={`form-container sign-in ${!isRegister ? 'active' : ''}`}>
-                    <form onSubmit={(e) => e.preventDefault()}>
+                    <form onSubmit={(e) => e.preventDefault()} onKeyDown={handleKeyDown}>
                         <h5>Zaloguj się</h5>
                         <br />
                         <input
+                            tabIndex={isRegister ? -1 : 0}
                             type="text"
                             placeholder="Login"
                             className='input-default'
@@ -259,6 +273,7 @@ function Login() {
                         />
                         {loginError && <span className="error-tooltip">{loginError}</span>}
                         <input
+                            tabIndex={isRegister ? -1 : 0}
                             type="password"
                             placeholder="Hasło"
                             className='input-default'
@@ -268,7 +283,7 @@ function Login() {
                         />
                         {passwordError && <span className="error-tooltip">{passwordError}</span>}
                         <br />
-                            <button type="button" onClick={handleLogin}>Zaloguj się</button>
+                        <button tabIndex={isRegister ? -1 : 0} type="button" onClick={handleLogin}>Zaloguj się</button>
                     </form>
                 </div>
                 <div className="toggle-container">
@@ -276,12 +291,12 @@ function Login() {
                         <div className="toggle-panel toggle-left">
                             <h4>Masz już konto?</h4>
                             <br />
-                            <button type="button" onClick={handleToggleLogin}>Zaloguj się</button>
+                            <button tabIndex={isRegister ? 0 : -1} type="button" onClick={handleToggleLogin}>Zaloguj się</button>
                         </div>
                         <div className="toggle-panel toggle-right">
                             <h4>Nie posiadasz konta?</h4>
                             <br />
-                            <button type="button" onClick={handleToggleRegister}>Zarejestruj się</button>
+                            <button tabIndex={isRegister ? -1 : 0} type="button" onClick={handleToggleRegister}>Zarejestruj się</button>
                         </div>
                     </div>
                 </div>
