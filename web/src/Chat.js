@@ -34,6 +34,24 @@ function Chat() {
     navigate("/");
   };
 
+  const fetchChatHistory = async () => {
+    setChatHistory([]);
+    const userId = Cookies.get('userId');
+    try {
+      const response = await fetch(`http://localhost:3000/api/v1/chats/list/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+      setChatHistory(data);
+    } catch (error) {
+      alert(error.errorMessage);
+    }
+  };
+
+
   const sendMessage = async () => {
     if (input.trim() === '') return;
 
@@ -92,17 +110,20 @@ function Chat() {
           if (mainTopRef.current) {
             mainTopRef.current.lastChild.scrollIntoView({ behavior: 'smooth' });
           }
-
           return updatedMessages;
         });
 
         setIsLoading(false);
         reader.read().then(processText);
-      });
+      }
+      );
 
     } catch (error) {
       alert(error.errorMessage);
       setIsLoading(false);
+    }
+    if (messages.length === 2 && messages.find(message => message.id === chatId)) {
+      fetchChatHistory();
     }
   };
 
@@ -117,6 +138,7 @@ function Chat() {
     }
   };
 
+  
   useEffect(() => {
     if (mainTopRef.current) {
       mainTopRef.current.scrollTop = mainTopRef.current.scrollHeight;
@@ -124,22 +146,6 @@ function Chat() {
   }, [messages]);
 
   useEffect(() => {
-    const fetchChatHistory = async () => {
-      const userId = Cookies.get('userId');
-      try {
-        const response = await fetch(`http://localhost:3000/api/v1/chats/list/${userId}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-        const data = await response.json();
-        setChatHistory(data);
-      } catch (error) {
-        alert(error.errorMessage);
-      }
-    };
-
     fetchChatHistory();
   }, []);
 
@@ -191,7 +197,7 @@ function Chat() {
                   .map((chat) => (
                     <li key={chat.id}>
                       <button className="chatHistoryButton" onClick={() => navigate(`/chat/${chat.id}`)}>
-                        {chat.name}
+                        {chat.name || "Nowy czat"}
                       </button>
                     </li>
                   ))
