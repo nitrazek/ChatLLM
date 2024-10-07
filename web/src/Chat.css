@@ -96,24 +96,41 @@ body {
   min-width: 170px;
 }
 
+.chatFooter {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: #484d52;
+  border-radius: 10px;
+  margin: 10px 0;
+}
+
 .input {
-  margin-top: auto;
-  margin-bottom: 20px;
+  font-size: 16px;
 }
 
 input {
   width: 100%;
   padding: 10px;
+  margin: auto;
+  flex-grow: 2;
   border: none;
-  border-radius: 5px;
+  border-radius: 10px;
   background-color: #484d52;
   color: white;
-  font-size: 16px;
-  margin-top: 10px;
 }
 
 input::placeholder {
   color: #ccc;
+}
+
+input::focus {
+  border: none;
+  outline: none;
+}
+
+.cancelBtn {
+  margin: auto 20px;
 }
 
 .userMessage, .botMessage {

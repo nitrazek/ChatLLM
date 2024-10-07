@@ -7,12 +7,15 @@ import { Oval } from 'react-loader-spinner';
 import { useNavigate, useParams } from "react-router-dom";
 import Cookies from 'js-cookie';
 import NewChatPopup from './NewChatPopup';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faStop } from "@fortawesome/free-solid-svg-icons"
 
 function Chat() {
   const { chatId } = useParams();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isGeneratingAnswer, setIsGeneratingAnswer] = useState(false);
   const [lastUserMessage, setLastUserMessage] = useState(null);
   const [chatHistory, setChatHistory] = useState([]);
   const [showNewChatPopup, setShowNewChatPopup] = useState(false);
@@ -92,6 +95,7 @@ function Chat() {
         const { done, value } = await reader.read();
         if (done) {
           setIsLoading(false);
+          setIsGeneratingAnswer(false);
           return;
         }
 
@@ -116,9 +120,13 @@ function Chat() {
           }
           return updatedMessages;
         });
+
+        setIsLoading(false);
+        setIsGeneratingAnswer(true);
       }
     } catch (error) {
       setIsLoading(false);
+      setIsGeneratingAnswer(false);
       controller.current = null;
       if(error.name !== "AbortError")
         alert(error.errorMessage);
@@ -257,17 +265,18 @@ function Chat() {
         <div className="mainBottom">
             {chatId && (
               <div className="chatFooter">
-                <div className="input">
-                  <input
-                    type="text"
-                    placeholder="Napisz wiadomość..."
-                    value={input}
-                    onChange={handleInputChange}
-                    onKeyDown={handleKeyDown}
-                    disabled={isLoading}
-                  />
-                </div>
-                <button className="cancelButton" onClick={cancelAnswer} disabled={!isLoading}>STOP</button>
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Napisz wiadomość..."
+                  value={input}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  disabled={isLoading || isGeneratingAnswer}
+                />
+                {isGeneratingAnswer && (
+                  <FontAwesomeIcon className="cancelBtn" icon={faStop} onClick={cancelAnswer} />
+                )}
               </div>
             )}
         </div>
