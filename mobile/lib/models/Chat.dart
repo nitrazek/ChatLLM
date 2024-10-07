@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 
 class Chat  {
   int id;
-  String name;
+  String? name;
   bool isUsingOnlyKnowledgeBase;
 
   Chat({

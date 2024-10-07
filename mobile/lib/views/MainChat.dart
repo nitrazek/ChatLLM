@@ -24,6 +24,7 @@ class MainChatPage extends StatefulWidget {
 class _MainChatPageState extends State<MainChatPage> {
   late TextEditingController textEditingController;
   final ScrollController scrollController = ScrollController();
+  final ScrollController scrollController2 = ScrollController();
   List<Chat> chatList = [];
 
   bool chatForm = false;
@@ -44,7 +45,7 @@ class _MainChatPageState extends State<MainChatPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    fetchChatList(); // Tutaj możemy bezpiecznie użyć fetchChatList
+    fetchChatList();
   }
 
   Future<void> fetchChatList() async {
@@ -64,9 +65,11 @@ class _MainChatPageState extends State<MainChatPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     double fontSizeScale = screenWidth * 0.0028;
 
+    bool isArchival = context.read<ChatState>().isArchival;
+
 
     return ScreenUtilInit (
-        designSize: Size(411, 707),
+        designSize: const Size(411, 707),
         minTextAdapt: true,
         builder: (context, child) {
           return PopScope(
@@ -76,8 +79,6 @@ class _MainChatPageState extends State<MainChatPage> {
                 backgroundColor: AppColors.darkest,
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    double width = constraints.maxWidth;
-                    double height = constraints.maxHeight;
                     return Column(
                       mainAxisSize: MainAxisSize.max,
                       children: [
@@ -132,7 +133,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                       backgroundColor: AppColors.purple,
                                     ),
                                     child: Text(
-                                      'Admin Panel',
+                                      'Panel Admina',
                                       style: TextStyle(
                                         fontFamily: AppTextStyles.Andada,
                                         color: Colors.white,
@@ -153,7 +154,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                 leading: Icon(
                                   Icons.history, color: Colors.white, size: 30.sp,),
                                 title: Text(
-                                  'History',
+                                  'Historia czatów',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontFamily: AppTextStyles.Andada,
@@ -175,27 +176,46 @@ class _MainChatPageState extends State<MainChatPage> {
                           height: 380.h,
                           child: Expanded(
                             child: ListView.builder(
+                              padding: EdgeInsets.only(top: 10.h),
                               shrinkWrap: true,
                               itemCount: chatList.length,
-                              controller: scrollController,
+                              controller: scrollController2,
                               itemBuilder: (context, index) {
                                 final chat = chatList[index];
-                                return ListTile(
+                                if(chat.name ==null)
+                                  chat.name = " ";
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    color: AppColors.theDarkest,
+                                    border: Border(
+                                      bottom: BorderSide(
+                                        color: Colors.white, width: 1.0
+                                      ),
+                                    ),
+                                  ),
+
+                                margin: EdgeInsets.all(5.h),
+                                child:  ListTile(
                                   leading: const Icon(
                                     Icons.chat, color: Colors.white,),
-                                  title: Text(chat.name,
+                                  title: Text(chat.name!,
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontFamily: AppTextStyles.Andada,
                                       fontSize: 18.sp,
                                     ),),
                                   trailing: const Icon(Icons.arrow_forward, color: Colors.white,),
-                                  onTap: () {
-                                    context.read<ChatState>().setChat(chat);
-                                    Navigator.pushReplacement(context,
-                                        MaterialPageRoute(builder: (
-                                            context) => const MainChatPage()));
+                                  onTap: () async {
+                                    bool? isLoaded = await context.read<MainChatViewModel>().loadHistory(chat.id) as bool;
+                                    if(isLoaded) {
+                                      context.read<ChatState>().setChat(chat);
+                                      context.read<ChatState>().setIsArchival(true);
+                                      Navigator.pushReplacement(context,
+                                          MaterialPageRoute(builder: (
+                                              context) => const MainChatPage()));
+                                    }
                                   },
+                                )
                                 );
                               },
                             ),
@@ -216,7 +236,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                       Icons.account_circle, color: Colors.white,
                                       size: 30.sp),
                                     title: Text(
-                                      'Profile',
+                                      'Profil',
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontFamily: AppTextStyles.Manrope,
@@ -288,15 +308,17 @@ class _MainChatPageState extends State<MainChatPage> {
                                           },
                                         );
                                         if (isCreated == true) {
-                                          context
-                                              .read<MainChatViewModel>()
-                                              .chatMessages
-                                              .clear();
-                                          Navigator.pushReplacement(
-                                            context,
-                                            MaterialPageRoute(builder: (
-                                                context) => const MainChatPage()),
-                                          );
+                                          if(mounted) {
+                                            context
+                                                .read<MainChatViewModel>()
+                                                .chatMessages
+                                                .clear();
+                                            Navigator.pushReplacement(
+                                              context,
+                                              MaterialPageRoute(builder: (
+                                                  context) => const MainChatPage()),
+                                            );
+                                          }
                                         }
                                       },
                                       child: Container(
@@ -338,6 +360,7 @@ class _MainChatPageState extends State<MainChatPage> {
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                if(chatMessage.sender == "human")
                                   Row(
                                     children: [
                                       const Icon(
@@ -357,13 +380,16 @@ class _MainChatPageState extends State<MainChatPage> {
                                           color: AppColors.dark,
                                         ),
                                         child: Text(
-                                            chatMessage.question,
+                                            chatMessage.sender == 'human'
+                                                ? chatMessage.content
+                                                : "",
                                             style: AppTextStyles.chatText(
                                                 fontSizeScale, 20)
                                         ),
                                       ),
                                     ],
                                   ),
+                                  if (chatMessage.sender != "human")
                                   Row(
                                     children: [
                                       const Icon(
@@ -379,10 +405,10 @@ class _MainChatPageState extends State<MainChatPage> {
                                         padding: const EdgeInsets.all(10.0),
                                         decoration: BoxDecoration(
                                           borderRadius: BorderRadius.circular(
-                                              15.0),
+                                              15.0), 
                                           color: const Color(0xFF424549),
                                         ),
-                                        child: StreamBuilder<String>(
+                                        child: isArchival ? StreamBuilder<String>(
                                           stream: chatMessage.responseStream,
                                           builder: (context, snapshot) {
                                             scrollController.animateTo(
@@ -397,7 +423,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                             }
 
                                             final data = snapshot.data ??
-                                                chatMessage.response;
+                                                chatMessage.content;
 
                                             return MarkdownBody(
                                               data: data,
@@ -430,6 +456,36 @@ class _MainChatPageState extends State<MainChatPage> {
                                               ),
                                             );
                                           },
+                                        )
+                                            : MarkdownBody(
+                                          data: chatMessage.content,
+                                          styleSheet: MarkdownStyleSheet(
+                                            p: AppTextStyles.chatText(
+                                                fontSizeScale, 20),
+                                            a: AppTextStyles.chatText(
+                                                fontSizeScale, 20).copyWith(
+                                                decoration: TextDecoration
+                                                    .underline),
+                                            strong: AppTextStyles.chatText(
+                                                fontSizeScale, 20).copyWith(
+                                                fontWeight: FontWeight
+                                                    .bold),
+                                            em: AppTextStyles.chatText(
+                                                fontSizeScale, 20).copyWith(
+                                                fontStyle: FontStyle
+                                                    .italic),
+                                            h1: AppTextStyles.chatText(
+                                                fontSizeScale, 34),
+                                            h2: AppTextStyles.chatText(
+                                                fontSizeScale, 30),
+                                            h3: AppTextStyles.chatText(
+                                                fontSizeScale, 26),
+                                            code: AppTextStyles.chatText(
+                                                fontSizeScale, 20).copyWith(
+                                                fontFamily: 'monospace',
+                                                backgroundColor: Colors
+                                                    .grey[400]),
+                                          ),
                                         ),
                                       ),
                                     ],

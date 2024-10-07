@@ -5,23 +5,36 @@ import '../services/ChatService.dart';
 
 class MainChatViewModel extends ChangeNotifier {
   final ChatService _chatService = ChatService();
-  final List<ChatMessage> _chatMessages = [];
-  late Chat _currentChat;
+  List<ChatMessage> _chatMessages = [];
 
   List<ChatMessage> get chatMessages => _chatMessages;
 
   void sendPrompt(String question, int currentChatId) async {
-    ChatMessage chatMessage = ChatMessage(question: question);
+    ChatMessage chatMessage = ChatMessage(sender : 'human', content : question);
     _chatMessages.add(chatMessage);
     notifyListeners();
 
+    ChatMessage chatMessage2 = ChatMessage(sender: "ai", content : "");
+    _chatMessages.add(chatMessage2);
     await for (var answer in _chatService.postQuestion(question, currentChatId)) {
-      chatMessage.addResponse(answer);
+      chatMessage2.addResponse(answer);
+      _chatMessages[_chatMessages.length-1] = chatMessage2;
+      notifyListeners();
     }
 
-    chatMessage.finalizeResponse();
+    chatMessage2.finalizeResponse();
+
     notifyListeners();
   }
+
+  Future<bool> loadHistory(int currentChatId) async {
+    _chatMessages = await _chatService.loadHistory(currentChatId);
+    if(_chatMessages != null)
+      return true;
+    else
+      return false;
+  }
+
 
   Future<List<Chat>> getChatList(int userId) async{
 
@@ -33,24 +46,39 @@ class MainChatViewModel extends ChangeNotifier {
 }
 
 class ChatMessage {
-  final String question;
-  String response = '';
-  final StreamController<String> _responseController = StreamController<String>.broadcast();
+  String sender = '';
+  String content = '';
+  final StreamController<String> _responseController = StreamController<
+      String>.broadcast();
 
-  ChatMessage({required this.question});
 
   Stream<String> get responseStream => _responseController.stream;
 
-  void addResponse(String response) {
-    this.response += response;
-    _responseController.sink.add(this.response);
+  void addResponse(String content) {
+    sender = 'ai';
+    this.content += content;
+    _responseController.sink.add(this.content);
   }
 
   void finalizeResponse() {
-    _responseController.sink.add(this.response);
+    _responseController.sink.add(content);
   }
 
   void dispose() {
     _responseController.close();
   }
+
+  ChatMessage({
+    required this.sender,
+    required this.content
+  });
+
+  factory ChatMessage.fromJson(Map<String, dynamic> json) {
+    return ChatMessage(
+      sender: json['sender'],
+      content: json['content'],
+
+    );
+  }
 }
+

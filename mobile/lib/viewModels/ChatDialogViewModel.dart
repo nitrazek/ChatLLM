@@ -10,7 +10,7 @@ class ChatDialogViewModel extends ChangeNotifier {
   late Chat _currentChat;
   ChatService _chatService = ChatService();
 
-  Future<bool> createChat(String name, bool isUsingOnlyKnowledgeBase, int userId ) async {
+  Future<bool> createChat(String? name, bool isUsingOnlyKnowledgeBase, int userId ) async {
     _currentChat = await _chatService.createChat(name, isUsingOnlyKnowledgeBase, userId);
     if(_currentChat.id >=0 || _currentChat.id!=null)
       return true;

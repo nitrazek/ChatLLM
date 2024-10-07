@@ -20,7 +20,7 @@ class _ChatDialogState extends State<ChatDialog> {
   TextEditingController _nameController = TextEditingController();
   bool isUsingOnlyKnowledgeBase = false;
   late final Account? _account = context.read<AccountState>().currentAccount;
-  late String name;
+  String? name = "";
 
   @override
   void dispose() {
@@ -32,7 +32,6 @@ class _ChatDialogState extends State<ChatDialog> {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
-    double fontSizeScale = screenWidth / 400;
 
     return AlertDialog(
       backgroundColor: AppColors.dark,
@@ -47,13 +46,13 @@ class _ChatDialogState extends State<ChatDialog> {
                 color: Colors.white,
                 fontFamily: AppTextStyles.Andada
             ),
+            onEditingComplete: (){
+            },
             controller: _nameController,
             decoration: const InputDecoration(labelText: 'Nazwa chatu', labelStyle: TextStyle(
                 color: Colors.white,
                 fontFamily: AppTextStyles.Andada
             ),),
-            onChanged: (value) {
-            },
           ),
           SizedBox(height: screenHeight * 0.017),
           Row(
@@ -96,6 +95,7 @@ class _ChatDialogState extends State<ChatDialog> {
               );
               if(isCreated == true) {
                 context.read<ChatState>().setChat(context.read<ChatDialogViewModel>().getChat());
+                context.read<ChatState>().setIsArchival(false);
                 Navigator.pop(context, isCreated);
               }
               else {
