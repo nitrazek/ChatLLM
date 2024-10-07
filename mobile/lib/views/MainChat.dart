@@ -285,7 +285,15 @@ class _MainChatPageState extends State<MainChatPage> {
                         ),
                       ),
                     ),
-                    IconButton(
+                    context.watch<MainChatViewModel>().isLoading ? IconButton(
+                      onPressed: () {
+                        context.read<MainChatViewModel>().cancelAnswer();
+                      },
+                      icon: const Icon(
+                        Icons.stop,
+                        color: Colors.grey
+                      ),
+                    ) : IconButton(
                       onPressed: () {
                         if (textEditingController.text.isNotEmpty) {
                           final message = textEditingController.text;
@@ -296,15 +304,6 @@ class _MainChatPageState extends State<MainChatPage> {
                       icon: const Icon(
                         Icons.send,
                         color: Colors.grey,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: context.watch<MainChatViewModel>().isLoading ? () {
-                        context.read<MainChatViewModel>().cancelAnswer();
-                      } : null,
-                      icon: const Icon(
-                        Icons.stop,
-                        color: Colors.grey
                       ),
                     )
                   ],
