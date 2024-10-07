@@ -72,8 +72,7 @@ class _MainChatPageState extends State<MainChatPage> {
         designSize: const Size(411, 707),
         minTextAdapt: true,
         builder: (context, child) {
-          return PopScope(
-            child: Scaffold(
+            return Scaffold(
               drawer: Drawer(
                 width: 270.w,
                 backgroundColor: AppColors.darkest,
@@ -558,7 +557,6 @@ class _MainChatPageState extends State<MainChatPage> {
                     ],
                   ),
                 ),
-              ),
             ),
           );
         }
