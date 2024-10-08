@@ -1,104 +1,190 @@
-import { Static, Type } from "@sinclair/typebox";
+import { Static, Type } from "@sinclair/typebox"
+import { FastifySchema } from "fastify"
+import { UserGuardedResponseSchema } from "./errors_schemas";
+import { SenderType } from "../enums/sender_type";
 
-//////////////////// Schemas for GET requests ////////////////////
+//////////////////// Generic Schemas ////////////////////
 
-// Schema for getting a list of chats for a specific user
-export const GetChatsParams = Type.Object({
-  userId: Type.Number({ description: "ID of the user for whom to get the list of chats." })
+// Schema for generic chat response
+const GenericChatResponseTypes = Type.Object({
+    id: Type.Number(),
+    name: Type.String(),
+    isUsingOnlyKnowledgeBase: Type.Boolean()
 });
-export type TGetChatsParams = Static<typeof GetChatsParams>;
 
-
-export const GetChatsResponse = Type.Array(
-  Type.Object({
-    id: Type.Number({ description: "Id of the chat." }),
-    name: Type.Union([Type.Null(), Type.String()], { description: "Name of the chat. If null, chat will be named automatically on first answer.", default: "test" }),
-    isUsingOnlyKnowledgeBase: Type.Boolean({ description: "If true, the chat model will only use context from the knowledge base; otherwise, it will use its own knowledge as well." }),
-  }, {
-    description: "Object containing information about a single chat."
-  }),
-  {
-    description: "List of information objects of available chats."
-  }
-);
-export type TGetChatsResponse = Static<typeof GetChatsResponse>;
-
-// Schema for getting chat messages
-export const GetMessagesParams = Type.Object({
-  chatId: Type.Number({ description: "The ID of the chat." }),
+// Schema for generic chat message response
+const GenericChatMessageResponseTypes = Type.Object({
+    id: Type.Number(),
+    sender: Type.Enum(SenderType),
+    content: Type.String()
 });
-export type TGetMessagesParams = Static<typeof GetMessagesParams>;
-
-export const GetMessagesResponse = Type.Array(
-  Type.Object({
-    sender: Type.String({ description: "Who sent the message: human or ai." }),
-    content: Type.String({ description: "Content of the message." }),
-  }, {
-    description: "Object containing details of a single message."
-  }),
-  {
-    description: "List of all messages in the chat."
-  }
-);
-export type TGetMessagesResponse = Static<typeof GetMessagesResponse>;
-
-
 
 //////////////////// Schema for POST requests ////////////////////
 
 // Schema for creating a new chat
-export const PostChatParams = Type.Object({
-  userId: Type.Number({ description: "ID of the user for whom to create new chat." })
+const CreateChatBodyTypes = Type.Object({
+    name: Type.Optional(Type.String()),
+    isUsingOnlyKnowledgeBase: Type.Optional(Type.Boolean())
 });
-export type TPostChatParams = Static<typeof PostChatParams>;
+export type CreateChatBody = Static<typeof CreateChatBodyTypes>;
 
-export const PostChatBody = Type.Object({
-  name: Type.Union([Type.Null(), Type.String()], { description: "Name of the new chat. If null, chat will be named automatically on the first answer.", default: "test" }),
-  isUsingOnlyKnowledgeBase: Type.Boolean({ description: "If true, the chat model will only use context from the knowledge base; otherwise, it will use its own knowledge as well." }),
-}, {
-  description: "Object containing information for creating a new chat."
+const CreateChatResponseTypes = Type.Object({
+    ...GenericChatResponseTypes.properties
 });
-export type TPostChatBody = Static<typeof PostChatBody>;
+export type CreateChatResponse = Static<typeof CreateChatResponseTypes>;
 
-
-export const PostChatResponse = Type.Object({
-  id: Type.Number({ description: "Id of the chat." }),
-  name: Type.Union([Type.Null(), Type.String()], { description: "Name of the chat. If null, chat will be named automatically on the first answer.", default: "test" }),
-  isUsingOnlyKnowledgeBase: Type.Boolean({ description: "If true, the chat model will only use context from the knowledge base; otherwise, it will use its own knowledge as well." }),
-}, {
-  description: "Object containing information about a single chat."
-});
-export type TPostChatResponse = Static<typeof PostChatResponse>;
+export const CreateChatSchema: FastifySchema = {
+    summary: "",
+    description: "",
+    body: CreateChatBodyTypes,
+    tags: ["Chats"],
+    response: {
+        200: CreateChatResponseTypes,
+        ...UserGuardedResponseSchema
+    }
+};
 
 // Schema for sending a message to existing chat
-export const PostMessageBody = Type.Object({
-  question: Type.String({ description: "Content of the question." })
-}, {
-  description: "Information about the question sent by the user (newChatName field is optional)."
+const SendMessageParamsTypes = Type.Object({
+    chatId: Type.Number()
 });
-export type TPostMessageBody = Static<typeof PostMessageBody>;
+export type SendMessageParams = Static<typeof SendMessageParamsTypes>;
 
-export const PostMessageParams = Type.Object({
-  chatId: Type.Number({ description: "The ID of the chat." }),
+const SendMessageBodyTypes = Type.Object({
+    content: Type.String()
 });
-export type TPostMessageParams = Static<typeof PostMessageParams>;
+export type SendMessageBody = Static<typeof SendMessageBodyTypes>;
 
-export const PostMessageResponse = Type.Object({
-  answer: Type.String({ description: "Content of the answer." })
-}, {
-  description: "Stream of stringified answer chunks in the format specified."
+const SendMessageResponseTypes = Type.Array(Type.Object({
+
+}));
+export type SendMessageResponse = Static<typeof SendMessageResponseTypes>;
+
+export const SendMessageSchema: FastifySchema = {
+    summary: "",
+    description: "",
+    params: SendMessageParamsTypes,
+    body: SendMessageBodyTypes,
+    tags: ["Chats"],
+    response: {
+        200: SendMessageResponseTypes,
+        ...UserGuardedResponseSchema
+    }
+};
+
+
+//////////////////// Schemas for GET requests ////////////////////
+
+// Schema for getting a list of chats for a specific user
+const GetChatListParamsTypes = Type.Object({
+    chatId: Type.Number()
 });
-export type TPostMessageResponse = Static<typeof PostMessageResponse>;
+export type GetChatListParams = Static<typeof GetChatListParamsTypes>;
 
-
-//////////////////// Schema for errors ////////////////////
-
-// Schema for chat not found error
-export const ErrorWithMessage = Type.Object({
-  errorMessage: Type.String({
-    description: "Reason of error that occured."
-  })
-}, {
-  description: "Error indicating that something was not right."
+const GetChatListQueryTypes = Type.Object({
+    page: Type.Optional(Type.Number()),
+    limit: Type.Optional(Type.Number())
 });
-export type TErrorWithMessage = Static<typeof ErrorWithMessage>;
+export type GetChatListQuery = Static<typeof GetChatListQueryTypes>;
+
+const GetChatListResponseTypes = Type.Array(Type.Object({
+    ...GenericChatResponseTypes.properties
+}));
+export type GetChatListResponse = Static<typeof GetChatListResponseTypes>;
+
+export const GetChatListSchema: FastifySchema = {
+    summary: "",
+    description: "",
+    params: GetChatListParamsTypes,
+    querystring: GetChatListQueryTypes,
+    tags: ["Chats"],
+    response: {
+        200: GetChatListResponseTypes,
+        ...UserGuardedResponseSchema
+    }
+}
+
+// Schema for getting chat messages
+const GetChatMessagesParamsTypes = Type.Object({
+    chatId: Type.Number()
+});
+export type GetChatMessagesParams = Static<typeof GetChatMessagesParamsTypes>;
+
+const GetChatMessagesQueryTypes = Type.Object({
+    page: Type.Optional(Type.Number()),
+    limit: Type.Optional(Type.Number())
+});
+export type GetChatMessagesQuery = Static<typeof GetChatMessagesQueryTypes>;
+
+const GetChatMessagesResponseTypes = Type.Array(Type.Object({
+    ...GenericChatMessageResponseTypes.properties
+}));
+export type GetChatMessagesResponse = Static<typeof GetChatMessagesResponseTypes>;
+
+export const GetChatMessagesSchema: FastifySchema = {
+    summary: "",
+    description: "",
+    params: GetChatMessagesParamsTypes,
+    querystring: GetChatMessagesQueryTypes,
+    tags: ["Chats"],
+    response: {
+        200: GetChatMessagesResponseTypes,
+        ...UserGuardedResponseSchema
+    }
+}
+
+
+//////////////////// Schemas for PUT requests ////////////////////
+
+// Schema for changing chat details
+const UpdateChatParamsTypes = Type.Object({
+    chatId: Type.Number()
+});
+export type UpdateChatParams = Static<typeof UpdateChatParamsTypes>;
+
+const UpdateChatBodyTypes = Type.Object({
+    name: Type.Optional(Type.String()),
+    isUsingOnlyKnowledgeBase: Type.Optional(Type.Boolean())
+});
+export type UpdateChatBody = Static<typeof UpdateChatBodyTypes>;
+
+const UpdateChatResponseTypes = Type.Object({
+    ...GenericChatResponseTypes.properties
+});
+export type UpdateChatResponse = Static<typeof UpdateChatResponseTypes>;
+
+export const UpdateChatSchema: FastifySchema = {
+    summary: "",
+    description: "",
+    params: UpdateChatParamsTypes,
+    body: UpdateChatBodyTypes,
+    tags: ["Chats"],
+    response: {
+        200: UpdateChatResponseTypes,
+        ...UserGuardedResponseSchema
+    }
+};
+
+
+//////////////////// Schemas for DELETE requests ////////////////////
+
+// Schema for deleting a chat
+const DeleteChatParamsTypes = Type.Object({
+    chatId: Type.Number()
+});
+export type DeleteChatParams = Static<typeof DeleteChatParamsTypes>;
+
+const DeleteChatResponseTypes = Type.Object({
+});
+export type DeleteChatResponse = Static<typeof DeleteChatResponseTypes>;
+
+export const DeleteChatSchema: FastifySchema = {
+    summary: "",
+    description: "",
+    params: DeleteChatParamsTypes,
+    tags: ["Chats"],
+    response: {
+        204: DeleteChatResponseTypes,
+        ...UserGuardedResponseSchema
+    }
+}

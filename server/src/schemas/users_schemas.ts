@@ -1,157 +1,189 @@
-import { Static, Type } from "@sinclair/typebox";
-//////////////////// Schemas for GET requests ////////////////////
+import { FastifySchema } from "fastify"
+import { Static, Type } from "@sinclair/typebox"
+import { AdminGuardedResponseSchema, NotGuardedResponseSchema } from "./errors_schemas";
 
-// Schema for getting list of users
-export const GetUsersParams = Type.Object({
-    loggedUserId: Type.Number({ description: "ID of logged user that made request." })
+//////////////////// Generic Schemas ////////////////////
+
+// Schema for generic user response
+const GenericUserResponseTypes = Type.Object({
+    id: Type.Number(),
+    name: Type.String(),
+    email: Type.String(),
+    activated: Type.Boolean()
 });
-export type TGetUsersParams = Static<typeof GetUsersParams>;
-
-export const GetUsersResponse = Type.Array(
-    Type.Object({
-        id: Type.Number({ description: "Id of the user." }),
-        name: Type.String({ description: "Name of the user." }),
-        email: Type.String({ description: "Email address of the user." }),
-        role: Type.String({ description: "Role of the user." }),
-        activated: Type.Boolean({ description: "Activation status of user." })
-    }, {
-        description: "Object containing information about a single user."
-    }),
-    {
-        description: "List of information objects of available users."
-    }
-);
-export type TGetUsersResponse = Static<typeof GetUsersResponse>;
 
 
 //////////////////// Schemas for POST requests ////////////////////
 
 // Schema for user registration
-export const RegisterUserBody = Type.Object({
-    name: Type.String({ description: "Name of the user." }),
-    email: Type.String({ description: "Email address of the user." }),
-    password: Type.String({ description: "Password for the user's account." })
-}, {
-    description: "Object containing information for registering a new user."
+const RegisterBodyTypes = Type.Object({
+    name: Type.String(),
+    email: Type.String(),
+    password: Type.String()
 });
-export type TRegisterUserBody = Static<typeof RegisterUserBody>;
+export type RegisterBody = Static<typeof RegisterBodyTypes>;
 
-export const RegisterUserResponse = Type.Object({
-    id: Type.Number({ description: "Id of the newly registered user." }),
-    name: Type.String({ description: "Name of the newly registered user." }),
-    email: Type.String({ description: "Email address of the newly registered user." }),
-    role: Type.String({ description: "Role of the newly registered user." }),
-    activated: Type.Boolean({ description: "Activation status of the newly registered user." })
-}, {
-    description: "Response containing details of the newly registered user."
+const RegisterResponseTypes = Type.Object({
 });
-export type TRegisterUserResponse = Static<typeof RegisterUserResponse>;
+export type RegisterResponse = Static<typeof RegisterResponseTypes>;
+
+export const RegisterSchema: FastifySchema = {
+    summary: "",
+    description: "",
+    body: RegisterBodyTypes,
+    tags: ["Users"],
+    response: {
+        201: RegisterResponseTypes,
+        ...NotGuardedResponseSchema
+    }
+};
 
 // Schema for user login
-export const LoginUserBody = Type.Object({
-    name: Type.String({ description: "Name of the user." }),
-    password: Type.String({ description: "Password for the user's account." })
-}, {
-    description: "Object containing credentials for user login."
+const LoginBodyTypes = Type.Object({
+    nameOrEmail: Type.String(),
+    password: Type.String()
 });
-export type TLoginUserBody = Static<typeof LoginUserBody>;
+export type LoginBody = Static<typeof LoginBodyTypes>;
 
-export const LoginUserResponse = Type.Object({
-    id: Type.Number({ description: "Id of the logged-in user." }),
-    name: Type.String({ description: "Name of the logged-in user." }),
-    email: Type.String({ description: "Email address of the logged-in user." }),
-    role: Type.String({ description: "Role of the logged-in user." }),
-    activated: Type.Boolean({ description: "Activation status of the logged-in user." })
-}, {
-    description: "Response containing details of the logged-in user."
+const LoginResponseTypes = Type.Object({
+    token: Type.String()
+})
+export type LoginResponse = Static<typeof LoginResponseTypes>;
+
+export const LoginSchema: FastifySchema = {
+    summary: "",
+    description: "",
+    body: LoginBodyTypes,
+    tags: ["Users"],
+    response: {
+        200: LoginResponseTypes,
+        ...NotGuardedResponseSchema
+    }
+};
+
+
+//////////////////// Schemas for GET requests ////////////////////
+
+// Schema for getting list of users
+const GetUserListQueryTypes = Type.Object({
+    page: Type.Optional(Type.Number()),
+    limit: Type.Optional(Type.Number())
 });
-export type TLoginUserResponse = Static<typeof LoginUserResponse>;
+export type GetUserListQuery = Static<typeof GetUserListQueryTypes>;
+
+const GetUserListResponseTypes = Type.Array(Type.Object({
+    ...GenericUserResponseTypes.properties
+}));
+export type GetUserListResponse = Static<typeof GetUserListResponseTypes>;
+
+export const GetUserListSchema: FastifySchema = {
+    summary: "",
+    description: "",
+    querystring: GetUserListQueryTypes,
+    tags: ["Users"],
+    response: {
+        200: GetUserListResponseTypes,
+        ...AdminGuardedResponseSchema
+    }
+};
+
+// Schema for getting specific user
+const GetUserParamsTypes = Type.Object({
+    userId: Type.Number()
+});
+export type GetUserParams = Static<typeof GetUserParamsTypes>;
+
+const GetUserResponseTypes = Type.Object({
+    ...GenericUserResponseTypes.properties
+});
+export type GetUserResponse = Static<typeof GetUserResponseTypes>;
+
+export const GetUserSchema: FastifySchema = {
+    summary: "",
+    description: "",
+    params: GetUserParamsTypes,
+    tags: ["Users"],
+    response: {
+        200: GetUserResponseTypes,
+        ...AdminGuardedResponseSchema
+    }
+};
 
 
 //////////////////// Schemas for PUT requests ////////////////////
 
 // Schema for activating a user
-export const ActivateUserParams = Type.Object({
-    userId: Type.Number({ description: "ID of the user to activate." }),
+const ActivateUserParamsTypes = Type.Object({
+    userId: Type.Number()
 });
-export type TActivateUserParams = Static<typeof ActivateUserParams>;
+export type ActivateUserParams = Static<typeof ActivateUserParamsTypes>;
 
-export const ActivateUserBody = Type.Object({
-    loggedUserId: Type.Number({ description: "ID of logged user that made request." })
-})
-export type TActivateUserBody = Static<typeof ActivateUserBody>;
-
-export const ActivateUserResponse = Type.Object({
-    id: Type.Number({ description: "Id of the activated user." }),
-    name: Type.String({ description: "Name of the activated user." }),
-    email: Type.String({ description: "Email address of the activated user." }),
-    role: Type.String({ description: "Role of the activated user." }),
-    activated: Type.Boolean({ description: "Activation status of the activated user." })
-}, {
-    description: "Response containing details of the activated user."
+const ActivateUserResponseTypes = Type.Object({
+    ...GenericUserResponseTypes.properties
 });
-export type TActivateUserResponse = Static<typeof ActivateUserResponse>;
+export type ActivateUserResponse = Static<typeof ActivateUserResponseTypes>;
 
+export const ActivateUserSchema: FastifySchema = {
+    summary: "",
+    description: "",
+    params: ActivateUserParamsTypes,
+    tags: ["Users"],
+    response: {
+        200: ActivateUserResponseTypes,
+        ...AdminGuardedResponseSchema
+    }
+}
 
 // Schema for changing user details
-export const ChangeUserDetailsParams = Type.Object({
-    userId: Type.Number({ description: "ID of the user whose role is to be changed." })
+const UpdateUserParamsTypes = Type.Object({
+    userId: Type.Number()
 });
-export type TChangeUserDetailsParams = Static<typeof ChangeUserDetailsParams>;
+export type UpdateUserParams = Static<typeof UpdateUserParamsTypes>;
 
-export const ChangeUserDetailsBody = Type.Object({
-    changes: Type.Object({
-        name: Type.String({ description: "Changed name of the user." }) || undefined,
-        email: Type.String({ description: "Changed email address of the user." }) || undefined,
-        role: Type.String({ description: "Changed role of the user." }) || undefined,
-        password: Type.String({ description: "Changed password of the user." }) || undefined
-    }, {
-        description: "Object containing user details to change (if something not provided, it will not be changed)."
-    }),
-    loggedUserId: Type.Number({ description: "ID of logged user that made request." })
-}, {
-    description: "Object containing the new role for the user."
+const UpdateUserBodyTypes = Type.Object({
+    name: Type.Optional(Type.String()),
+    email: Type.Optional(Type.String()),
+    password: Type.Optional(Type.String())
 });
-export type TChangeUserDetailsBody = Static<typeof ChangeUserDetailsBody>;
+export type UpdateUserBody = Static<typeof UpdateUserBodyTypes>;
 
-export const ChangeUserDetailsResponse = Type.Object({
-    id: Type.Number({ description: "Id of the user whose details was changed." }),
-    name: Type.String({ description: "Current name of the user after changes." }),
-    email: Type.String({ description: "Current email address of the user after changes." }),
-    role: Type.String({ description: "Current role of the user after changes." }),
-    activated: Type.Boolean({ description: "Activation of the user whose details was changed." })
-}, {
-    description: "Response containing details of the user with the updates."
+const UpdateUserResponseTypes = Type.Object({
+    ...GenericUserResponseTypes.properties
 });
-export type TChangeUserDetailsResponse = Static<typeof ChangeUserDetailsResponse>;
+export type UpdateUserResponse = Static<typeof UpdateUserResponseTypes>;
+
+export const UpdateUserSchema: FastifySchema = {
+    summary: "",
+    description: "",
+    params: UpdateUserParamsTypes,
+    body: UpdateUserBodyTypes,
+    tags: ["Users"],
+    response: {
+        200: UpdateUserResponseTypes,
+        ...AdminGuardedResponseSchema
+    }
+}
 
 
 //////////////////// Schemas for DELETE requests ////////////////////
 
 // Schema for deleting a user
-export const DeleteUserParams = Type.Object({
-    userId: Type.Number({ description: "ID of the user to delete." })
+const DeleteUserParamsTypes = Type.Object({
+    userId: Type.Number()
 });
-export type TDeleteUserParams = Static<typeof DeleteUserParams>;
+export type DeleteUserParams = Static<typeof DeleteUserParamsTypes>;
 
-export const DeleteUserBody = Type.Object({
-    loggedUserId: Type.Number({ description: "ID of logged user that made request." })
+const DeleteUserResponseTypes = Type.Object({
 });
-export type TDeleteUserBody = Static<typeof DeleteUserBody>;
+export type DeleteUserResponse = Static<typeof DeleteUserResponseTypes>;
 
-export const DeleteUserResponse = Type.Null({
-    description: "User successfully deleted"
-});
-export type TDeleteUserResponse = Static<typeof DeleteUserResponse>;
-
-//////////////////// Schemas for errors ////////////////////
-
-// Schema for user not found error
-export const ErrorWithMessage = Type.Object({
-    errorMessage: Type.String({
-        description: "Reason of error that occured."
-    })
-}, {
-    description: "Error indicating that something was not right."
-});
-export type TErrorWithMessage = Static<typeof ErrorWithMessage>;
+export const DeleteUserSchema: FastifySchema = {
+    summary: "",
+    description: "",
+    params: DeleteUserParamsTypes,
+    tags: ["Users"],
+    response: {
+        204: DeleteUserParamsTypes,
+        ...AdminGuardedResponseSchema
+    }
+}

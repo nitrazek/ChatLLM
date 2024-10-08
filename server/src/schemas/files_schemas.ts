@@ -1,16 +1,25 @@
-import { Static, Type } from "@sinclair/typebox";
+import { Static, Type } from "@sinclair/typebox"
+import { FastifySchema } from "fastify"
+import { AdminGuardedResponseSchema } from "./errors_schemas";
 
 //////////////////// Schemas for POST requests ////////////////////
 
-// Schema for uploading file to files database
-export const FileUploadSuccess = Type.Null({
-  description: "File added successfully to knowledge base."
-});
-export type TFileUploadSuccess = Static<typeof FileUploadSuccess>;
+// Schema for uploading file to files knowledge base
 
-export const FileUploadError = Type.Object({
-  message: Type.String()
-}, {
-  description: "No file was found in request."
-});
-export type TFileUploadError = Static<typeof FileUploadError>;
+
+
+//////////////////// Schemas for GET requests ////////////////////
+
+// Empty for now
+
+
+
+//////////////////// Schemas for PUT requests ////////////////////
+
+// Empty for now
+
+
+
+//////////////////// Schemas for DELETE requests ////////////////////
+
+// Empty for now
