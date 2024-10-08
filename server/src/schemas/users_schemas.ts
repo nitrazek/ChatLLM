@@ -6,30 +6,30 @@ import { AdminGuardedResponseSchema, NotGuardedResponseSchema } from "./errors_s
 
 // Schema for generic user response
 const GenericUserResponseTypes = Type.Object({
-    id: Type.Number(),
-    name: Type.String(),
-    email: Type.String(),
-    activated: Type.Boolean()
-});
+    id: Type.Number({ description: "Unique identifier of the user" }),
+    name: Type.String({ description: "Name of the user" }),
+    email: Type.String({ description: "Email address of the user" }),
+    activated: Type.Boolean({ description: "Indicates whether the user's account is activated" })
+}, { description: "A generic response schema for a user, containing basic user information" });
 
 
 //////////////////// Schemas for POST requests ////////////////////
 
 // Schema for user registration
 const RegisterBodyTypes = Type.Object({
-    name: Type.String(),
-    email: Type.String(),
-    password: Type.String()
-});
+    name: Type.String({ description: "Name of the new user" }),
+    email: Type.String({ description: "Email address of the new user" }),
+    password: Type.String({ description: "Password chosen by the new user" })
+}, { description: "Schema for the body of the user registration request" });
 export type RegisterBody = Static<typeof RegisterBodyTypes>;
 
 const RegisterResponseTypes = Type.Object({
-});
+}, { description: "Empty response for a successful user registration" });
 export type RegisterResponse = Static<typeof RegisterResponseTypes>;
 
 export const RegisterSchema: FastifySchema = {
-    summary: "",
-    description: "",
+    summary: "Register a new user",
+    description: "Creates a new user account and stores it in the database.",
     body: RegisterBodyTypes,
     tags: ["Users"],
     response: {
@@ -40,19 +40,19 @@ export const RegisterSchema: FastifySchema = {
 
 // Schema for user login
 const LoginBodyTypes = Type.Object({
-    nameOrEmail: Type.String(),
-    password: Type.String()
-});
+    nameOrEmail: Type.String({ description: "User's name or email address" }),
+    password: Type.String({ description: "Password provided by the user" })
+}, { description: "Schema for the body of the user login request" });
 export type LoginBody = Static<typeof LoginBodyTypes>;
 
 const LoginResponseTypes = Type.Object({
-    token: Type.String()
-})
+    token: Type.String({ description: "JWT token for the authenticated user" })
+}, { description: "Response for a successful login, containing the JWT token" });
 export type LoginResponse = Static<typeof LoginResponseTypes>;
 
 export const LoginSchema: FastifySchema = {
-    summary: "",
-    description: "",
+    summary: "Login a user",
+    description: "Authenticates a user by their name or email and password, and returns a JWT token.",
     body: LoginBodyTypes,
     tags: ["Users"],
     response: {
@@ -66,19 +66,19 @@ export const LoginSchema: FastifySchema = {
 
 // Schema for getting list of users
 const GetUserListQueryTypes = Type.Object({
-    page: Type.Optional(Type.Number()),
-    limit: Type.Optional(Type.Number())
-});
+    page: Type.Optional(Type.Number({ description: "Page number for pagination" })),
+    limit: Type.Optional(Type.Number({ description: "Limit of users per page" }))
+}, { description: "Query parameters for fetching a list of users" });
 export type GetUserListQuery = Static<typeof GetUserListQueryTypes>;
 
 const GetUserListResponseTypes = Type.Array(Type.Object({
     ...GenericUserResponseTypes.properties
-}));
+}), { description: "An array of users with basic information" });
 export type GetUserListResponse = Static<typeof GetUserListResponseTypes>;
 
 export const GetUserListSchema: FastifySchema = {
-    summary: "",
-    description: "",
+    summary: "Get list of users",
+    description: "Retrieves a paginated list of users. Only accessible by admin users.",
     querystring: GetUserListQueryTypes,
     tags: ["Users"],
     response: {
@@ -89,18 +89,18 @@ export const GetUserListSchema: FastifySchema = {
 
 // Schema for getting specific user
 const GetUserParamsTypes = Type.Object({
-    userId: Type.Number()
-});
+    userId: Type.Number({ description: "Unique identifier of the user to fetch" })
+}, { description: "Parameters for fetching a specific user" });
 export type GetUserParams = Static<typeof GetUserParamsTypes>;
 
 const GetUserResponseTypes = Type.Object({
     ...GenericUserResponseTypes.properties
-});
+}, { description: "Response schema for fetching a specific user" });
 export type GetUserResponse = Static<typeof GetUserResponseTypes>;
 
 export const GetUserSchema: FastifySchema = {
-    summary: "",
-    description: "",
+    summary: "Get specific user",
+    description: "Retrieves information about a specific user by their ID. Only accessible by admin users.",
     params: GetUserParamsTypes,
     tags: ["Users"],
     response: {
@@ -114,47 +114,47 @@ export const GetUserSchema: FastifySchema = {
 
 // Schema for activating a user
 const ActivateUserParamsTypes = Type.Object({
-    userId: Type.Number()
-});
+    userId: Type.Number({ description: "Unique identifier of the user to activate" })
+}, { description: "Parameters for activating a specific user" });
 export type ActivateUserParams = Static<typeof ActivateUserParamsTypes>;
 
 const ActivateUserResponseTypes = Type.Object({
     ...GenericUserResponseTypes.properties
-});
+}, { description: "Response schema for the activation of a user" });
 export type ActivateUserResponse = Static<typeof ActivateUserResponseTypes>;
 
 export const ActivateUserSchema: FastifySchema = {
-    summary: "",
-    description: "",
+    summary: "Activate a user",
+    description: "Activates a user's account by their ID. Only accessible by admin users.",
     params: ActivateUserParamsTypes,
     tags: ["Users"],
     response: {
         200: ActivateUserResponseTypes,
         ...AdminGuardedResponseSchema
     }
-}
+};
 
 // Schema for changing user details
 const UpdateUserParamsTypes = Type.Object({
-    userId: Type.Number()
-});
+    userId: Type.Number({ description: "Unique identifier of the user to update" })
+}, { description: "Parameters for updating a specific user" });
 export type UpdateUserParams = Static<typeof UpdateUserParamsTypes>;
 
 const UpdateUserBodyTypes = Type.Object({
-    name: Type.Optional(Type.String()),
-    email: Type.Optional(Type.String()),
-    password: Type.Optional(Type.String())
-});
+    name: Type.Optional(Type.String({ description: "New name for the user" })),
+    email: Type.Optional(Type.String({ description: "New email address for the user" })),
+    password: Type.Optional(Type.String({ description: "New password for the user" }))
+}, { description: "Body schema for updating a user's details" });
 export type UpdateUserBody = Static<typeof UpdateUserBodyTypes>;
 
 const UpdateUserResponseTypes = Type.Object({
     ...GenericUserResponseTypes.properties
-});
+}, { description: "Response schema for the updated user information" });
 export type UpdateUserResponse = Static<typeof UpdateUserResponseTypes>;
 
 export const UpdateUserSchema: FastifySchema = {
-    summary: "",
-    description: "",
+    summary: "Update user details",
+    description: "Updates a user's details such as name, email, or password. Only accessible by admin users.",
     params: UpdateUserParamsTypes,
     body: UpdateUserBodyTypes,
     tags: ["Users"],
@@ -162,28 +162,28 @@ export const UpdateUserSchema: FastifySchema = {
         200: UpdateUserResponseTypes,
         ...AdminGuardedResponseSchema
     }
-}
+};
 
 
 //////////////////// Schemas for DELETE requests ////////////////////
 
 // Schema for deleting a user
 const DeleteUserParamsTypes = Type.Object({
-    userId: Type.Number()
-});
+    userId: Type.Number({ description: "Unique identifier of the user to delete" })
+}, { description: "Parameters for deleting a specific user" });
 export type DeleteUserParams = Static<typeof DeleteUserParamsTypes>;
 
 const DeleteUserResponseTypes = Type.Object({
-});
+}, { description: "Empty response for a successful user deletion" });
 export type DeleteUserResponse = Static<typeof DeleteUserResponseTypes>;
 
 export const DeleteUserSchema: FastifySchema = {
-    summary: "",
-    description: "",
+    summary: "Delete a user",
+    description: "Deletes a specific user by their ID. Only accessible by admin users.",
     params: DeleteUserParamsTypes,
     tags: ["Users"],
     response: {
-        204: DeleteUserParamsTypes,
+        204: DeleteUserResponseTypes,
         ...AdminGuardedResponseSchema
     }
-}
+};
