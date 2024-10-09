@@ -407,7 +407,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                               15.0), 
                                           color: const Color(0xFF424549),
                                         ),
-                                        child: isArchival ? StreamBuilder<String>(
+                                        child: !isArchival ? StreamBuilder<String>(
                                           stream: chatMessage.responseStream,
                                           builder: (context, snapshot) {
                                             scrollController.animateTo(

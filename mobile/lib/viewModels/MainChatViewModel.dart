@@ -36,7 +36,7 @@ class MainChatViewModel extends ChangeNotifier {
   }
 
 
-  Future<List<Chat>> getChatList(int userId) async{
+  Future<List<Chat>> getChatList(int userId) async {
 
       List<Chat> chatList = await _chatService.getChatList(userId);
       return chatList;
