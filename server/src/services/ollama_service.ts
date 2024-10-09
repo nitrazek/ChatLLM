@@ -8,11 +8,12 @@ export class OllamaService {
     
     private constructor() {}
   
-    public static getInstance(): ChatOllama {
+    static getInstance(): ChatOllama {
         if (!this.instance) {
             this.instance = new ChatOllama({
                 baseUrl: ollamaUrl,
-                model: ollamaModel
+                model: ollamaModel,
+                checkOrPullModel: true
             });
         }
 

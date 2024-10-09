@@ -13,6 +13,7 @@ export const MultipartFileSchema: FastifySchema = {
     summary: "Upload a file",
     description: "Endpoint to upload a file (txt or pdf) to the knowledge base. The file is processed and its content is extracted for storage in the knowledge base.",
     consumes: ['multipart/form-data'],
+    tags: ["Files"],
     response: {
         204: UploadFileResponseTypes,
         ...AdminGuardedResponseSchema

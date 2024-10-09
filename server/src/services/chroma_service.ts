@@ -11,7 +11,7 @@ export class ChromaService {
 
     private constructor() { }
     
-    public static async getInstance(): Promise<Chroma> {
+    static async getInstance(): Promise<Chroma> {
         if (!this.instance) {
             this.instance = await Chroma.fromExistingCollection(new OllamaEmbeddings({
                 baseUrl: ollamaUrl,

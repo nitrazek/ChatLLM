@@ -5,6 +5,8 @@ import { Chat } from "../models/chat";
 import { ChatMessage } from "../models/chat_message";
 import { BadRequestError, ForbiddenError } from "../schemas/errors_schemas";
 import { ChromaService } from "../services/chroma_service";
+import { getRagTemplate } from "../prompts";
+import { SenderType } from "../enums/sender_type";
 
 const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
     // Create a new chat
@@ -36,7 +38,18 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         if (chat.user.id !== req.user.id) throw new ForbiddenError('You do not have permission to access this resource.');
 
         const chroma = await ChromaService.getInstance();
-        // TODO Implement sending message
+        const template = getRagTemplate(chat.isUsingOnlyKnowledgeBase);
+        const question = req.body.content;
+        const [chatMessageList, _] = await ChatMessage.findAndCount({
+            take: 10,
+            where: {
+                chat: { id: chat.id }
+            }
+        });
+
+        await chat.addMessage(SenderType.HUMAN, question);
+
+        //TODO implement generating message
 
         reply.send();
     });
