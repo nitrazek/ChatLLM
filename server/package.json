@@ -15,7 +15,7 @@
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/node": "^22.7.4",
-    "@types/pdfjs-dist": "^2.10.378",
+    "@types/pdf-parse": "^1.1.4",
     "nodemon": "^3.1.7",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.2"
@@ -27,14 +27,13 @@
     "@fastify/swagger": "^9.1.0",
     "@fastify/swagger-ui": "^5.0.1",
     "@langchain/community": "^0.3.4",
+    "@langchain/ollama": "^0.1.0",
     "@sinclair/typebox": "^0.33.14",
     "bcrypt": "^5.1.1",
     "class-validator": "^0.14.1",
     "fastify": "^5.0.0",
     "fastify-plugin": "^5.0.1",
-    "langchain": "^0.1.37",
-    "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "^4.6.82",
+    "pdf-parse": "^1.1.1",
     "pg": "^8.13.0",
     "typeorm": "^0.3.20"
   }

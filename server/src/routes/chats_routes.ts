@@ -4,6 +4,7 @@ import { userAuth } from "../services/authentication_service";
 import { Chat } from "../models/chat";
 import { ChatMessage } from "../models/chat_message";
 import { BadRequestError, ForbiddenError } from "../schemas/errors_schemas";
+import { ChromaService } from "../services/chroma_service";
 
 const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
     // Create a new chat
@@ -34,6 +35,7 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         if (!chat) throw new BadRequestError('Chat do not exist.');
         if (chat.user.id !== req.user.id) throw new ForbiddenError('You do not have permission to access this resource.');
 
+        const chroma = await ChromaService.getInstance();
         // TODO Implement sending message
 
         reply.send();
