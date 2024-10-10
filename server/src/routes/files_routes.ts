@@ -1,43 +1,38 @@
-import { MultipartFile } from "@fastify/multipart";
-import { FastifyInstance } from "fastify";
-import { FileUploadError, TFileUploadError, FileUploadSuccess, TFileUploadSuccess } from "../schemas/files_schemas";
-import { getChromaConnection } from "../services/chroma_service";
-import { Chroma } from "@langchain/community/vectorstores/chroma";
-import { getFileHandler } from "../utils/file_handlers";
+import { FastifyPluginCallback } from "fastify";
+import * as Schemas from "../schemas/files_schemas";
+import { adminAuth } from "../services/authentication_service";
+import { BadRequestError } from "../schemas/errors_schemas";
+import { getFileHandler } from "../utils/files_handlers";
+import { ChromaService } from "../services/chroma_service";
 
-const filesRoute = async (fastify: FastifyInstance) => {
-  fastify.post<{
-    Reply: TFileUploadSuccess | TFileUploadError
-  }>("/upload", {
-    schema: {
-      summary: "Upload a file to the knowledge base",
-      description: "Uploads a file to the server and processes it for adding to the knowledge base.",
-      tags: ["Files"],
-      response: {
-        204: FileUploadSuccess,
-        400: FileUploadError
-      }
-    }
-  }, async (request, response) => {
-    const file: MultipartFile | undefined = await request.file();
-    if (file === undefined) {
-      response.status(400).send();
-      return;
-    }
+const filesRoutes: FastifyPluginCallback = (server, _, done) => {
+    // Upload a file to the knowledge base (only admin)
+    server.post<{
+        Reply: Schemas.UploadFileResponse
+    }>('/', {
+        schema: Schemas.MultipartFileSchema,
+        onRequest: [adminAuth(server)]
+    }, async (req, reply) => {
+        const file = await req.file();
+        if (!file) throw new BadRequestError('No file was provided.');
 
-    const fileHandler: ((file: MultipartFile) => Promise<string>) | undefined = getFileHandler(file.mimetype);
-    if (fileHandler === undefined) {
-      response.status(400).send();
-      return;
-    }
+        const fileHandler = getFileHandler(file.mimetype);
+        if (!fileHandler) throw new BadRequestError('This file type is not supported.');
 
-    const chroma: Chroma = await getChromaConnection();
-    await chroma.addDocuments([{ pageContent: await fileHandler(file), metadata: { fileName: file.filename } }], {
-      ids: [file.filename]
+        const chroma = await ChromaService.getInstance();
+        await chroma.addDocuments([{
+            pageContent: await fileHandler(file),
+            metadata: {
+                fileName: file.filename
+            }
+        }], {
+            ids: [file.filename]
+        });
+
+        reply.code(204).send();
     });
 
-    response.status(204).send();
-  });
+    done();
 }
 
-export default filesRoute;
+export default filesRoutes;
