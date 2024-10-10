@@ -38,8 +38,8 @@ class Application {
         try {
             console.log(`[server]: Connecting to databases and starting models (might take a while)`);
             await AppDataSource.initialize();
-            OllamaService.getInstance();
-            await ChromaService.getInstance();
+            //OllamaService.getInstance();
+            //await ChromaService.getInstance();
             console.log(`[server]: Server connected to databases and model`);
         } catch (error: unknown) {
             console.error(error);
