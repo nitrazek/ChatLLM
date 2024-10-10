@@ -98,6 +98,16 @@ function Chat() {
         accumulatedText += answer;
         botMessage.text = accumulatedText;
 
+        if (parsedChunk.newChatName) {
+          setChatHistory(prevHistory => {
+            const updatedHistory = prevHistory.map(chat => {
+              const isMatch = chat.id == chatId;
+              return isMatch ? { ...chat, name: parsedChunk.newChatName } : chat;
+            });
+            return updatedHistory;
+          });
+        }
+
         setMessages(prevMessages => {
           const updatedMessages = [...prevMessages];
           const existingMessageIndex = updatedMessages.findIndex(msg => !msg.fromUser && msg.id === botMessage.id);
@@ -122,9 +132,6 @@ function Chat() {
       alert(error.errorMessage);
       setIsLoading(false);
     }
-    if (messages.length === 2 && messages.find(message => message.id === chatId)) {
-      fetchChatHistory();
-    }
   };
 
   const handleInputChange = (e) => {
@@ -138,7 +145,7 @@ function Chat() {
     }
   };
 
-  
+
   useEffect(() => {
     if (mainTopRef.current) {
       mainTopRef.current.scrollTop = mainTopRef.current.scrollHeight;
