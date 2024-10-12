@@ -19,16 +19,16 @@ function Chat() {
   const role = Cookies.get("userRole");
   const mainTopRef = useRef(null);
   const navigate = useNavigate();
-
+  const userToken = Cookies.get("userToken");
   useEffect(() => {
-    const userId = Cookies.get("userId");
-    if (!userId) {
+    if (!userToken) {
       navigate('/');
     }
   })
 
   const handleLogout = async () => {
-    Cookies.remove("userId");
+    Cookies.remove("userToken");
+    //Cookies.remove("userId");
     Cookies.remove("userName");
     Cookies.remove("userRole");
     navigate("/");
@@ -36,12 +36,12 @@ function Chat() {
 
   const fetchChatHistory = async () => {
     setChatHistory([]);
-    const userId = Cookies.get('userId');
     try {
-      const response = await fetch(`http://localhost:3000/api/v1/chats/list/${userId}`, {
+      const response = await fetch(`http://localhost:3000/api/v1/chats/list`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${userToken}`,
+          'Content-Type': 'application/json'
         },
       });
       const data = await response.json();
@@ -71,7 +71,8 @@ function Chat() {
       const response = await fetch(`http://localhost:3000/api/v1/chats/${chatId}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${userToken}`,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ question: input }),
       });
@@ -159,11 +160,14 @@ function Chat() {
   useEffect(() => {
     const fetchMessages = async () => {
       if (!chatId) return;
-
+      console.log("fetch Messages");
+      console.log(chatId);
+      console.log(userToken);
       try {
         const response = await fetch(`http://localhost:3000/api/v1/chats/${chatId}`, {
           method: 'GET',
           headers: {
+            'Authorization': `Bearer ${userToken}`,
             'Content-Type': 'application/json',
           },
         });
@@ -171,9 +175,9 @@ function Chat() {
         const data = await response.json();
         const formattedMessages = data.map((msg, index) => ({
           id: index + 1,
-          text: msg.content,
+          user: { name: msg.sender === "human" ? `${Cookies.get("userName")}` : "Bot", avatar: msg.sender === "human" ? "/avatars/user.png" : "/avatars/bot.png" },
           fromUser: msg.sender === "human",
-          user: { name: msg.sender === "human" ? `${Cookies.get("userName")}` : "Bot", avatar: msg.sender === "human" ? "/avatars/user.png" : "/avatars/bot.png" }
+          text: msg.content
         }));
 
         setMessages(formattedMessages);
