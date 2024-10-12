@@ -56,7 +56,6 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
 
     // Get a list of chats for a specific user
     server.get<{
-        Params: Schemas.GetChatListParams,
         Querystring: Schemas.GetChatListQuery,
         Reply: Schemas.GetChatListResponse
     }>('/list', {
