@@ -2,6 +2,7 @@ import { DataSource } from "typeorm";
 import { Chat } from "../models/chat";
 import { User } from "../models/user";
 import { ChatMessage } from "../models/chat_message";
+import { UserRole } from "../enums/user_role";
 
 export const AppDataSource = new DataSource({
     type: "postgres",
@@ -16,3 +17,17 @@ export const AppDataSource = new DataSource({
     migrations: [],
     subscribers: [],
 });
+
+export const populateDatabase = async () => {
+    const existingAdmin = await User.findOneBy({ name: "superadmin" });
+    if(existingAdmin !== null) return;
+     
+    const admin = User.create({
+        name: "superadmin",
+        email: "superadmin@admin.com",
+        password: "Superadmin1!",
+        activated: true,
+        role: UserRole.ADMIN
+    });
+    await admin.save();
+}
