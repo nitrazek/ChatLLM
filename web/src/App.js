@@ -7,7 +7,7 @@ import Chat from './Chat';
 
 function App() {
   const location = useLocation();
-
+  
   return (
     <TransitionGroup>
       <CSSTransition key={location.key} classNames="fade" timeout={300}>

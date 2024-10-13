@@ -9,21 +9,31 @@ import '../models/Chat.dart';
 
 class ChatService extends ChangeNotifier {
   final String baseUrl = "http://10.0.2.2:3000";
+  final HttpClient _httpClient = HttpClient();
+  bool _isRequestCancelled = false;
+  HttpClientRequest? _request;
+
+  void cancelAnswer() {
+    _isRequestCancelled = true;
+  }
 
 
   Stream<String> postQuestion(String question, int chatId) async* {
     try {
-      final uri = Uri.parse("$baseUrl/api/v1/chats/$chatId");
-      final httpClient = HttpClient();
-      final request = await httpClient.postUrl(uri);
+      final uri = Uri.parse("$baseUrl/api/v1/chats/1");
+      _request = await _httpClient.postUrl(uri);
 
-      request.headers.set('Content-Type', 'application/json');
-      request.add(utf8.encode(jsonEncode({'question': question})));
+      _request!.headers.set('Content-Type', 'application/json');
+      _request!.add(utf8.encode(jsonEncode({'question': question})));
 
-      final response = await request.close();
+      final response = await _request!.close();
 
       if (response.statusCode == 200) {
         await for (var chunk in response.transform(utf8.decoder)) {
+          if(_isRequestCancelled) {
+            _isRequestCancelled = false;
+            break;
+          }
           final answers = _parseConcatenatedJson(chunk);
           for (final answer in answers) {
             yield _formatText(answer);

@@ -6,7 +6,7 @@ import multipart from "@fastify/multipart";
 import userRoutes from "./routes/users_routes";
 import filesRoutes from "./routes/files_routes";
 import chatsRoutes from "./routes/chats_routes";
-import { AppDataSource } from "./services/database_service";
+import { AppDataSource, populateDatabase } from "./services/database_service";
 import errorsService from "./services/errors_service";
 import authenticationService from "./services/authentication_service";
 import { OllamaService } from "./services/ollama_service";
@@ -38,9 +38,9 @@ class Application {
         try {
             console.log(`[server]: Connecting to databases and starting models (might take a while)`);
             await AppDataSource.initialize();
-            //OllamaService.getInstance();
-            //await ChromaService.getInstance();
             console.log(`[server]: Server connected to databases and model`);
+            await populateDatabase();
+            console.log(`[server]: Database populated with initial data`);
         } catch (error: unknown) {
             console.error(error);
             console.log('[server]: Exiting...');
