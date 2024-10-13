@@ -7,6 +7,7 @@ import { ChatMessage } from "../models/chat_message";
 import { ChromaService } from "../services/chroma_service";
 import { SenderType } from "../enums/sender_type";
 import { Chat } from "../models/chat";
+import { IterableReadableStream } from "@langchain/core/dist/utils/stream";
 
 export const getRagChain = (template: string, chatMessages: ChatMessage[]) => RunnableSequence.from([
     {
@@ -31,48 +32,63 @@ export const getRagChain = (template: string, chatMessages: ChatMessage[]) => Ru
     OllamaService.getInstance()
 ]);
 
-export const transformStream = (stream: ReadableStream<BaseMessageChunk>, chat: Chat) => {
-    const transformedStream = stream.pipeThrough(getTransformStream(chat));
+export const transformStream = (stream: IterableReadableStream<BaseMessageChunk>, chat: Chat) => {
+    const transformedStream = getTransformedStream(stream, chat);
     if(chat.name !== null) return transformedStream;
-    return transformedStream.pipeThrough(getNewChatNameStream(chat));
+    return getNewChatNameStream(transformedStream, chat);
 }
 
-export const getTransformStream = (chat: Chat): TransformStream<BaseMessageChunk, string> => {
-    let fullAnswer: string = "";
-    return new TransformStream<BaseMessageChunk, string>({
-        transform: (chunk, controller) => {
-            console.log(chunk.content as string)
-            const answer = { answer: chunk.content as string };
-            fullAnswer += answer.answer;
-            controller.enqueue(JSON.stringify(answer));
+const getTransformedStream = (stream: ReadableStream<BaseMessageChunk>, chat: Chat): ReadableStream<string> => {
+    const answerChunks: string[] = [];
+    const reader = stream.getReader();
+    let isCanceled = false;
+    return new ReadableStream<string>({
+        async pull(controller) {
+            const { done, value } = await reader.read();
+            if(done || isCanceled) {
+                controller.close();
+                await chat.addMessage(SenderType.AI, answerChunks.join(""));
+                return;
+            }
+            const answerChunk = value.content as string;
+            answerChunks.push(answerChunk);
+            console.log(answerChunk);
+            controller.enqueue(JSON.stringify({ answer: answerChunk }));
         },
-        flush: async (controller) => {
-            await chat.addMessage(SenderType.AI, fullAnswer);
-            controller.terminate();
+        async cancel() {
+            await reader.cancel();
+            isCanceled = true;
         }
     });
-}
-  
-export const getNewChatNameStream = (chat: Chat): TransformStream<string, string> => {
+};
+
+const getNewChatNameStream = (stream: ReadableStream<string>, chat: Chat) => {
     const ollama = OllamaService.getInstance();
-    let fullAnswer = "";
-    const streamBuffer: { answer: string }[] = [];
-    return new TransformStream<string, string>({
-        transform: (chunk, controller) => {
-            const answer = JSON.parse(chunk);
-            streamBuffer.push(answer);
-            if (streamBuffer.length <= 1) return;
-            fullAnswer += streamBuffer[0].answer;
-            controller.enqueue(JSON.stringify(answer));
-            streamBuffer.shift();
+    const answerChunks: string[] = [];
+    const buffer: string[] = [];
+    const reader = stream.getReader();
+    let isCanceled = false;
+    return new ReadableStream<string>({
+        async pull(controller) {
+            const { done, value } = await reader.read();
+            if(done || isCanceled) {
+                answerChunks.push(buffer[0]);
+                const summary: string = (await ollama.invoke(`Summarize this answer into 3 words: ${answerChunks.join("")}`)).content as string;
+                await Chat.update({ id: chat.id }, { name: summary });
+                controller.enqueue(JSON.stringify({ answer: buffer[0], newChatName: summary }));
+                controller.close();
+                return;
+            }
+            const answerChunk = JSON.parse(value).answer;
+            buffer.push(answerChunk);
+            if (buffer.length <= 1) return;
+            answerChunks.push(buffer[0]);
+            controller.enqueue(JSON.stringify({ answer: buffer[0] }));
+            buffer.shift();
         },
-        flush: async (controller) => {
-            fullAnswer += streamBuffer[0].answer;
-            const summary: string = (await ollama.invoke(`Summarize this answer into 3 words: ${fullAnswer}`)).content as string;
-            chat.name = summary;
-            await chat.save();
-            controller.enqueue(JSON.stringify({ answer: streamBuffer[0].answer, newChatName: summary }));
-            controller.terminate();
+        async cancel() {
+            await reader.cancel();
+            isCanceled = true;
         }
     });
 }
