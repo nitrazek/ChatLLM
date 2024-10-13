@@ -3,7 +3,6 @@ import { Chat } from "./chat";
 import { UserRole } from "../enums/user_role";
 import { ExtendedBaseEntity } from "./extended_base_entity";
 import { IsEmail, IsEnum, IsOptional, IsStrongPassword, Length, MaxLength } from "class-validator";
-import { Exclude } from "class-transformer"
 import { getIsInvalidMessage } from "../utils/model_validation_messages";
 import { compare, hash, genSalt } from "bcrypt";
 
@@ -38,7 +37,6 @@ export class User extends ExtendedBaseEntity {
     chats!: Chat[];
 
     // This property stores an original password for comparing in hashing process
-    @Exclude()
     private cachedPassword!: string;
 
     @AfterLoad()
