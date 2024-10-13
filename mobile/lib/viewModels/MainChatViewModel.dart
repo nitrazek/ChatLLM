@@ -9,14 +9,14 @@ class MainChatViewModel extends ChangeNotifier {
 
   List<ChatMessage> get chatMessages => _chatMessages;
 
-  void sendPrompt(String question, int currentChatId) async {
+  void sendPrompt(String question, int currentChatId, String token) async {
     ChatMessage chatMessage = ChatMessage(sender : 'human', content : question);
     _chatMessages.add(chatMessage);
     notifyListeners();
 
     ChatMessage chatMessage2 = ChatMessage(sender: "ai", content : "");
     _chatMessages.add(chatMessage2);
-    await for (var answer in _chatService.postQuestion(question, currentChatId)) {
+    await for (var answer in _chatService.postQuestion(question, currentChatId, token)) {
       chatMessage2.addResponse(answer);
       _chatMessages[_chatMessages.length-1] = chatMessage2;
       notifyListeners();
@@ -27,8 +27,8 @@ class MainChatViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> loadHistory(int currentChatId) async {
-    _chatMessages = await _chatService.loadHistory(currentChatId);
+  Future<bool> loadHistory() async {
+    _chatMessages = await _chatService.loadHistory();
     if(_chatMessages != null)
       return true;
     else
@@ -36,9 +36,9 @@ class MainChatViewModel extends ChangeNotifier {
   }
 
 
-  Future<List<Chat>> getChatList(int userId) async {
+  Future<List<Chat>> getChatList(String token) async {
 
-      List<Chat> chatList = await _chatService.getChatList(userId);
+      List<Chat> chatList = await _chatService.getChatList(token);
       return chatList;
   }
 

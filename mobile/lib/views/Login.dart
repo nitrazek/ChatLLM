@@ -173,7 +173,7 @@ class _LoginPageState extends State<LoginPage> with RouteAware{
                               isLogged = await context.read<LoginViewModel>().login(login, password);
 
                               if (isLogged) {
-                                context.read<AccountState>().setAccount(context.read<LoginViewModel>().getAccount());
+                                context.read<AccountState>().setAccount(context.read<LoginViewModel>().token!);
                                 Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(

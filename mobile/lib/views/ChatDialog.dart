@@ -6,6 +6,7 @@ import 'package:mobile/viewModels/ChatDialogViewModel.dart';
 import 'package:mobile/viewModels/MainChatViewModel.dart';
 import 'package:mobile/views/MainChat.dart';
 import 'package:provider/provider.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 import '../viewModels/LoginViewModel.dart';
 import '../models/Account.dart';
@@ -19,7 +20,7 @@ class ChatDialog extends StatefulWidget {
 class _ChatDialogState extends State<ChatDialog> {
   TextEditingController _nameController = TextEditingController();
   bool isUsingOnlyKnowledgeBase = false;
-  late final Account? _account = context.read<AccountState>().currentAccount;
+  late final String? _token = context.read<AccountState>().token;
   String? name = "";
 
   @override
@@ -91,12 +92,18 @@ class _ChatDialogState extends State<ChatDialog> {
               bool isCreated = await context.read<ChatDialogViewModel>().createChat(
                   name,
                   isUsingOnlyKnowledgeBase,
-                  _account!.id
+                  _token!
               );
               if(isCreated == true) {
                 context.read<ChatState>().setChat(context.read<ChatDialogViewModel>().getChat());
                 context.read<ChatState>().setIsArchival(false);
-                Navigator.pop(context, isCreated);
+                Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ShowCaseWidget(
+                          builder: (context) => MainChatPage(),
+                        ))
+                );
               }
               else {
                 SnackBar(

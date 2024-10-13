@@ -4,10 +4,10 @@ import '../models/Account.dart';
 
 class AccountState extends ChangeNotifier {
 
-  Account? _currentAccount;
-  Account? get currentAccount => _currentAccount;
+  String? _token;
+  String? get token => _token;
 
-  void setAccount(Account account) {
-    _currentAccount = account;
+  void setAccount(String token) {
+    _token = token;
   }
 }

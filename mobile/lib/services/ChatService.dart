@@ -11,13 +11,14 @@ class ChatService extends ChangeNotifier {
   final String baseUrl = "http://10.0.2.2:3000";
 
 
-  Stream<String> postQuestion(String question, int chatId) async* {
+  Stream<String> postQuestion(String question, int chatId, String token) async* {
     try {
       final uri = Uri.parse("$baseUrl/api/v1/chats/$chatId");
       final httpClient = HttpClient();
       final request = await httpClient.postUrl(uri);
 
       request.headers.set('Content-Type', 'application/json');
+      request.headers.set('Authorization', 'Bearer $token');
       request.add(utf8.encode(jsonEncode({'question': question})));
 
       final response = await request.close();
@@ -61,18 +62,28 @@ class ChatService extends ChangeNotifier {
   }
 
   Future<Chat> createChat(String? name, bool isUsingOnlyKnowledgeBase,
-      int userId) async {
+      String token) async {
     try {
-      final uri = Uri.parse("$baseUrl/api/v1/chats/new/$userId");
+      final uri = Uri.parse("$baseUrl/api/v1/chats/new");
       final httpClient = HttpClient();
       final request = await httpClient.postUrl(uri);
 
       request.headers.set('Content-Type', 'application/json');
+      request.headers.set('Authorization', 'Bearer $token');
 
-      request.add(utf8.encode(jsonEncode({
-        'name': name,
-        'isUsingOnlyKnowledgeBase': isUsingOnlyKnowledgeBase
-      })));
+
+      if(name != "") {
+        request.add(utf8.encode(jsonEncode({
+          'name': name,
+          'isUsingOnlyKnowledgeBase': isUsingOnlyKnowledgeBase
+        })));
+      }
+      else
+        {
+          request.add(utf8.encode(jsonEncode({
+            'isUsingOnlyKnowledgeBase': isUsingOnlyKnowledgeBase
+          })));
+        }
 
       final response = await request.close();
 
@@ -93,12 +104,13 @@ class ChatService extends ChangeNotifier {
   }
 
 
-  Future<List<Chat>> getChatList(int userId) async {
+  Future<List<Chat>> getChatList(String token) async {
     try {
-      final uri = Uri.parse("$baseUrl/api/v1/chats/list/$userId");
+      final uri = Uri.parse("$baseUrl/api/v1/chats/list");
       final httpClient = HttpClient();
       final request = await httpClient.getUrl(uri);
 
+      request.headers.set('Authorization', 'Bearer $token');
       final response = await request.close();
 
       if (response.statusCode == 200) {
@@ -115,9 +127,9 @@ class ChatService extends ChangeNotifier {
     }
   }
 
-  Future<List<ChatMessage>> loadHistory(int currentChatId) async {
+  Future<List<ChatMessage>> loadHistory() async {
     try {
-      final uri = Uri.parse("$baseUrl/api/v1/chats/$currentChatId");
+      final uri = Uri.parse("$baseUrl/api/v1/chats");
       final httpClient = HttpClient();
       final request = await httpClient.getUrl(uri);
 

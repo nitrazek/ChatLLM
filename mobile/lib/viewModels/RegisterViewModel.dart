@@ -6,13 +6,13 @@ import '../services/ChatService.dart'; // Jeśli potrzebne są dodatkowe wyjątk
 
 class RegisterviewModel extends ChangeNotifier {
   final AccountService _accountService = AccountService();
-  late Account _account;
+  bool _isRegistered = false;
   String errorMessage = '';
 
   Future<bool> register(String name, String email, String password) async {
     try {
-      _account = await _accountService.register(name, email, password);
-      return true;
+      _isRegistered = await _accountService.register(name, email, password);
+      return _isRegistered;
     } catch (e) {
       if (e is BadRequestException) {
         errorMessage = e.message;
@@ -26,9 +26,5 @@ class RegisterviewModel extends ChangeNotifier {
       notifyListeners();
       return false;
     }
-  }
-
-  Account getAccount() {
-    return _account;
   }
 }

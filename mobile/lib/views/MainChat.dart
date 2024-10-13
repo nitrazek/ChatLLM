@@ -55,21 +55,16 @@ class _MainChatPageState extends State<MainChatPage> {
   }
 
   Future<void> fetchChatList() async {
-    Account? currentAccount = context.read<AccountState>().currentAccount;
 
-    if (currentAccount != null) {
-      final fetchedChats = await context.read<MainChatViewModel>().getChatList(currentAccount.id);
+
+      final fetchedChats = await context.read<MainChatViewModel>().getChatList(context.read<AccountState>().token!);
       setState(() {
         chatList = fetchedChats;
         if(chatList.isNotEmpty && context.read<ChatState>().currentChat == null) {
           context.read<ChatState>().setChat(chatList.last);
-          context.read<MainChatViewModel>().loadHistory(context
-              .read<ChatState>()
-              .currentChat!
-              .id);
+          context.read<MainChatViewModel>().loadHistory();
         }
       });
-    }
   }
 
   @override
@@ -220,13 +215,15 @@ class _MainChatPageState extends State<MainChatPage> {
                                     ),),
                                   trailing: const Icon(Icons.arrow_forward, color: Colors.white,),
                                   onTap: () async {
-                                    bool? isLoaded = await context.read<MainChatViewModel>().loadHistory(chat.id) as bool;
+                                    bool? isLoaded = await context.read<MainChatViewModel>().loadHistory() as bool;
                                     if(isLoaded) {
                                       context.read<ChatState>().setChat(chat);
                                       context.read<ChatState>().setIsArchival(true);
                                       Navigator.pushReplacement(context,
-                                          MaterialPageRoute(builder: (
-                                              context) => const MainChatPage()));
+                                          MaterialPageRoute(
+                                              builder: (context) => ShowCaseWidget(
+                                                builder: (context) => MainChatPage(),
+                                              )));
                                     }
                                   },
                                 )
@@ -334,7 +331,6 @@ class _MainChatPageState extends State<MainChatPage> {
                                                  return ChatDialog();
                                                },
                                              );
-                                             if (isCreated == true) {
                                                if(mounted) {
                                                  context
                                                      .read<MainChatViewModel>()
@@ -346,7 +342,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                                        context) => const MainChatPage()),
                                                  );
                                                }
-                                             }
+
                                            },
                                            child:Container(
                                              decoration: const BoxDecoration(
@@ -597,7 +593,8 @@ class _MainChatPageState extends State<MainChatPage> {
                                       context
                                           .read<ChatState>()
                                           .currentChat!
-                                          .id
+                                          .id,
+                                    context.read<AccountState>().token!
                                   );
                                   textEditingController.clear();
                                 },
@@ -621,7 +618,8 @@ class _MainChatPageState extends State<MainChatPage> {
                                       context
                                           .read<ChatState>()
                                           .currentChat!
-                                          .id
+                                          .id,
+                                      context.read<AccountState>().token!
                                   );
                                   textEditingController.clear();
                                 }

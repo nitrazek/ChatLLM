@@ -6,14 +6,16 @@ import '../services/AccountService.dart';
 import '../services/ChatService.dart';
 
 class LoginViewModel extends ChangeNotifier {
-  late Account _account;
   final AccountService _accountService = AccountService();
+
+  String? _token;
+  String? get token => _token;
 
   String errorMessage = '';
 
 Future<bool> login (String name, String password) async {
   try {
-    _account = await _accountService.login(name, password);
+    _token = await _accountService.login(name, password);
     return true;
   }
   catch (e) {
@@ -32,7 +34,4 @@ Future<bool> login (String name, String password) async {
     return false;
   }
 }
-  Account getAccount() {
-    return _account;
-  }
 }
