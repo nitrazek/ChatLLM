@@ -51,7 +51,7 @@ const SendMessageParamsTypes = Type.Object({
 export type SendMessageParams = Static<typeof SendMessageParamsTypes>;
 
 const SendMessageBodyTypes = Type.Object({
-    content: Type.String({ description: "The message content" })
+    question: Type.String({ description: "The message content" })
 }, { description: "Payload containing the message to be sent" });
 export type SendMessageBody = Static<typeof SendMessageBodyTypes>;
 

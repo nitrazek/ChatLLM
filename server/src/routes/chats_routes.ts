@@ -4,9 +4,9 @@ import { userAuth } from "../services/authentication_service";
 import { Chat } from "../models/chat";
 import { ChatMessage } from "../models/chat_message";
 import { BadRequestError, ForbiddenError } from "../schemas/errors_schemas";
-import { ChromaService } from "../services/chroma_service";
 import { getRagTemplate } from "../prompts";
 import { SenderType } from "../enums/sender_type";
+import { getRagChain, transformStream } from "../utils/stream_handler";
 
 const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
     // Create a new chat
@@ -18,9 +18,12 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         onRequest:[userAuth(server)]
     }, async (req, reply) => {
         const { name, isUsingOnlyKnowledgeBase } = req.body;
-        const chat = Chat.create({ name, isUsingOnlyKnowledgeBase, user: req.user });
+        const chat = Chat.create({
+            name,
+            isUsingOnlyKnowledgeBase,
+            user: req.user
+        });
         await chat.save();
-
         reply.send(chat);
     });
 
@@ -33,25 +36,24 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         schema: Schemas.SendMessageSchema,
         onRequest:[userAuth(server)]
     }, async (req, reply) => {
-        const chat = await Chat.findOneBy({ id: req.params.chatId });
+        const chat = await Chat.findOne({
+            where: { id: req.params.chatId },
+            relations: ["user"]
+        });
         if (!chat) throw new BadRequestError('Chat do not exist.');
         if (chat.user.id !== req.user.id) throw new ForbiddenError('You do not have permission to access this resource.');
 
-        const chroma = await ChromaService.getInstance();
         const template = getRagTemplate(chat.isUsingOnlyKnowledgeBase);
-        const question = req.body.content;
+        const question = req.body.question;
         const [chatMessageList, _] = await ChatMessage.findAndCount({
             take: 10,
-            where: {
-                chat: { id: chat.id }
-            }
+            where: { chat: { id: chat.id } }
         });
-
         await chat.addMessage(SenderType.HUMAN, question);
 
-        //TODO implement generating message
-
-        reply.send();
+        const ragChain = getRagChain(template, chatMessageList);
+        const stream = await ragChain.stream({ question });
+        return reply.send(transformStream(stream, chat));
     });
 
     // Get a list of chats for a specific user
@@ -83,7 +85,10 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         schema: Schemas.GetChatMessagesSchema,
         onRequest:[userAuth(server)]
     }, async (req, reply) => {
-        const chat = await Chat.findOneBy({ id: req.params.chatId });
+        const chat = await Chat.findOne({
+            where: { id: req.params.chatId },
+            relations: ["user"]
+        });
         if (!chat) throw new BadRequestError('Chat do not exist.');
         if (chat.user.id !== req.user.id) throw new ForbiddenError('You do not have permission to access this resource.');
 
@@ -110,7 +115,10 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         schema: Schemas.UpdateChatSchema,
         onRequest:[userAuth(server)]
     }, async (req, reply) => {
-        const chat = await Chat.findOneBy({ id: req.params.chatId });
+        const chat = await Chat.findOne({
+            where: { id: req.params.chatId },
+            relations: ["user"]
+        });
         if (!chat) throw new BadRequestError('Chat do not exist.');
         if (chat.user.id !== req.user.id) throw new ForbiddenError('You do not have permission to access this resource.');
 
@@ -130,7 +138,10 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         schema: Schemas.UpdateChatSchema,
         onRequest:[userAuth(server)]
     }, async (req, reply) => {
-        const chat = await Chat.findOneBy({ id: req.params.chatId });
+        const chat = await Chat.findOne({
+            where: { id: req.params.chatId },
+            relations: ["user"]
+        });
         if (!chat) throw new BadRequestError('Chat do not exist.');
         if (chat.user.id !== req.user.id) throw new ForbiddenError('You do not have permission to access this resource.');
     

@@ -6,6 +6,8 @@ import '../services/ChatService.dart';
 class MainChatViewModel extends ChangeNotifier {
   final ChatService _chatService = ChatService();
   List<ChatMessage> _chatMessages = [];
+  bool isLoading = false;
+
 
   List<ChatMessage> get chatMessages => _chatMessages;
 
@@ -27,8 +29,12 @@ class MainChatViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> loadHistory() async {
-    _chatMessages = await _chatService.loadHistory();
+  void cancelAnswer() {
+    _chatService.cancelAnswer();
+  }
+
+  Future<bool> loadHistory(int currentChatId) async {
+    _chatMessages = await _chatService.loadHistory(currentChatId);
     if(_chatMessages != null)
       return true;
     else

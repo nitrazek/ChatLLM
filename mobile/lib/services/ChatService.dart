@@ -9,6 +9,13 @@ import '../models/Chat.dart';
 
 class ChatService extends ChangeNotifier {
   final String baseUrl = "http://10.0.2.2:3000";
+  final HttpClient _httpClient = HttpClient();
+  bool _isRequestCancelled = false;
+  HttpClientRequest? _request;
+
+  void cancelAnswer() {
+    _isRequestCancelled = true;
+  }
 
 
   Stream<String> postQuestion(String question, int chatId, String token) async* {
@@ -18,13 +25,16 @@ class ChatService extends ChangeNotifier {
       final request = await httpClient.postUrl(uri);
 
       request.headers.set('Content-Type', 'application/json');
-      request.headers.set('Authorization', 'Bearer $token');
       request.add(utf8.encode(jsonEncode({'question': question})));
 
       final response = await request.close();
 
       if (response.statusCode == 200) {
         await for (var chunk in response.transform(utf8.decoder)) {
+          if(_isRequestCancelled) {
+            _isRequestCancelled = false;
+            break;
+          }
           final answers = _parseConcatenatedJson(chunk);
           for (final answer in answers) {
             yield _formatText(answer);
@@ -69,7 +79,6 @@ class ChatService extends ChangeNotifier {
       final request = await httpClient.postUrl(uri);
 
       request.headers.set('Content-Type', 'application/json');
-      request.headers.set('Authorization', 'Bearer $token');
 
 
       if(name != "") {
@@ -127,9 +136,9 @@ class ChatService extends ChangeNotifier {
     }
   }
 
-  Future<List<ChatMessage>> loadHistory() async {
+  Future<List<ChatMessage>> loadHistory(int currentChatId) async {
     try {
-      final uri = Uri.parse("$baseUrl/api/v1/chats");
+      final uri = Uri.parse("$baseUrl/api/v1/chats/$currentChatId");
       final httpClient = HttpClient();
       final request = await httpClient.getUrl(uri);
 

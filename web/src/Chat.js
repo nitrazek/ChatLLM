@@ -7,17 +7,21 @@ import { Oval } from 'react-loader-spinner';
 import { useNavigate, useParams } from "react-router-dom";
 import Cookies from 'js-cookie';
 import NewChatPopup from './NewChatPopup';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faStop } from "@fortawesome/free-solid-svg-icons"
 
 function Chat() {
   const { chatId } = useParams();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isGeneratingAnswer, setIsGeneratingAnswer] = useState(false);
   const [lastUserMessage, setLastUserMessage] = useState(null);
   const [chatHistory, setChatHistory] = useState([]);
   const [showNewChatPopup, setShowNewChatPopup] = useState(false);
   const role = Cookies.get("userRole");
   const mainTopRef = useRef(null);
+  const controller = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -66,6 +70,7 @@ function Chat() {
     setLastUserMessage(userMessage);
     setInput('');
     setIsLoading(true);
+    controller.current = new AbortController();
 
     try {
       const response = await fetch(`http://localhost:3000/api/v1/chats/${chatId}`, {
@@ -74,6 +79,7 @@ function Chat() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ question: input }),
+        signal: controller.current.signal
       });
 
       const reader = response.body.getReader();
@@ -85,9 +91,11 @@ function Chat() {
         user: { name: "Bot", avatar: "/avatars/bot.png" }
       };
 
-      reader.read().then(function processText({ done, value }) {
+      while(true) {
+        const { done, value } = await reader.read();
         if (done) {
           setIsLoading(false);
+          setIsGeneratingAnswer(false);
           return;
         }
 
@@ -114,17 +122,22 @@ function Chat() {
         });
 
         setIsLoading(false);
-        reader.read().then(processText);
+        setIsGeneratingAnswer(true);
       }
-      );
-
     } catch (error) {
-      alert(error.errorMessage);
       setIsLoading(false);
+      setIsGeneratingAnswer(false);
+      controller.current = null;
+      if(error.name !== "AbortError")
+        alert(error.errorMessage);
     }
     if (messages.length === 2 && messages.find(message => message.id === chatId)) {
       fetchChatHistory();
     }
+  };
+
+  const cancelAnswer = (e) => {
+    if(controller.current) controller.current.abort();
   };
 
   const handleInputChange = (e) => {
@@ -250,20 +263,22 @@ function Chat() {
         </div>
 
         <div className="mainBottom">
-          <div className="chatFooter">
             {chatId && (
-              <div className="input">
+              <div className="chatFooter">
                 <input
+                  className="input"
                   type="text"
                   placeholder="Napisz wiadomość..."
                   value={input}
                   onChange={handleInputChange}
                   onKeyDown={handleKeyDown}
-                  disabled={isLoading}
+                  disabled={isLoading || isGeneratingAnswer}
                 />
+                {isGeneratingAnswer && (
+                  <FontAwesomeIcon className="cancelBtn" icon={faStop} onClick={cancelAnswer} />
+                )}
               </div>
             )}
-          </div>
         </div>
       </div>
     </div>
