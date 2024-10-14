@@ -36,10 +36,7 @@ class MainChatViewModel extends ChangeNotifier {
   Future<bool> loadHistory(int currentChatId, String token) async {
     _chatMessages = await _chatService.loadHistory(currentChatId, token);
     notifyListeners();
-    if(_chatMessages != null)
-      return true;
-    else
-      return false;
+    return true;
   }
 
 

@@ -9,7 +9,6 @@ import 'package:mobile/viewModels/LoginViewModel.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_markdown/flutter_markdown.dart' show MarkdownStyleSheet, MarkdownBody;
 import 'package:showcaseview/showcaseview.dart';
-import '../models/Account.dart';
 import '../models/Chat.dart';
 import 'ChatDialog.dart';
 import '../viewModels/MainChatViewModel.dart';

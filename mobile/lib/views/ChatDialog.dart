@@ -8,8 +8,6 @@ import 'package:mobile/views/MainChat.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 
-import '../viewModels/LoginViewModel.dart';
-import '../models/Account.dart';
 
 class ChatDialog extends StatefulWidget {
 

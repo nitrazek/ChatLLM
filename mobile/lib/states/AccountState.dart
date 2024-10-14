@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 
-import '../models/Account.dart';
 
 class AccountState extends ChangeNotifier {
 

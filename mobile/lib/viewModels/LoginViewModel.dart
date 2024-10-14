@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
-import '../models/Account.dart';
 import '../services/AccountService.dart';
 import '../services/ChatService.dart';
 
