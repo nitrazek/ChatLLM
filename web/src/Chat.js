@@ -173,9 +173,6 @@ function Chat() {
   useEffect(() => {
     const fetchMessages = async () => {
       if (!chatId) return;
-      console.log("fetch Messages");
-      console.log(chatId);
-      console.log(userToken);
       try {
         const response = await fetch(`http://localhost:3000/api/v1/chats/${chatId}`, {
           method: 'GET',

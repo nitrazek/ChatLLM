@@ -49,6 +49,9 @@ function Login() {
         if (!login) {
             return "Login jest wymagany";
         }
+        else if (login.length < 6 || login.length > 30) {
+            return "Login musi mieć od 6 do 30 znaków";
+        }
         return "";
     };
 
