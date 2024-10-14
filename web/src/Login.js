@@ -8,17 +8,20 @@ function Login() {
 
     const [email, setEmail] = useState("");
     const [login, setLogin] = useState("");
+    const [loginOrEmail, setLoginOrEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
     const [emailError, setEmailError] = useState("");
     const [loginError, setLoginError] = useState("");
+    const [loginOrEmailError, setLoginOrEmailError] = useState("");
     const [passwordError, setPasswordError] = useState("");
     const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
     const [touched, setTouched] = useState({
         email: false,
         login: false,
+        loginOrEmail: false,
         password: false,
         confirmPassword: false
     });
@@ -26,8 +29,8 @@ function Login() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const userId = Cookies.get("userId");
-        if (userId) {
+        const userToken = Cookies.get("userToken");
+        if (userToken) {
             navigate('/chat');
         }
     })
@@ -46,14 +49,32 @@ function Login() {
         if (!login) {
             return "Login jest wymagany";
         }
+        else if (login.length < 4 || login.length > 30) {
+            return "Login musi mieć od 4 do 30 znaków";
+        }
+        return "";
+    };
+
+    const validateLoginOrEmail = (loginOrEmail) => {
+        if (!loginOrEmail) {
+            return "Login lub email jest wymagany";
+        }
         return "";
     };
 
     const validatePassword = (password) => {
         if (!password) {
             return "Hasło jest wymagane";
-        } else if (password.length < 6) {
-            return "Hasło musi mieć co najmniej 6 znaków";
+        } else if (password.length < 6 || password.length > 30) {
+            return "Hasło musi mieć od 6 do 30 znaków";
+        } else if (!/[a-z]/.test(password)) {
+            return "Hasło musi zawierać co najmniej jedną małą literę";
+        } else if (!/[A-Z]/.test(password)) {
+            return "Hasło musi zawierać co najmniej jedną dużą literę";
+        } else if (!/[0-9]/.test(password)) {
+            return "Hasło musi zawierać co najmniej jedną cyfrę";
+        } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+            return "Hasło musi zawierać co najmniej jeden znak specjalny";
         }
         return "";
     };
@@ -69,6 +90,7 @@ function Login() {
 
     const handleEmailChange = (e) => setEmail(e.target.value);
     const handleLoginChange = (e) => setLogin(e.target.value);
+    const handleLoginOrEmailChange = (e) => setLoginOrEmail(e.target.value);
     const handlePasswordChange = (e) => setPassword(e.target.value);
     const handleConfirmPasswordChange = (e) => setConfirmPassword(e.target.value);
 
@@ -80,6 +102,12 @@ function Login() {
         setTouched((prev) => ({ ...prev, login: true }));
         setLoginError(validateLogin(login));
     };
+
+    const handleLoginOrEmailBlur = () => {
+        setTouched((prev) => ({ ...prev, loginOrEmail: true}));
+        setLoginOrEmailError(validateLoginOrEmail(loginOrEmail));
+    }
+
     const handlePasswordBlur = () => {
         setTouched((prev) => ({ ...prev, password: true }));
         setPasswordError(validatePassword(password));
@@ -107,13 +135,13 @@ function Login() {
     };
 
     const handleLogin = () => {
-        const loginError = validateLogin(login);
+        const loginError = validateLoginOrEmail(loginOrEmail);
         const passwordError = validatePassword(password);
 
-        setLoginError(loginError);
+        setLoginOrEmailError(loginOrEmailError);
         setPasswordError(passwordError);
 
-        if (!loginError && !passwordError) {
+        if (!loginOrEmailError && !passwordError) {
             loginUser();
         }
     };
@@ -125,6 +153,7 @@ function Login() {
         setConfirmPassword("");
         setEmailError("");
         setLoginError("");
+        setLoginOrEmailError("");
         setPasswordError("");
         setConfirmPasswordError("");
         setTouched({
@@ -187,15 +216,16 @@ function Login() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ name: login, password: password }),
+                body: JSON.stringify({ nameOrEmail: loginOrEmail, password: password }),
             });
             const data = await response.json();
 
             if (response.ok) {
-                navigate('/chat');
+                Cookies.set("userToken", data.token);
                 Cookies.set("userId", data.id);
                 Cookies.set("userName", data.name);
                 Cookies.set("userRole", data.role);
+                navigate('/chat');
             } else {
                 alert(data.errorMessage);
             }
@@ -265,13 +295,13 @@ function Login() {
                         <input
                             tabIndex={isRegister ? -1 : 0}
                             type="text"
-                            placeholder="Login"
+                            placeholder="Login lub email"
                             className='input-default'
-                            value={login}
-                            onChange={handleLoginChange}
-                            onBlur={handleLoginBlur}
+                            value={loginOrEmail}
+                            onChange={handleLoginOrEmailChange}
+                            onBlur={handleLoginOrEmailBlur}
                         />
-                        {loginError && <span className="error-tooltip">{loginError}</span>}
+                        {loginOrEmailError && <span className="error-tooltip">{loginOrEmailError}</span>}
                         <input
                             tabIndex={isRegister ? -1 : 0}
                             type="password"
