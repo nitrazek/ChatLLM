@@ -7,6 +7,7 @@ import { BadRequestError, ForbiddenError } from "../schemas/errors_schemas";
 import { getRagTemplate } from "../prompts";
 import { SenderType } from "../enums/sender_type";
 import { getRagChain, transformStream } from "../utils/stream_handler";
+import { getPaginationMetadata } from "../utils/pagination_handler";
 
 const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
     // Create a new chat
@@ -69,23 +70,16 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         const [chats, _] = await Chat.findAndCount({
             skip: (page - 1) * limit,
             take: limit,
-            where: {
-                user: { id: req.user.id }
-            }
+            where: { user: { id: req.user.id } }
         });
 
-        const totalMessages = await Chat.count();
-        const totalPages = Math.ceil(totalMessages / limit);
-        const paginationMetadata = {
-            totalPages: totalPages,
-            currentPage: page,
-            prevPage: page > 1 ? page - 1 : null,
-            nextPage: page < totalPages ? page + 1 : null
-        }
+        const totalChats = await Chat.count({
+            where: { user: { id: req.user.id } }
+        });
 
         reply.send({
             chats: chats,
-            pagination: paginationMetadata
+            pagination: getPaginationMetadata(page, limit, totalChats)
         });
     });
 
@@ -109,17 +103,20 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         const [messages, _] = await ChatMessage.findAndCount({
             skip: (page - 1) * limit,
             take: limit,
-            where: {
-                chat: {
-                    id: req.params.chatId
-                }
-            }
+            where: { chat: { id: req.params.chatId } }
         });
 
-        reply.send(messages);
+        const totalChatMessages = await ChatMessage.count({
+            where: { chat: { id: req.params.chatId } }
+        });
+
+        reply.send({
+            messages: messages,
+            pagination: getPaginationMetadata(page, limit, totalChatMessages)
+        });
     });
 
-    // Change datails of specific chat
+    // Change details of specific chat
     server.put<{
         Params: Schemas.UpdateChatParams,
         Body: Schemas.UpdateChatBody,

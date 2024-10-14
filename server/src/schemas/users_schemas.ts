@@ -1,6 +1,7 @@
 import { FastifySchema } from "fastify"
 import { Static, Type } from "@sinclair/typebox"
 import { AdminGuardedResponseSchema, NotGuardedResponseSchema } from "./errors_schemas";
+import { PaginationMetadataTypes } from "./base_schemas";
 
 //////////////////// Generic Schemas ////////////////////
 
@@ -71,9 +72,12 @@ const GetUserListQueryTypes = Type.Object({
 }, { description: "Query parameters for fetching a list of users" });
 export type GetUserListQuery = Static<typeof GetUserListQueryTypes>;
 
-const GetUserListResponseTypes = Type.Array(Type.Object({
-    ...GenericUserResponseTypes.properties
-}), { description: "An array of users with basic information" });
+const GetUserListResponseTypes = Type.Object({
+    users: Type.Array(Type.Object({
+        ...GenericUserResponseTypes.properties
+    }), { description: "List of users" }),
+    pagination: PaginationMetadataTypes
+}, { description: "List of users with pagination metadata" });
 export type GetUserListResponse = Static<typeof GetUserListResponseTypes>;
 
 export const GetUserListSchema: FastifySchema = {

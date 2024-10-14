@@ -4,6 +4,7 @@ import { User } from "../models/user";
 import { adminAuth, userAuth } from "../services/authentication_service";
 import { BadRequestError } from "../schemas/errors_schemas";
 import { isEmail } from "class-validator";
+import { getPaginationMetadata } from "../utils/pagination_handler";
 
 const userRoutes: FastifyPluginCallback = (server, _, done) => {
     // Register new user
@@ -58,7 +59,11 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
             take: limit
         });
 
-        reply.send(users);
+        const totalUsers = await User.count();
+        reply.send({
+            users: users,
+            pagination: getPaginationMetadata(page, limit, totalUsers)
+        });
     });
 
     // Get specific user (only admin)
@@ -92,7 +97,7 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
         reply.send(user);
     });
 
-    // Change datails of specific user (only admin)
+    // Change details of specific user (only admin)
     server.put<{
         Params: Schemas.UpdateUserParams,
         Body: Schemas.UpdateUserBody,
