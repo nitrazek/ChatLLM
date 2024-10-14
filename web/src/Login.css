@@ -230,14 +230,14 @@ body {
 .error-tooltip {
     background-color: #b40000; 
     color: #fff;
-    padding: 4px 3px 4px 6px;
+    padding: 3px 6px 4px 6px;
     margin-top: 4px;
     border-radius: 0.2rem;
-    font-size: 8px;
+    font-size: 6px;
     white-space: nowrap;
     z-index: 10;
     transform: translateY(-3px);
-    width: 65%;
+    width: auto;
 }
 
 .error-tooltip::after {
@@ -245,7 +245,7 @@ body {
     position: absolute;
     top: 0;
     left: 15%;
-    transform: translateX(-25px) translateY(-16px);
+    transform: translateY(-16px);
     border-width: 9px;
     border-style: solid;
     border-color:  transparent transparent #b40000 transparent; 

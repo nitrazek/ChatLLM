@@ -46,8 +46,8 @@ const getTransformedStream = (stream: ReadableStream<BaseMessageChunk>, chat: Ch
         async pull(controller) {
             const { done, value } = await reader.read();
             if(done || isCanceled) {
-                controller.close();
                 await chat.addMessage(SenderType.AI, answerChunks.join(""));
+                controller.close();
                 return;
             }
             const answerChunk = value.content as string;
