@@ -45,6 +45,8 @@ class _MainChatPageState extends State<MainChatPage> {
   @override
   void dispose() {
     textEditingController.dispose();
+    scrollController.dispose();
+    scrollController2.dispose();
     super.dispose();
   }
 
@@ -58,13 +60,23 @@ class _MainChatPageState extends State<MainChatPage> {
 
 
       final fetchedChats = await context.read<MainChatViewModel>().getChatList(context.read<AccountState>().token!);
-      setState(() {
-        chatList = fetchedChats;
-        if(chatList.isNotEmpty && context.read<ChatState>().currentChat == null) {
-          context.read<ChatState>().setChat(chatList.last);
-          context.read<MainChatViewModel>().loadHistory();
+      if(mounted) {
+        setState(() {
+          chatList = fetchedChats;
+          if (chatList.isNotEmpty && context
+              .read<ChatState>()
+              .currentChat == null) {
+            context.read<ChatState>().setChat(chatList.last);
+            context.read<MainChatViewModel>().loadHistory(context
+                .read<ChatState>()
+                .currentChat!
+                .id, context
+                .read<AccountState>()
+                .token!);
+          }
         }
-      });
+        );
+      }
   }
 
   @override
@@ -215,15 +227,20 @@ class _MainChatPageState extends State<MainChatPage> {
                                     ),),
                                   trailing: const Icon(Icons.arrow_forward, color: Colors.white,),
                                   onTap: () async {
-                                    bool? isLoaded = await context.read<MainChatViewModel>().loadHistory() as bool;
+                                    final tempChat = context.read<ChatState>().currentChat;
+                                    context.read<ChatState>().setChat(chat);
+                                    bool? isLoaded = await context.read<MainChatViewModel>().loadHistory(context.read<ChatState>().currentChat!.id, context.read<AccountState>().token!);
                                     if(isLoaded) {
-                                      context.read<ChatState>().setChat(chat);
                                       context.read<ChatState>().setIsArchival(true);
                                       Navigator.pushReplacement(context,
                                           MaterialPageRoute(
                                               builder: (context) => ShowCaseWidget(
                                                 builder: (context) => MainChatPage(),
                                               )));
+                                    }
+                                    else {
+                                      if(tempChat != null)
+                                      context.read<ChatState>().setChat(tempChat!);
                                     }
                                   },
                                 )
@@ -331,17 +348,18 @@ class _MainChatPageState extends State<MainChatPage> {
                                                  return ChatDialog();
                                                },
                                              );
-                                               if(mounted) {
                                                  context
                                                      .read<MainChatViewModel>()
                                                      .chatMessages
                                                      .clear();
                                                  Navigator.pushReplacement(
                                                    context,
-                                                   MaterialPageRoute(builder: (
-                                                       context) => const MainChatPage()),
+                                                     MaterialPageRoute(
+                                                         builder: (context) => ShowCaseWidget(
+                                                           builder: (context) => MainChatPage(),
+                                                         ))
                                                  );
-                                               }
+
 
                                            },
                                            child:Container(
@@ -366,17 +384,18 @@ class _MainChatPageState extends State<MainChatPage> {
                                               },
                                             );
                                             if (isCreated == true) {
-                                              if(mounted) {
                                                 context
                                                     .read<MainChatViewModel>()
                                                     .chatMessages
                                                     .clear();
                                                 Navigator.pushReplacement(
-                                                  context,
-                                                  MaterialPageRoute(builder: (
-                                                      context) => const MainChatPage()),
+                                                    context,
+                                                    MaterialPageRoute(
+                                                        builder: (context) => ShowCaseWidget(
+                                                          builder: (context) => MainChatPage(),
+                                                        ))
                                                 );
-                                              }
+
                                             }
                                           },
                                           child:Container(
@@ -475,12 +494,15 @@ class _MainChatPageState extends State<MainChatPage> {
                                               stream: chatMessage
                                                   .responseStream,
                                               builder: (context, snapshot) {
-                                                 scrollController.animateTo(
-                                                    scrollController.position
-                                                        .maxScrollExtent,
-                                                    duration: const Duration(
-                                                        milliseconds: 300),
-                                                    curve: Curves.easeOut);
+                                                if(mounted && scrollController.position
+                                                    .maxScrollExtent !=null) {
+                                                  scrollController.animateTo(
+                                                      scrollController.position
+                                                          .maxScrollExtent,
+                                                      duration: const Duration(
+                                                          milliseconds: 300),
+                                                      curve: Curves.easeOut);
+                                                }
                                                 if (snapshot.hasError) {
                                                   return Text(
                                                       'Error: ${snapshot

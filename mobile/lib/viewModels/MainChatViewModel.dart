@@ -33,8 +33,9 @@ class MainChatViewModel extends ChangeNotifier {
     _chatService.cancelAnswer();
   }
 
-  Future<bool> loadHistory(int currentChatId) async {
-    _chatMessages = await _chatService.loadHistory(currentChatId);
+  Future<bool> loadHistory(int currentChatId, String token) async {
+    _chatMessages = await _chatService.loadHistory(currentChatId, token);
+    notifyListeners();
     if(_chatMessages != null)
       return true;
     else

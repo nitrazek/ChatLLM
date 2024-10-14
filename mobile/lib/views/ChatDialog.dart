@@ -97,13 +97,7 @@ class _ChatDialogState extends State<ChatDialog> {
               if(isCreated == true) {
                 context.read<ChatState>().setChat(context.read<ChatDialogViewModel>().getChat());
                 context.read<ChatState>().setIsArchival(false);
-                Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => ShowCaseWidget(
-                          builder: (context) => MainChatPage(),
-                        ))
-                );
+                Navigator.of(context).pop(isCreated);
               }
               else {
                 SnackBar(

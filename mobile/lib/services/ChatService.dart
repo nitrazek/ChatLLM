@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
+import 'package:mobile/states/ChatState.dart';
 import 'package:mobile/viewModels/MainChatViewModel.dart';
 import 'package:provider/provider.dart';
 
@@ -25,6 +26,7 @@ class ChatService extends ChangeNotifier {
       final request = await httpClient.postUrl(uri);
 
       request.headers.set('Content-Type', 'application/json');
+      request.headers.set('Authorization', 'Bearer $token');
       request.add(utf8.encode(jsonEncode({'question': question})));
 
       final response = await request.close();
@@ -41,7 +43,7 @@ class ChatService extends ChangeNotifier {
           }
         }
       } else {
-        throw Exception('Failed to load answer');
+        throw Exception('$response');
       }
     } catch (e) {
       if (e is SocketException) {
@@ -54,14 +56,23 @@ class ChatService extends ChangeNotifier {
 
   List<String> _parseConcatenatedJson(String responseBody) {
     final List<String> answers = [];
-    final regex = RegExp(r'\{"answer":"(.*?)"\}');
-    final matches = regex.allMatches(responseBody);
+    ChatState chatState = ChatState();
+
+    final answerRegex = RegExp(r'\{"answer":"(.*?)"\}');
+    final matches = answerRegex.allMatches(responseBody);
 
     for (final match in matches) {
       final answer = match.group(1);
       if (answer != null) {
         answers.add(answer);
       }
+    }
+
+    final newChatNameRegex = RegExp(r'"newChatName":"(.*?)"');
+    final chatNameMatch = newChatNameRegex.firstMatch(responseBody);
+
+    if (chatNameMatch != null) {
+      final newChatName = chatNameMatch.group(1);
     }
 
     return answers;
@@ -79,6 +90,7 @@ class ChatService extends ChangeNotifier {
       final request = await httpClient.postUrl(uri);
 
       request.headers.set('Content-Type', 'application/json');
+      request.headers.set('Authorization', 'Bearer $token');
 
 
       if(name != "") {
@@ -136,12 +148,13 @@ class ChatService extends ChangeNotifier {
     }
   }
 
-  Future<List<ChatMessage>> loadHistory(int currentChatId) async {
+  Future<List<ChatMessage>> loadHistory(int currentChatId, String token) async {
     try {
       final uri = Uri.parse("$baseUrl/api/v1/chats/$currentChatId");
       final httpClient = HttpClient();
       final request = await httpClient.getUrl(uri);
 
+      request.headers.set('Authorization', 'Bearer $token');
       final response = await request.close();
 
       if (response.statusCode == 200) {
