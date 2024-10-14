@@ -19,6 +19,18 @@ const GenericChatMessageResponseTypes = Type.Object({
     content: Type.String({ description: "Content of the message" })
 }, { description: "Basic information about a chat message" });
 
+// Schema for generic pagination metadata
+const GenericPaginationMetadataTypes = Type.Object({
+    totalPages: Type.Number({ description: "Amount of total pages" }),
+    currentPage: Type.Number({ description: "Number of current page" }),
+    prevPage: Type.Union([Type.Number(), Type.Null()], {
+        description: "Number of previous page, null if there is no previous page"
+    }),
+    nextPage: Type.Union([Type.Number(), Type.Null()], {
+        description: "Number of next page, null if there is no next page"
+    })
+}, { description: "Information about pagination" });
+
 //////////////////// Schema for POST requests ////////////////////
 
 // Schema for creating a new chat
@@ -56,8 +68,9 @@ const SendMessageBodyTypes = Type.Object({
 export type SendMessageBody = Static<typeof SendMessageBodyTypes>;
 
 const SendMessageResponseTypes = Type.Array(Type.Object({
-    //TODO Implement SendMessageResponse Types
-}), { description: "Response after sending a message" });
+    answer: Type.String({ description: "Answer chunk" }),
+    newChatName: Type.Optional(Type.String({ description: "New generated chat name, sent in last chunk if question was sent to chat without name" }))
+}), { description: "Response after sending a message in form of stream" });
 export type SendMessageResponse = Static<typeof SendMessageResponseTypes>;
 
 export const SendMessageSchema: FastifySchema = {
@@ -82,9 +95,12 @@ const GetChatListQueryTypes = Type.Object({
 }, { description: "Query parameters for paginated chat list retrieval" });
 export type GetChatListQuery = Static<typeof GetChatListQueryTypes>;
 
-const GetChatListResponseTypes = Type.Array(Type.Object({
-    ...GenericChatResponseTypes.properties
-}), { description: "List of chats for the user" });
+const GetChatListResponseTypes = Type.Object({
+    chats: Type.Array(Type.Object({
+        ...GenericChatResponseTypes.properties
+    }), { description: "List of chats for the user" }),
+    pagination: GenericPaginationMetadataTypes
+}, { description: "List of chats for the user with pagination metadata" });
 export type GetChatListResponse = Static<typeof GetChatListResponseTypes>;
 
 export const GetChatListSchema: FastifySchema = {

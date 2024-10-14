@@ -2,7 +2,7 @@ import { OllamaService } from "../services/ollama_service";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { ChatPromptTemplate } from "@langchain/core/prompts"
 import { formatDocumentsAsString } from "langchain/util/document"
-import { AIMessage, AIMessageChunk, BaseMessageChunk, HumanMessage } from "@langchain/core/messages";
+import { AIMessage, BaseMessageChunk, HumanMessage } from "@langchain/core/messages";
 import { ChatMessage } from "../models/chat_message";
 import { ChromaService } from "../services/chroma_service";
 import { SenderType } from "../enums/sender_type";

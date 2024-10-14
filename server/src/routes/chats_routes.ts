@@ -65,6 +65,7 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         onRequest:[userAuth(server)]
     }, async (req, reply) => {
         const { page = 1, limit = 20 } = req.query;
+        
         const [chats, _] = await Chat.findAndCount({
             skip: (page - 1) * limit,
             take: limit,
@@ -73,7 +74,19 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
             }
         });
 
-        reply.send(chats);
+        const totalMessages = await Chat.count();
+        const totalPages = Math.ceil(totalMessages / limit);
+        const paginationMetadata = {
+            totalPages: totalPages,
+            currentPage: page,
+            prevPage: page > 1 ? page - 1 : null,
+            nextPage: page < totalPages ? page + 1 : null
+        }
+
+        reply.send({
+            chats: chats,
+            pagination: paginationMetadata
+        });
     });
 
     // Get specific chat history

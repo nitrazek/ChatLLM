@@ -13,7 +13,7 @@ export class User extends ExtendedBaseEntity {
     id!: number;
 
     @Column()
-    @Length(4, 30, { message: getIsInvalidMessage('Name') })
+    @Length(4   , 30, { message: getIsInvalidMessage('Name') })
     name!: string;
 
     @Column()
