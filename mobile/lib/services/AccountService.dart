@@ -58,7 +58,7 @@ class AccountService {
     }
     }
 
-  Future<Account> register(String name, String email, String password) async {
+  Future<bool> register(String name, String email, String password) async {
     try {
       final uri = Uri.parse("$baseUrl/api/v1/users/register");
       final request = await httpClient.postUrl(uri);
@@ -75,9 +75,8 @@ class AccountService {
 
       switch (response.statusCode) {
         case 201:
-          final responseBody = await response.transform(utf8.decoder).join();
-          Map<String, dynamic> json = jsonDecode(responseBody);
-          return Account.fromJson(json);
+          //final responseBody = await response.transform(utf8.decoder).join();
+          return true;
         case 400:
           throw BadRequestException('Dane są już zajęte.');
         default:
@@ -92,7 +91,7 @@ class AccountService {
     }
   }
 
-  Future<Account> login(String name, String password) async {
+  Future<String> login(String nameOrEmail, String password) async {
     try {
       final uri = Uri.parse("$baseUrl/api/v1/users/login");
       final request = await httpClient.postUrl(uri);
@@ -100,7 +99,7 @@ class AccountService {
       request.headers.set(HttpHeaders.contentTypeHeader, "application/json");
 
       request.add(utf8.encode(jsonEncode({
-        'name': name,
+        'nameOrEmail': nameOrEmail,
         'password': password,
       })));
 
@@ -110,7 +109,8 @@ class AccountService {
         case 200:
           final responseBody = await response.transform(utf8.decoder).join();
           Map<String, dynamic> json = jsonDecode(responseBody);
-          return Account.fromJson(json);
+          String token = json['token'];
+          return token;
         case 400:
           final responseBody = await response.transform(utf8.decoder).join();
           throw BadRequestException('Nieprawidłowe dane logowania.');

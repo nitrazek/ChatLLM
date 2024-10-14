@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile/models/Styles.dart';
 import 'package:mobile/viewModels/LoginViewModel.dart';
 import 'package:provider/provider.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 import '../states/AccountState.dart';
 import 'MainChat.dart';
@@ -172,11 +173,13 @@ class _LoginPageState extends State<LoginPage> with RouteAware{
                               isLogged = await context.read<LoginViewModel>().login(login, password);
 
                               if (isLogged) {
-                                context.read<AccountState>().setAccount(context.read<LoginViewModel>().getAccount());
+                                context.read<AccountState>().setAccount(context.read<LoginViewModel>().token!);
                                 Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                        builder: (context) => const MainChatPage())
+                                        builder: (context) => ShowCaseWidget(
+                                          builder: (context) => MainChatPage(),
+                                    ))
                                 );
                               } else {
                                 String errorMessage = context.read<LoginViewModel>().errorMessage;
