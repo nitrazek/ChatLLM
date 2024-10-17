@@ -5,6 +5,8 @@ import { adminAuth, userAuth } from "../services/authentication_service";
 import { BadRequestError } from "../schemas/errors_schemas";
 import { isEmail } from "class-validator";
 import { getPaginationMetadata } from "../utils/pagination_handler";
+import { Like } from "typeorm";
+import { UserRole } from "../enums/user_role";
 
 const userRoutes: FastifyPluginCallback = (server, _, done) => {
     // Register new user
@@ -53,13 +55,19 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
         schema: Schemas.GetUserListSchema,
         onRequest: [adminAuth(server)]
     }, async (req, reply) => {
-        const { page = 1, limit = 10 } = req.query;
-        const [users, _] = await User.findAndCount({
+        const { page = 1, limit = 10, name, email, role, activated } = req.query;
+        console.dir({ role: UserRole[role as keyof typeof UserRole] })
+        const [users, totalUsers] = await User.findAndCount({
             skip: (page - 1) * limit,
-            take: limit
+            take: limit,
+            where: {
+                ...(name !== undefined && { name: Like(`%${name}%`) }),
+                ...(email != undefined && { email: Like(`%${email}%`) }),
+                ...(role !== undefined && { role: role as UserRole }),
+                ...(activated !== undefined && { activated })
+            }
         });
 
-        const totalUsers = await User.count();
         reply.send({
             users: users,
             pagination: getPaginationMetadata(page, limit, totalUsers)

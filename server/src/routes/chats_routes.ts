@@ -51,7 +51,6 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
             where: { chat: { id: chat.id } }
         });
         await chat.addMessage(SenderType.HUMAN, question);
-
         const ragChain = getRagChain(template, chatMessageList);
         const stream = await ragChain.stream({ question });
         return reply.send(transformStream(stream, chat));
@@ -67,13 +66,9 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
     }, async (req, reply) => {
         const { page = 1, limit = 20 } = req.query;
         
-        const [chats, _] = await Chat.findAndCount({
+        const [chats, totalChats] = await Chat.findAndCount({
             skip: (page - 1) * limit,
             take: limit,
-            where: { user: { id: req.user.id } }
-        });
-
-        const totalChats = await Chat.count({
             where: { user: { id: req.user.id } }
         });
 
@@ -100,19 +95,15 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         if (chat.user.id !== req.user.id) throw new ForbiddenError('You do not have permission to access this resource.');
 
         const { page = 1, limit = 20 } = req.query;
-        const [messages, _] = await ChatMessage.findAndCount({
+        const [messages, totalMessages] = await ChatMessage.findAndCount({
             skip: (page - 1) * limit,
             take: limit,
             where: { chat: { id: req.params.chatId } }
         });
 
-        const totalChatMessages = await ChatMessage.count({
-            where: { chat: { id: req.params.chatId } }
-        });
-
         reply.send({
             messages: messages,
-            pagination: getPaginationMetadata(page, limit, totalChatMessages)
+            pagination: getPaginationMetadata(page, limit, totalMessages)
         });
     });
 

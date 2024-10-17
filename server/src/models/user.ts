@@ -30,7 +30,6 @@ export class User extends ExtendedBaseEntity {
 
     @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
     @IsEnum(UserRole, { message: getIsInvalidMessage('Role') })
-    @IsOptional()
     role!: UserRole;
 
     @OneToMany(() => Chat, (chat) => chat.user)
