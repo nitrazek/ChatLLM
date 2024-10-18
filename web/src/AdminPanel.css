@@ -1,0 +1,91 @@
+.adminApp {
+    min-height: 100vh;
+    height: 100vh;
+    display: flex;
+    background-color: #282b30;
+}
+
+.adminSideBar {
+    flex: 3;
+    border-right: 2px solid #1e2124;
+    background-color: #1e2124;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    min-width: 220px;
+}
+
+.adminMain {
+    flex: 8;
+    margin: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.adminUpperSideTop {
+    color: white;
+    margin-bottom: 15px;
+    font-weight: bold;
+    z-index: 3;
+    background-color: #7289da;
+}
+
+.adminUpperSideContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 20px 0;
+    background-color: #7289da;
+    z-index: 3;
+    margin-bottom: 15px;
+  }
+
+  .userTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.userTable th, .userTable td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+.userTable th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #f2f2f2;
+    color: black;
+}
+
+.adminSideBar button {
+    position: relative;
+    padding: 10px 20px;
+    margin: 10px 0;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    overflow: hidden;
+    transition: color 0.3s ease; /* Efekt przejścia dla koloru tekstu */
+  }
+  
+/* Aktywny przycisk */
+.userManagementButtonActive {
+    background-color: green; /* Kolor aktywny dla Zarządzaj użytkownikami */
+  }
+  
+  .fileManagementButtonActive {
+    background-color: green; 
+  }
+  
+  /* Styl dla nieaktywnych przycisków */
+  .fileManagementButtonInactive {
+    background-color: red; /* Kolor nieaktywny dla Zarządzaj plikami */
+  }
+  
+  .userManagementButtonInactive {
+    background-color: red; /* Kolor nieaktywny dla Zarządzaj użytkownikami */
+  }

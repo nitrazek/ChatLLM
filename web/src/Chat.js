@@ -38,8 +38,11 @@ function Chat() {
     navigate("/");
   };
 
+  const handleAdminPanelButton = async () => {
+    navigate("/admin");
+  }
+
   const fetchChatHistory = async () => {
-    setChatHistory([]);
     try {
       const response = await fetch(`http://localhost:3000/api/v1/chats/list`, {
         method: 'GET',
@@ -229,7 +232,7 @@ function Chat() {
         </div>
         <div className="lowerSide">
           <button className="button">Ustawienia</button>
-          {role === "admin" && <button className="button">Panel administratora</button>}
+          {1==1 && <button className="button" onClick={handleAdminPanelButton}>Panel administratora</button>}
           <button className="button" onClick={handleLogout}>Wyloguj się</button>
         </div>
       </div>
