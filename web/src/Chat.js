@@ -217,7 +217,7 @@ function Chat() {
                   .sort((a, b) => b.id - a.id)
                   .map((chat) => (
                     <li key={chat.id}>
-                      <button className="chatHistoryButton" onClick={() => navigate(`/chat/${chat.id}`)}>
+                      <button className={chat.id == chatId ? "activeChatHistoryButton" : "chatHistoryButton"} onClick={() => navigate(`/chat/${chat.id}`)}>
                         {chat.name || "Nowy czat"}
                       </button>
                     </li>
