@@ -7,21 +7,23 @@ import 'package:mobile/viewModels/MainChatViewModel.dart';
 import 'package:provider/provider.dart';
 
 import '../models/Chat.dart';
+import '../states/AccountState.dart';
 
-class ChatService extends ChangeNotifier {
+class ChatService {
   final String baseUrl = "http://10.0.2.2:3000";
   final HttpClient _httpClient = HttpClient();
   bool _isRequestCancelled = false;
-  HttpClientRequest? _request;
+  String? token = AccountState.token;
 
   void cancelAnswer() {
     _isRequestCancelled = true;
   }
 
 
-  Stream<String> postQuestion(String question, int chatId, String token) async* {
+  Stream<String> postQuestion(String question) async* {
     try {
-      final uri = Uri.parse("$baseUrl/api/v1/chats/$chatId");
+      int? currentChatId = ChatState.currentChat?.id;
+      final uri = Uri.parse("$baseUrl/api/v1/chats/$currentChatId");
       final httpClient = HttpClient();
       final request = await httpClient.postUrl(uri);
 
@@ -56,23 +58,15 @@ class ChatService extends ChangeNotifier {
 
   List<String> _parseConcatenatedJson(String responseBody) {
     final List<String> answers = [];
-    ChatState chatState = ChatState();
 
-    final answerRegex = RegExp(r'\{"answer":"(.*?)"\}');
-    final matches = answerRegex.allMatches(responseBody);
+    final answerRegex = RegExp(r'"answer":"(.*?)"');
+    Iterable<Match> matches = answerRegex.allMatches(responseBody);
 
     for (final match in matches) {
       final answer = match.group(1);
       if (answer != null) {
         answers.add(answer);
       }
-    }
-
-    final newChatNameRegex = RegExp(r'"newChatName":"(.*?)"');
-    final chatNameMatch = newChatNameRegex.firstMatch(responseBody);
-
-    if (chatNameMatch != null) {
-      final newChatName = chatNameMatch.group(1);
     }
 
     return answers;
@@ -82,8 +76,7 @@ class ChatService extends ChangeNotifier {
     return text.replaceAll(r'\n', '\n').replaceAll(r'\t', '    ');
   }
 
-  Future<Chat> createChat(String? name, bool isUsingOnlyKnowledgeBase,
-      String token) async {
+  Future<Chat> createChat(String? name, bool isUsingOnlyKnowledgeBase) async {
     try {
       final uri = Uri.parse("$baseUrl/api/v1/chats/new");
       final httpClient = HttpClient();
@@ -111,6 +104,7 @@ class ChatService extends ChangeNotifier {
       if (response.statusCode == 200) {
         final responseBody = await response.transform(utf8.decoder).join();
         Map<String, dynamic> json = jsonDecode(responseBody);
+        ChatState.currentChat = Chat.fromJson(json);
         return Chat.fromJson(json);
       } else {
         throw Exception('Nie udało się utworzyć czatu: ${response.statusCode}');
@@ -125,7 +119,7 @@ class ChatService extends ChangeNotifier {
   }
 
 
-  Future<List<Chat>> getChatList(String token) async {
+  Future<List<Chat>> getChatList() async {
     try {
       final uri = Uri.parse("$baseUrl/api/v1/chats/list");
       final httpClient = HttpClient();
@@ -148,8 +142,9 @@ class ChatService extends ChangeNotifier {
     }
   }
 
-  Future<List<ChatMessage>> loadHistory(int currentChatId, String token) async {
+  Future<List<ChatMessage>> loadHistory() async {
     try {
+      int? currentChatId = ChatState.currentChat?.id;
       final uri = Uri.parse("$baseUrl/api/v1/chats/$currentChatId");
       final httpClient = HttpClient();
       final request = await httpClient.getUrl(uri);

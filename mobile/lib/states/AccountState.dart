@@ -1,12 +1,8 @@
 import 'package:flutter/cupertino.dart';
 
 
-class AccountState extends ChangeNotifier {
+class AccountState {
 
-  String? _token;
-  String? get token => _token;
+static String? token;
 
-  void setAccount(String token) {
-    _token = token;
-  }
 }

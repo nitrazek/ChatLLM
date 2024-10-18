@@ -7,19 +7,17 @@ import '../models/Chat.dart';
 
 class ChatDialogViewModel extends ChangeNotifier {
 
-  late Chat _currentChat;
+  Chat currentChat = ChatState.currentChat!;
   ChatService _chatService = ChatService();
 
-  Future<bool> createChat(String? name, bool isUsingOnlyKnowledgeBase, String token ) async {
-    _currentChat = await _chatService.createChat(name, isUsingOnlyKnowledgeBase, token);
-    if(_currentChat.id >=0 || _currentChat.id!=null)
+  Future<bool> createChat(String? name, bool isUsingOnlyKnowledgeBase ) async {
+    currentChat = await _chatService.createChat(name, isUsingOnlyKnowledgeBase);
+    if(currentChat.id >=0 || currentChat.id!=null)
       return true;
     else
       return false;
   }
-
-  Chat getChat()
-  {
-    return _currentChat;
+  void setChat(Chat chat){
+    ChatState.currentChat = chat;
   }
 }

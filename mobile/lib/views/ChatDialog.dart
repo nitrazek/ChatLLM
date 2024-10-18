@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/models/Styles.dart';
-import 'package:mobile/states/AccountState.dart';
 import 'package:mobile/states/ChatState.dart';
 import 'package:mobile/viewModels/ChatDialogViewModel.dart';
-import 'package:mobile/viewModels/MainChatViewModel.dart';
-import 'package:mobile/views/MainChat.dart';
 import 'package:provider/provider.dart';
-import 'package:showcaseview/showcaseview.dart';
+
 
 
 class ChatDialog extends StatefulWidget {
@@ -18,7 +15,6 @@ class ChatDialog extends StatefulWidget {
 class _ChatDialogState extends State<ChatDialog> {
   TextEditingController _nameController = TextEditingController();
   bool isUsingOnlyKnowledgeBase = false;
-  late final String? _token = context.read<AccountState>().token;
   String? name = "";
 
   @override
@@ -89,12 +85,10 @@ class _ChatDialogState extends State<ChatDialog> {
               name = _nameController.text;
               bool isCreated = await context.read<ChatDialogViewModel>().createChat(
                   name,
-                  isUsingOnlyKnowledgeBase,
-                  _token!
+                  isUsingOnlyKnowledgeBase
               );
               if(isCreated == true) {
-                context.read<ChatState>().setChat(context.read<ChatDialogViewModel>().getChat());
-                context.read<ChatState>().setIsArchival(false);
+                ChatState.isArchival = false;
                 Navigator.of(context).pop(isCreated);
               }
               else {

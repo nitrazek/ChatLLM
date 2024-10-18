@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:mobile/states/AccountState.dart';
+
 import '../models/Account.dart';
 import 'ChatService.dart';
 
@@ -31,32 +33,6 @@ class AccountService {
   final String baseUrl = "http://10.0.2.2:3000";
   final httpClient = HttpClient();
 
-  Future<Account> activateAccount(int loggedUserId) async {
-    try {
-      final uri = Uri.parse("$baseUrl/api/v1/users/$loggedUserId/activate");
-      final request = await httpClient.postUrl(uri);
-
-      request.headers.set(HttpHeaders.contentTypeHeader, "application/json");
-
-      request.add(utf8.encode(jsonEncode({
-        'loggedUserId': loggedUserId,
-      })));
-      final response = await request.close();
-
-      if (response.statusCode == 200) {
-        final responseBody = await response.transform(utf8.decoder).join();
-        Map<String, dynamic> json = jsonDecode(responseBody);
-        return Account.fromJson(json);
-      }
-      throw HttpException('Failed to activate user with status code: ${response.statusCode}');
-    } catch (e) {
-      if (e is SocketException) {
-        throw FetchDataException(e.message);
-      } else {
-        rethrow;
-      }
-    }
-    }
 
   Future<bool> register(String name, String email, String password) async {
     try {
@@ -110,6 +86,7 @@ class AccountService {
           final responseBody = await response.transform(utf8.decoder).join();
           Map<String, dynamic> json = jsonDecode(responseBody);
           String token = json['token'];
+          AccountState.token = token;
           return token;
         case 400:
           final responseBody = await response.transform(utf8.decoder).join();

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
+import 'package:mobile/states/ChatState.dart';
 import '../models/Chat.dart';
 import '../services/ChatService.dart';
 
@@ -11,14 +12,14 @@ class MainChatViewModel extends ChangeNotifier {
 
   List<ChatMessage> get chatMessages => _chatMessages;
 
-  void sendPrompt(String question, int currentChatId, String token) async {
+  void sendPrompt(String question) async {
     ChatMessage chatMessage = ChatMessage(sender : 'human', content : question);
     _chatMessages.add(chatMessage);
     notifyListeners();
 
     ChatMessage chatMessage2 = ChatMessage(sender: "ai", content : "");
     _chatMessages.add(chatMessage2);
-    await for (var answer in _chatService.postQuestion(question, currentChatId, token)) {
+    await for (var answer in _chatService.postQuestion(question)) {
       chatMessage2.addResponse(answer);
       _chatMessages[_chatMessages.length-1] = chatMessage2;
       notifyListeners();
@@ -33,16 +34,20 @@ class MainChatViewModel extends ChangeNotifier {
     _chatService.cancelAnswer();
   }
 
-  Future<bool> loadHistory(int currentChatId, String token) async {
-    _chatMessages = await _chatService.loadHistory(currentChatId, token);
+  Future<bool> loadHistory() async {
+    _chatMessages = await _chatService.loadHistory();
     notifyListeners();
     return true;
   }
 
+  void setChat(Chat chat){
+    ChatState.currentChat = chat;
+  }
 
-  Future<List<Chat>> getChatList(String token) async {
 
-      List<Chat> chatList = await _chatService.getChatList(token);
+  Future<List<Chat>> getChatList() async {
+
+      List<Chat> chatList = await _chatService.getChatList();
       return chatList;
   }
 

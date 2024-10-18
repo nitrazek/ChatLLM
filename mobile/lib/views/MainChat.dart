@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:mobile/services/ChatService.dart';
-import 'package:mobile/states/AccountState.dart';
 import 'package:mobile/states/ChatState.dart';
-import 'package:mobile/viewModels/LoginViewModel.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_markdown/flutter_markdown.dart' show MarkdownStyleSheet, MarkdownBody;
 import 'package:showcaseview/showcaseview.dart';
@@ -13,7 +10,6 @@ import '../models/Chat.dart';
 import 'ChatDialog.dart';
 import '../viewModels/MainChatViewModel.dart';
 import '../models/Styles.dart';
-import 'AdminPanel.dart';
 
 class MainChatPage extends StatefulWidget {
   const MainChatPage({super.key});
@@ -31,6 +27,7 @@ class _MainChatPageState extends State<MainChatPage> {
 
   bool chatForm = false;
   bool isUsingOnlyKnowledgeBase=false;
+  bool isChatNull = ChatState.currentChat == null;
 
   @override
   void initState() {
@@ -58,20 +55,13 @@ class _MainChatPageState extends State<MainChatPage> {
   Future<void> fetchChatList() async {
 
 
-      final fetchedChats = await context.read<MainChatViewModel>().getChatList(context.read<AccountState>().token!);
+      final fetchedChats = await context.read<MainChatViewModel>().getChatList();
       if(mounted) {
         setState(() {
           chatList = fetchedChats;
-          if (chatList.isNotEmpty && context
-              .read<ChatState>()
-              .currentChat == null) {
-            context.read<ChatState>().setChat(chatList.last);
-            context.read<MainChatViewModel>().loadHistory(context
-                .read<ChatState>()
-                .currentChat!
-                .id, context
-                .read<AccountState>()
-                .token!);
+          if (chatList.isNotEmpty && isChatNull) {
+            context.read<MainChatViewModel>().setChat(chatList.last);
+            context.read<MainChatViewModel>().loadHistory();
           }
         }
         );
@@ -84,9 +74,7 @@ class _MainChatPageState extends State<MainChatPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     double fontSizeScale = screenWidth * 0.0028;
 
-    bool isArchival = context.read<ChatState>().isArchival;
-    Chat? currentChat = context.watch<ChatState>().currentChat;
-    bool isChatNull = currentChat == null;
+
 
 
     return ScreenUtilInit (
@@ -141,13 +129,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                   ),
                                   child: ElevatedButton(
                                     onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (
-                                              context) => const AdminPanelPage(),
-                                        ),
-                                      );
+
                                     },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppColors.purple,
@@ -226,11 +208,11 @@ class _MainChatPageState extends State<MainChatPage> {
                                     ),),
                                   trailing: const Icon(Icons.arrow_forward, color: Colors.white,),
                                   onTap: () async {
-                                    final tempChat = context.read<ChatState>().currentChat;
-                                    context.read<ChatState>().setChat(chat);
-                                    bool? isLoaded = await context.read<MainChatViewModel>().loadHistory(context.read<ChatState>().currentChat!.id, context.read<AccountState>().token!);
+                                    final tempChat = ChatState.currentChat;
+                                    context.read<MainChatViewModel>().setChat(chat);
+                                    bool? isLoaded = await context.read<MainChatViewModel>().loadHistory();
                                     if(isLoaded) {
-                                      context.read<ChatState>().setIsArchival(true);
+                                      ChatState.isArchival = true;
                                       Navigator.pushReplacement(context,
                                           MaterialPageRoute(
                                               builder: (context) => ShowCaseWidget(
@@ -239,7 +221,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                     }
                                     else {
                                       if(tempChat != null)
-                                      context.read<ChatState>().setChat(tempChat!);
+                                        context.read<MainChatViewModel>().setChat(tempChat);
                                     }
                                   },
                                 )
@@ -488,7 +470,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                                   15.0),
                                               color: const Color(0xFF424549),
                                             ),
-                                            child: !isArchival ? StreamBuilder<
+                                            child: ChatState.isArchival ? StreamBuilder<
                                                 String>(
                                               stream: chatMessage
                                                   .responseStream,
@@ -610,12 +592,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                 controller: textEditingController,
                                 onSubmitted: (message) async {
                                   context.read<MainChatViewModel>().sendPrompt(
-                                      message,
-                                      context
-                                          .read<ChatState>()
-                                          .currentChat!
-                                          .id,
-                                    context.read<AccountState>().token!
+                                      message
                                   );
                                   textEditingController.clear();
                                 },
@@ -643,12 +620,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                 if (textEditingController.text.isNotEmpty) {
                                   final message = textEditingController.text;
                                   context.read<MainChatViewModel>().sendPrompt(
-                                      message,
-                                      context
-                                          .read<ChatState>()
-                                          .currentChat!
-                                          .id,
-                                      context.read<AccountState>().token!
+                                      message
                                   );
                                   textEditingController.clear();
                                 }
