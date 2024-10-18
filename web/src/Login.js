@@ -301,7 +301,6 @@ function Login() {
                             onChange={handleLoginOrEmailChange}
                             onBlur={handleLoginOrEmailBlur}
                         />
-                        {loginOrEmailError && <span className="error-tooltip">{loginOrEmailError}</span>}
                         <input
                             tabIndex={isRegister ? -1 : 0}
                             type="password"
@@ -311,7 +310,6 @@ function Login() {
                             onChange={handlePasswordChange}
                             onBlur={handlePasswordBlur}
                         />
-                        {passwordError && <span className="error-tooltip">{passwordError}</span>}
                         <br />
                         <button tabIndex={isRegister ? -1 : 0} type="button" onClick={handleLogin}>Zaloguj się</button>
                     </form>

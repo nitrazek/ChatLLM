@@ -72,6 +72,15 @@ function Chat() {
     setIsLoading(true);
     controller.current = new AbortController();
 
+    let botMessage = {
+      id: messages.length + 2,
+      text: '',
+      fromUser: false,
+      user: { name: "Bot", avatar: "/avatars/bot.png" }
+    };
+
+    setMessages(prevMessages => [...prevMessages, botMessage]);
+
     try {
       const response = await fetch(`http://localhost:3000/api/v1/chats/${chatId}`, {
         method: 'POST',
@@ -85,14 +94,7 @@ function Chat() {
 
       const reader = response.body.getReader();
       let accumulatedText = '';
-      let botMessage = {
-        id: messages.length + 2,
-        text: '',
-        fromUser: false,
-        user: { name: "Bot", avatar: "/avatars/bot.png" }
-      };
-
-      while(true) {
+      while (true) {
         const { done, value } = await reader.read();
         if (done) {
           setIsLoading(false);
@@ -105,7 +107,23 @@ function Chat() {
         const answer = parsedChunk.answer;
 
         accumulatedText += answer;
-        botMessage.text = accumulatedText;
+
+        setMessages(prevMessages => {
+          const updatedMessages = [...prevMessages];
+          const botIndex = updatedMessages.findIndex(msg => msg.id === botMessage.id);
+
+          if (botIndex !== -1) {
+            updatedMessages[botIndex].text = accumulatedText;
+          }
+
+          if (mainTopRef.current) {
+            mainTopRef.current.lastChild.scrollIntoView({ behavior: 'smooth' });
+          }
+
+          return updatedMessages;
+        });
+
+        setIsGeneratingAnswer(true);
 
         if (parsedChunk.newChatName) {
           setChatHistory(prevHistory => {
@@ -116,36 +134,18 @@ function Chat() {
             return updatedHistory;
           });
         }
-
-        setMessages(prevMessages => {
-          const updatedMessages = [...prevMessages];
-          const existingMessageIndex = updatedMessages.findIndex(msg => !msg.fromUser && msg.id === botMessage.id);
-          if (existingMessageIndex !== -1) {
-            updatedMessages[existingMessageIndex].text = botMessage.text;
-          } else {
-            updatedMessages.push(botMessage);
-          }
-
-          if (mainTopRef.current) {
-            mainTopRef.current.lastChild.scrollIntoView({ behavior: 'smooth' });
-          }
-          return updatedMessages;
-        });
-
-        setIsLoading(false);
-        setIsGeneratingAnswer(true);
       }
     } catch (error) {
       setIsLoading(false);
       setIsGeneratingAnswer(false);
       controller.current = null;
-      if(error.name !== "AbortError")
+      if (error.name !== "AbortError")
         alert(error.errorMessage);
     }
   };
 
   const cancelAnswer = (e) => {
-    if(controller.current) controller.current.abort();
+    if (controller.current) controller.current.abort();
   };
 
   const handleInputChange = (e) => {
@@ -249,44 +249,38 @@ function Chat() {
                   <span className="username">{message.user.name}</span>
                 </div>
                 <div className="messageContent">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.text}</ReactMarkdown>
+                  {message.text ? (
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.text}</ReactMarkdown>
+                  ) :
+                    (isLoading && (
+                      <div className="loadingOval">
+                        <Oval color="#00BFFF" secondaryColor="#484d52" height={30} width={30} />
+                      </div>))
+                  }
+
                 </div>
               </div>
             ))
           )}
-
-          {isLoading && (
-            <div className="botMessage">
-              <div className="messageHeader">
-                <img src="./avatars/bot.png" alt="Bot" className="avatar" />
-                <span className="username">Bot</span>
-              </div>
-              <div className="messageContent">
-                <div className="loadingOval">
-                  <Oval color="#00BFFF" secondaryColor="#484d52" height={30} width={30} />
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="mainBottom">
-            {chatId && (
-              <div className="chatFooter">
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Napisz wiadomość..."
-                  value={input}
-                  onChange={handleInputChange}
-                  onKeyDown={handleKeyDown}
-                  disabled={isLoading || isGeneratingAnswer}
-                />
-                {isGeneratingAnswer && (
-                  <FontAwesomeIcon className="cancelBtn" icon={faStop} onClick={cancelAnswer} />
-                )}
-              </div>
-            )}
+          {chatId && (
+            <div className="chatFooter">
+              <input
+                className="input"
+                type="text"
+                placeholder="Napisz wiadomość..."
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                disabled={isLoading || isGeneratingAnswer}
+              />
+              {isGeneratingAnswer && (
+                <FontAwesomeIcon className="cancelBtn" icon={faStop} onClick={cancelAnswer} />
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
