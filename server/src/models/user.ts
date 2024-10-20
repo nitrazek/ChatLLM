@@ -13,7 +13,7 @@ export class User extends ExtendedBaseEntity {
     id!: number;
 
     @Column()
-    @Length(4   , 30, { message: getIsInvalidMessage('Name') })
+    @Length(4, 30, { message: getIsInvalidMessage('Name') })
     name!: string;
 
     @Column()
@@ -30,6 +30,7 @@ export class User extends ExtendedBaseEntity {
 
     @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
     @IsEnum(UserRole, { message: getIsInvalidMessage('Role') })
+    @IsOptional()
     role!: UserRole;
 
     @OneToMany(() => Chat, (chat) => chat.user)
