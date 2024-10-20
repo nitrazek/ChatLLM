@@ -156,7 +156,7 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         Params: Schemas.DeleteChatParams,
         Reply: Schemas.DeleteChatResponse
     }>('/:chatId', {
-        schema: Schemas.UpdateChatSchema,
+        schema: Schemas.DeleteChatSchema,
         onRequest:[userAuth(server)]
     }, async (req, reply) => {
         const chat = await Chat.findOne({
