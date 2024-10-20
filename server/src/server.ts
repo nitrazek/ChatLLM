@@ -69,7 +69,7 @@ class Application {
         this.server.register(multipart);
         this.server.register(cors, {
             origin: "*",
-            methods: ["GET", "POST"],
+            methods: ["POST", "GET", "PUT", "DELETE"],
             allowedHeaders: ["Content-Type", "Authorization"],
             credentials: true
         });

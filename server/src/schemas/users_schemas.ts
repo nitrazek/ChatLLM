@@ -1,7 +1,7 @@
 import { FastifySchema } from "fastify"
 import { Static, Type } from "@sinclair/typebox"
 import { AdminGuardedResponseSchema, NotGuardedResponseSchema } from "./errors_schemas";
-import { PaginationMetadataTypes } from "./base_schemas";
+import { AuthHeaderTypes, PaginationMetadataTypes } from "./base_schemas";
 import { UserRole } from "../enums/user_role";
 
 //////////////////// Generic Schemas ////////////////////
@@ -49,6 +49,8 @@ const LoginBodyTypes = Type.Object({
 export type LoginBody = Static<typeof LoginBodyTypes>;
 
 const LoginResponseTypes = Type.Object({
+    name: Type.String({ description: "Name of the user" }),
+    role: Type.Enum(UserRole, { description: "Role of the user" }),
     token: Type.String({ description: "JWT token for the authenticated user" })
 }, { description: "Response for a successful login, containing the JWT token" });
 export type LoginResponse = Static<typeof LoginResponseTypes>;
@@ -89,6 +91,7 @@ export type GetUserListResponse = Static<typeof GetUserListResponseTypes>;
 export const GetUserListSchema: FastifySchema = {
     summary: "Get list of users",
     description: "Retrieves a paginated list of users. Only accessible by admin users.",
+    headers: AuthHeaderTypes,
     querystring: GetUserListQueryTypes,
     tags: ["Users"],
     response: {
@@ -111,6 +114,7 @@ export type GetUserResponse = Static<typeof GetUserResponseTypes>;
 export const GetUserSchema: FastifySchema = {
     summary: "Get specific user",
     description: "Retrieves information about a specific user by their ID. Only accessible by admin users.",
+    headers: AuthHeaderTypes,
     params: GetUserParamsTypes,
     tags: ["Users"],
     response: {
@@ -136,6 +140,7 @@ export type ActivateUserResponse = Static<typeof ActivateUserResponseTypes>;
 export const ActivateUserSchema: FastifySchema = {
     summary: "Activate a user",
     description: "Activates a user's account by their ID. Only accessible by admin users.",
+    headers: AuthHeaderTypes,
     params: ActivateUserParamsTypes,
     tags: ["Users"],
     response: {
@@ -165,6 +170,7 @@ export type UpdateUserResponse = Static<typeof UpdateUserResponseTypes>;
 export const UpdateUserSchema: FastifySchema = {
     summary: "Update user details",
     description: "Updates a user's details such as name, email, or password. Only accessible by admin users.",
+    headers: AuthHeaderTypes,
     params: UpdateUserParamsTypes,
     body: UpdateUserBodyTypes,
     tags: ["Users"],
@@ -190,6 +196,7 @@ export type DeleteUserResponse = Static<typeof DeleteUserResponseTypes>;
 export const DeleteUserSchema: FastifySchema = {
     summary: "Delete a user",
     description: "Deletes a specific user by their ID. Only accessible by admin users.",
+    headers: AuthHeaderTypes,
     params: DeleteUserParamsTypes,
     tags: ["Users"],
     response: {

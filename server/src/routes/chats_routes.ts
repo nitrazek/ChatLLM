@@ -8,10 +8,12 @@ import { getRagTemplate } from "../prompts";
 import { SenderType } from "../enums/sender_type";
 import { getRagChain, transformStream } from "../utils/stream_handler";
 import { getPaginationMetadata } from "../utils/pagination_handler";
+import { AuthHeader } from "../schemas/base_schemas";
 
 const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
     // Create a new chat
     server.post<{
+        Headers: AuthHeader,
         Body: Schemas.CreateChatBody,
         Reply: Schemas.CreateChatResponse
     }>('/new', {
@@ -30,6 +32,7 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
 
     // Send a message to specific chat
     server.post<{
+        Headers: AuthHeader,
         Params: Schemas.SendMessageParams,
         Body: Schemas.SendMessageBody,
         Response: Schemas.SendMessageResponse
@@ -58,6 +61,7 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
 
     // Get a list of chats for a specific user
     server.get<{
+        Headers: AuthHeader,
         Querystring: Schemas.GetChatListQuery,
         Reply: Schemas.GetChatListResponse
     }>('/list', {
@@ -86,6 +90,7 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
 
     // Get specific chat history
     server.get<{
+        Headers: AuthHeader,
         Params: Schemas.GetChatMessagesParams,
         Querystring: Schemas.GetChatMessagesQuery,
         Reply: Schemas.GetChatMessagesResponse
@@ -122,6 +127,7 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
 
     // Change details of specific chat
     server.put<{
+        Headers: AuthHeader,
         Params: Schemas.UpdateChatParams,
         Body: Schemas.UpdateChatBody,
         Reply: Schemas.UpdateChatResponse
@@ -146,6 +152,7 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
 
     // Delete specific chat
     server.delete<{
+        Headers: AuthHeader,
         Params: Schemas.DeleteChatParams,
         Reply: Schemas.DeleteChatResponse
     }>('/:chatId', {
