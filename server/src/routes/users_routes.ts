@@ -56,21 +56,35 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
         onRequest: [adminAuth(server)]
     }, async (req, reply) => {
         const { page = 1, limit = 10, name, email, role, activated } = req.query;
-        console.dir({ role: UserRole[role as keyof typeof UserRole] })
+        if(page < 1) throw new BadRequestError("Invalid page number, must not be negative");
+        if(limit < 1) throw new BadRequestError("Invalid limit value, must not be negative");
+        
+        const getUserRole = (role: string): UserRole => {
+            if(Object.values(UserRole).includes(role as UserRole)) {
+                return role as UserRole;
+            } else {
+                throw new BadRequestError("Invalid role value");
+            }
+        }
+
         const [users, totalUsers] = await User.findAndCount({
             skip: (page - 1) * limit,
             take: limit,
             where: {
                 ...(name !== undefined && { name: Like(`%${name}%`) }),
                 ...(email != undefined && { email: Like(`%${email}%`) }),
-                ...(role !== undefined && { role: role as UserRole }),
+                ...(role !== undefined && { role: getUserRole(role) }),
                 ...(activated !== undefined && { activated })
             }
         });
 
+        const paginationMetadata = getPaginationMetadata(page, limit, totalUsers);
+        if(paginationMetadata.currentPage > paginationMetadata.totalPages)
+            throw new BadRequestError("Invalid page number, must not be greater than page amount");
+
         reply.send({
             users: users,
-            pagination: getPaginationMetadata(page, limit, totalUsers)
+            pagination: paginationMetadata
         });
     });
 

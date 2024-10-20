@@ -65,16 +65,22 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         onRequest:[userAuth(server)]
     }, async (req, reply) => {
         const { page = 1, limit = 20 } = req.query;
-        
+        if(page < 1) throw new BadRequestError("Invalid page number, must not be negative");
+        if(limit < 1) throw new BadRequestError("Invalid limit value, must not be negative");
+
         const [chats, totalChats] = await Chat.findAndCount({
             skip: (page - 1) * limit,
             take: limit,
             where: { user: { id: req.user.id } }
         });
 
+        const paginationMetadata = getPaginationMetadata(page, limit, totalChats);
+        if(paginationMetadata.currentPage > paginationMetadata.totalPages)
+            throw new BadRequestError("Invalid page number, must not be greater than page amount");
+
         reply.send({
             chats: chats,
-            pagination: getPaginationMetadata(page, limit, totalChats)
+            pagination: paginationMetadata
         });
     });
 
@@ -95,15 +101,22 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         if (chat.user.id !== req.user.id) throw new ForbiddenError('You do not have permission to access this resource.');
 
         const { page = 1, limit = 20 } = req.query;
+        if(page < 1) throw new BadRequestError("Invalid page number, must not be negative");
+        if(limit < 1) throw new BadRequestError("Invalid limit value, must not be negative");
+
         const [messages, totalMessages] = await ChatMessage.findAndCount({
             skip: (page - 1) * limit,
             take: limit,
             where: { chat: { id: req.params.chatId } }
         });
 
+        const paginationMetadata = getPaginationMetadata(page, limit, totalMessages);
+        if(paginationMetadata.currentPage > paginationMetadata.totalPages)
+            throw new BadRequestError("Invalid page number, must not be greater than page amount");
+
         reply.send({
             messages: messages,
-            pagination: getPaginationMetadata(page, limit, totalMessages)
+            pagination: paginationMetadata
         });
     });
 

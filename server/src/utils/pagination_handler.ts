@@ -1,4 +1,5 @@
 import { PaginationMetadata } from "../schemas/base_schemas";
+import { BadRequestError } from "../schemas/errors_schemas";
 
 export const getPaginationMetadata = (page: number, limit: number, totalAmount: number): PaginationMetadata => {
     const totalPages = Math.ceil(totalAmount / limit);
