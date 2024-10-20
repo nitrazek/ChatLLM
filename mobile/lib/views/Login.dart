@@ -58,7 +58,8 @@ class _LoginPageState extends State<LoginPage> with RouteAware{
     bool isKeyBoardOpen = MediaQuery.of(context).viewInsets.bottom != 0;
     bool isLogged = false;
 
-    return Scaffold(
+    return PopScope(
+      child:Scaffold(
         body: Stack(
           children: [
             Container(
@@ -249,6 +250,7 @@ class _LoginPageState extends State<LoginPage> with RouteAware{
               ),
             ),
           ],
-        ));
+        ))
+    );
   }
 }

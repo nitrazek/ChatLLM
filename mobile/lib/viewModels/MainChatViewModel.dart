@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
+import 'package:mobile/states/AccountState.dart';
 import 'package:mobile/states/ChatState.dart';
 import '../models/Chat.dart';
 import '../services/ChatService.dart';
@@ -8,6 +9,9 @@ class MainChatViewModel extends ChangeNotifier {
   final ChatService _chatService = ChatService();
   List<ChatMessage> _chatMessages = [];
   bool isLoading = false;
+  double chatListHeight = 380;
+  bool isChatListVisible = true;
+  bool setting = false;
 
 
   List<ChatMessage> get chatMessages => _chatMessages;
@@ -40,8 +44,25 @@ class MainChatViewModel extends ChangeNotifier {
     return true;
   }
 
+  static void logOut()
+  {
+    AccountState.token = "";
+  }
+
   void setChat(Chat chat){
     ChatState.currentChat = chat;
+  }
+
+
+  void setChatListHeight()
+  {
+    if(setting)
+    {
+      chatListHeight = 320;
+    }
+    else {
+      chatListHeight = 380;
+    }
   }
 
 

@@ -7,7 +7,9 @@ import 'package:mobile/viewModels/MainChatViewModel.dart';
 import 'package:provider/provider.dart';
 
 import '../models/Chat.dart';
+import '../models/ErrorResponse.dart';
 import '../states/AccountState.dart';
+import 'AccountService.dart';
 
 class ChatService {
   final String baseUrl = "http://10.0.2.2:3000";
@@ -152,19 +154,33 @@ class ChatService {
       request.headers.set('Authorization', 'Bearer $token');
       final response = await request.close();
 
-      if (response.statusCode == 200) {
-        final responseBody = await response.transform(utf8.decoder).join();
-        List<dynamic> jsonList = jsonDecode(responseBody);
-        return jsonList.map((json) =>
-            ChatMessage.fromJson(json)).toList();
+      switch (response.statusCode) {
+        case 200:
+          final responseBody = await response.transform(utf8.decoder).join();
+             List<dynamic> jsonList = jsonDecode(responseBody);
+             return jsonList.map((json) =>
+               ChatMessage.fromJson(json)).toList();
+        case 400:
+          final responseBody = await response.transform(utf8.decoder).join();
+          final errorResponse = ErrorResponse.fromJson(jsonDecode(responseBody));
+          throw BadRequestException(errorResponse.message);
+        case 401:
+          final responseBody = await response.transform(utf8.decoder).join();
+          final errorResponse = ErrorResponse.fromJson(jsonDecode(responseBody));
+          throw BadRequestException(errorResponse.message);
+        case 500:
+          final responseBody = await response.transform(utf8.decoder).join();
+          final errorResponse = ErrorResponse.fromJson(jsonDecode(responseBody));
+          throw ServerException(errorResponse.message);
+        default:
+          throw ServerException('Błąd serwera: ${response.statusCode}');
       }
-      else {
-        throw Exception('Failed to load chats');
+    } catch (e) {
+      if (e is SocketException) {
+        throw FetchDataException('Błąd sieci: ${e.message}');
+      } else {
+        rethrow;
       }
-    }
-    catch(e) {
-      print("Error: $e");
-      return [];
     }
   }
 }

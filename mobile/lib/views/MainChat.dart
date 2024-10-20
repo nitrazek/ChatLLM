@@ -3,6 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mobile/states/ChatState.dart';
+import 'package:mobile/views/Login.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_markdown/flutter_markdown.dart' show MarkdownStyleSheet, MarkdownBody;
 import 'package:showcaseview/showcaseview.dart';
@@ -74,10 +75,8 @@ class _MainChatPageState extends State<MainChatPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     double fontSizeScale = screenWidth * 0.0028;
 
-
-
-
-    return ScreenUtilInit (
+    return PopScope(
+      child:ScreenUtilInit (
         designSize: const Size(411, 707),
         minTextAdapt: true,
         builder: (context, child) {
@@ -164,7 +163,9 @@ class _MainChatPageState extends State<MainChatPage> {
                                   ),
                                 ),
                                 onTap: () {
-                                  Navigator.pop(context);
+                                  setState(() {
+                                    context.read<MainChatViewModel>().isChatListVisible = !context.read<MainChatViewModel>().isChatListVisible;
+                                  });
                                 },
                               ),
                           ),
@@ -173,11 +174,12 @@ class _MainChatPageState extends State<MainChatPage> {
                           thickness: 3,
                           height: 1.h
                         ),
-                        Container(
-                          color: AppColors.dark,
-                          height: 380.h,
-                          child: Expanded(
-                            child: ListView.builder(
+                        AnimatedContainer(
+                            duration: Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            height: context.read<MainChatViewModel>().isChatListVisible ? context.read<MainChatViewModel>().chatListHeight.h : 0,
+                            color: AppColors.dark,
+                            child: context.read<MainChatViewModel>().isChatListVisible ? ListView.builder(
                               padding: EdgeInsets.only(top: 10.h),
                               shrinkWrap: true,
                               itemCount: chatList.length,
@@ -227,8 +229,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                 )
                                 );
                               },
-                            ),
-                          ),
+                            ) : null
                         ),
                         Divider(color: AppColors.purple,
                           thickness: 3,
@@ -245,7 +246,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                       Icons.account_circle, color: Colors.white,
                                       size: 30.sp),
                                     title: Text(
-                                      'Profil',
+                                      'Ustawienia',
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontFamily: AppTextStyles.Manrope,
@@ -254,13 +255,54 @@ class _MainChatPageState extends State<MainChatPage> {
                                       ),
                                     ),
                                     onTap: () {
-                                      Navigator.pop(context);
+                                      setState(() {
+                                        context.read<MainChatViewModel>().setting = !context.read<MainChatViewModel>().setting;
+                                        context.read<MainChatViewModel>().setChatListHeight();
+                                      });
                                     },
                                   ),
                               ),
                             ),
                           ),
                         ),
+                    AnimatedContainer(
+                      duration: Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      height: context.read<MainChatViewModel>().setting ? 60.h : 0,
+                      color: AppColors.dark,
+                      child: context.read<MainChatViewModel>().setting ? Container(
+                        height: 62.5.h,
+                        child: Expanded(
+                          child: Align(
+                            alignment: Alignment.bottomLeft,
+                            child: Center(
+                              child:ListTile(
+                                leading: Icon(
+                                  Icons.logout, color: Colors.white,
+                                  size: 30.sp),
+                                title: Text(
+                                    'Wyloguj się',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontFamily: AppTextStyles.Andada,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 21.sp,
+                                  ),
+                                ),
+                                onTap: () {
+                                  MainChatViewModel.logOut();
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                                  );
+                                },
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    )
+                    : null),
                       ],
                     );
                   },
@@ -639,6 +681,7 @@ class _MainChatPageState extends State<MainChatPage> {
             ),
           );
         }
+    )
     );
   }
 }

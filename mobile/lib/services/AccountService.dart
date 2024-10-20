@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:mobile/states/AccountState.dart';
 
 import '../models/Account.dart';
+import '../models/ErrorResponse.dart';
 import 'ChatService.dart';
 
 class BadRequestException implements Exception {
@@ -48,13 +49,17 @@ class AccountService {
       })));
 
       final response = await request.close();
+      final responseBody = await response.transform(utf8.decoder).join();
 
       switch (response.statusCode) {
         case 201:
-          //final responseBody = await response.transform(utf8.decoder).join();
           return true;
         case 400:
-          throw BadRequestException('Dane są już zajęte.');
+          final errorResponse = ErrorResponse.fromJson(jsonDecode(responseBody));
+          throw BadRequestException(errorResponse.message);
+        case 500:
+          final errorResponse = ErrorResponse.fromJson(jsonDecode(responseBody));
+          throw ServerException(errorResponse.message);
         default:
           throw ServerException('Błąd serwera: ${response.statusCode}');
       }
@@ -81,6 +86,7 @@ class AccountService {
 
       final response = await request.close();
 
+
       switch (response.statusCode) {
         case 200:
           final responseBody = await response.transform(utf8.decoder).join();
@@ -90,9 +96,12 @@ class AccountService {
           return token;
         case 400:
           final responseBody = await response.transform(utf8.decoder).join();
-          throw BadRequestException('Nieprawidłowe dane logowania.');
-        case 403:
-          throw NotFoundException('Konto nie zostało aktywowane. Poczekaj na aktywacje');
+          final errorResponse = ErrorResponse.fromJson(jsonDecode(responseBody));
+          throw BadRequestException(errorResponse.message);
+        case 500:
+          final responseBody = await response.transform(utf8.decoder).join();
+          final errorResponse = ErrorResponse.fromJson(jsonDecode(responseBody));
+          throw ServerException(errorResponse.message);
         default:
           throw ServerException('Błąd serwera: ${response.statusCode}');
       }
