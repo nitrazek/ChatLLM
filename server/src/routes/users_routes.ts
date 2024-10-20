@@ -7,6 +7,7 @@ import { isEmail } from "class-validator";
 import { getPaginationMetadata } from "../utils/pagination_handler";
 import { Like } from "typeorm";
 import { UserRole } from "../enums/user_role";
+import { AuthHeader } from "../schemas/base_schemas";
 
 const userRoutes: FastifyPluginCallback = (server, _, done) => {
     // Register new user
@@ -38,17 +39,18 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
             user = await User.findOneBy({ name: nameOrEmail });
         if (!user) throw new BadRequestError('User do not exist.');
 
-        const isPasswordValid = user.isPasswordValid(password);
+        const isPasswordValid = await user.isPasswordValid(password);
         if (!isPasswordValid) throw new BadRequestError('Invalid password.');
 
         if (!user.activated) throw new BadRequestError('User is not activated.');
 
         const token = server.jwt.sign({ ...user });
-        reply.send({ token });
+        reply.send({ name: user.name, role: user.role, token });
     });
 
     // Get list of users (only admin)
     server.get<{
+        Headers: AuthHeader,
         Querystring: Schemas.GetUserListQuery,
         Reply: Schemas.GetUserListResponse
     }>('/list', {
@@ -90,6 +92,7 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
 
     // Get specific user (only admin)
     server.get<{
+        Headers: AuthHeader,
         Params: Schemas.GetUserParams,
         Reply: Schemas.GetUserResponse
     }>('/:userId', {
@@ -104,6 +107,7 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
 
     // Activate specific user (only admin)
     server.put<{
+        Headers: AuthHeader,
         Params: Schemas.ActivateUserParams,
         Reply: Schemas.ActivateUserResponse
     }>('/:userId/activate', {
@@ -121,6 +125,7 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
 
     // Change details of specific user (only admin)
     server.put<{
+        Headers: AuthHeader,
         Params: Schemas.UpdateUserParams,
         Body: Schemas.UpdateUserBody,
         Reply: Schemas.UpdateUserResponse
@@ -141,6 +146,7 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
 
     // Delete specific user (only admin)
     server.delete<{
+        Headers: AuthHeader,
         Params: Schemas.DeleteUserParams,
         Reply: Schemas.DeleteUserResponse
     }>('/:userId', {

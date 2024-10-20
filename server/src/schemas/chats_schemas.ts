@@ -1,8 +1,8 @@
 import { Static, Type } from "@sinclair/typebox"
 import { FastifySchema } from "fastify"
-import { UserGuardedResponseSchema } from "./errors_schemas";
+import { ChatOwnerGuardedResponseSchema, UserGuardedResponseSchema } from "./errors_schemas";
 import { SenderType } from "../enums/sender_type";
-import { PaginationMetadataTypes } from "./base_schemas";
+import { AuthHeaderTypes, PaginationMetadataTypes } from "./base_schemas";
 
 //////////////////// Generic Schemas ////////////////////
 
@@ -10,7 +10,9 @@ import { PaginationMetadataTypes } from "./base_schemas";
 const GenericChatResponseTypes = Type.Object({
     id: Type.Number({ description: "Unique identifier of the chat" }),
     name: Type.String({ description: "Name of the chat" }),
-    isUsingOnlyKnowledgeBase: Type.Boolean({ description: "Flag indicating if the chat uses only the knowledge base" })
+    isUsingOnlyKnowledgeBase: Type.Boolean({ description: "Flag indicating if the chat uses only the knowledge base" }),
+    createdAt: Type.Unsafe<Date>({ type: 'string', format: 'date', description: "Creation date of the chat" }),
+    updatedAt: Type.Unsafe<Date>({ type: 'string', format: 'date', description: "Update date of the chat" })
 }, { description: "Basic information about a chat" });
 
 // Schema for generic chat message response
@@ -37,6 +39,7 @@ export type CreateChatResponse = Static<typeof CreateChatResponseTypes>;
 export const CreateChatSchema: FastifySchema = {
     summary: "Create a new chat",
     description: "Creates a new chat for the authenticated user.",
+    headers: AuthHeaderTypes,
     body: CreateChatBodyTypes,
     tags: ["Chats"],
     response: {
@@ -65,12 +68,13 @@ export type SendMessageResponse = Static<typeof SendMessageResponseTypes>;
 export const SendMessageSchema: FastifySchema = {
     summary: "Send a message",
     description: "Sends a message to a specific chat. The user must be the owner of the chat.",
+    headers: AuthHeaderTypes,
     params: SendMessageParamsTypes,
     body: SendMessageBodyTypes,
     tags: ["Chats"],
     response: {
         200: SendMessageResponseTypes,
-        ...UserGuardedResponseSchema
+        ...ChatOwnerGuardedResponseSchema
     }
 };
 
@@ -95,6 +99,7 @@ export type GetChatListResponse = Static<typeof GetChatListResponseTypes>;
 export const GetChatListSchema: FastifySchema = {
     summary: "Get list of chats",
     description: "Retrieves a paginated list of chats for the authenticated user.",
+    headers: AuthHeaderTypes,
     querystring: GetChatListQueryTypes,
     tags: ["Chats"],
     response: {
@@ -126,12 +131,13 @@ export type GetChatMessagesResponse = Static<typeof GetChatMessagesResponseTypes
 export const GetChatMessagesSchema: FastifySchema = {
     summary: "Get chat messages",
     description: "Retrieves a paginated list of messages for a specific chat. The user must be the owner of the chat.",
+    headers: AuthHeaderTypes,
     params: GetChatMessagesParamsTypes,
     querystring: GetChatMessagesQueryTypes,
     tags: ["Chats"],
     response: {
         200: GetChatMessagesResponseTypes,
-        ...UserGuardedResponseSchema
+        ...ChatOwnerGuardedResponseSchema
     }
 }
 
@@ -158,12 +164,13 @@ export type UpdateChatResponse = Static<typeof UpdateChatResponseTypes>;
 export const UpdateChatSchema: FastifySchema = {
     summary: "Update chat details",
     description: "Updates the name or settings of a specific chat. The user must be the owner of the chat.",
+    headers: AuthHeaderTypes,
     params: UpdateChatParamsTypes,
     body: UpdateChatBodyTypes,
     tags: ["Chats"],
     response: {
         200: UpdateChatResponseTypes,
-        ...UserGuardedResponseSchema
+        ...ChatOwnerGuardedResponseSchema
     }
 };
 
@@ -184,10 +191,11 @@ export type DeleteChatResponse = Static<typeof DeleteChatResponseTypes>;
 export const DeleteChatSchema: FastifySchema = {
     summary: "Delete chat",
     description: "Deletes a specific chat. The user must be the owner of the chat.",
+    headers: AuthHeaderTypes,
     params: DeleteChatParamsTypes,
     tags: ["Chats"],
     response: {
         204: DeleteChatResponseTypes,
-        ...UserGuardedResponseSchema
+        ...ChatOwnerGuardedResponseSchema
     }
 }
