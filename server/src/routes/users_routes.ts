@@ -4,6 +4,9 @@ import { User } from "../models/user";
 import { adminAuth, userAuth } from "../services/authentication_service";
 import { BadRequestError } from "../schemas/errors_schemas";
 import { isEmail } from "class-validator";
+import { getPaginationMetadata } from "../utils/pagination_handler";
+import { Like } from "typeorm";
+import { UserRole } from "../enums/user_role";
 
 const userRoutes: FastifyPluginCallback = (server, _, done) => {
     // Register new user
@@ -52,13 +55,37 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
         schema: Schemas.GetUserListSchema,
         onRequest: [adminAuth(server)]
     }, async (req, reply) => {
-        const { page = 1, limit = 10 } = req.query;
-        const [users, _] = await User.findAndCount({
+        const { page = 1, limit = 10, name, email, role, activated } = req.query;
+        if(page < 1) throw new BadRequestError("Invalid page number, must not be negative");
+        if(limit < 1) throw new BadRequestError("Invalid limit value, must not be negative");
+        
+        const getUserRole = (role: string): UserRole => {
+            if(Object.values(UserRole).includes(role as UserRole)) {
+                return role as UserRole;
+            } else {
+                throw new BadRequestError("Invalid role value");
+            }
+        }
+
+        const [users, totalUsers] = await User.findAndCount({
             skip: (page - 1) * limit,
-            take: limit
+            take: limit,
+            where: {
+                ...(name !== undefined && { name: Like(`%${name}%`) }),
+                ...(email != undefined && { email: Like(`%${email}%`) }),
+                ...(role !== undefined && { role: getUserRole(role) }),
+                ...(activated !== undefined && { activated })
+            }
         });
 
-        reply.send(users);
+        const paginationMetadata = getPaginationMetadata(page, limit, totalUsers);
+        if(paginationMetadata.currentPage > paginationMetadata.totalPages)
+            throw new BadRequestError("Invalid page number, must not be greater than page amount");
+
+        reply.send({
+            users: users,
+            pagination: paginationMetadata
+        });
     });
 
     // Get specific user (only admin)
@@ -92,7 +119,7 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
         reply.send(user);
     });
 
-    // Change datails of specific user (only admin)
+    // Change details of specific user (only admin)
     server.put<{
         Params: Schemas.UpdateUserParams,
         Body: Schemas.UpdateUserBody,

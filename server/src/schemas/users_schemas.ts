@@ -1,6 +1,8 @@
 import { FastifySchema } from "fastify"
 import { Static, Type } from "@sinclair/typebox"
 import { AdminGuardedResponseSchema, NotGuardedResponseSchema } from "./errors_schemas";
+import { PaginationMetadataTypes } from "./base_schemas";
+import { UserRole } from "../enums/user_role";
 
 //////////////////// Generic Schemas ////////////////////
 
@@ -9,7 +11,8 @@ const GenericUserResponseTypes = Type.Object({
     id: Type.Number({ description: "Unique identifier of the user" }),
     name: Type.String({ description: "Name of the user" }),
     email: Type.String({ description: "Email address of the user" }),
-    activated: Type.Boolean({ description: "Indicates whether the user's account is activated" })
+    activated: Type.Boolean({ description: "Indicates whether the user's account is activated" }),
+    role: Type.Enum(UserRole, { description: "Role of the user" })
 }, { description: "A generic response schema for a user, containing basic user information" });
 
 
@@ -67,13 +70,20 @@ export const LoginSchema: FastifySchema = {
 // Schema for getting list of users
 const GetUserListQueryTypes = Type.Object({
     page: Type.Optional(Type.Number({ description: "Page number for pagination" })),
-    limit: Type.Optional(Type.Number({ description: "Limit of users per page" }))
+    limit: Type.Optional(Type.Number({ description: "Limit of users per page" })),
+    name: Type.Optional(Type.String({ description: "Filters users by partial match of their name" })),
+    email: Type.Optional(Type.String({ description: "Filters users by partial match of their email address" })),
+    role: Type.Optional(Type.String({ description: "Filters users by their assigned role" })),
+    activated: Type.Optional(Type.Boolean({ description: "Filters users by activation status" }))
 }, { description: "Query parameters for fetching a list of users" });
 export type GetUserListQuery = Static<typeof GetUserListQueryTypes>;
 
-const GetUserListResponseTypes = Type.Array(Type.Object({
-    ...GenericUserResponseTypes.properties
-}), { description: "An array of users with basic information" });
+const GetUserListResponseTypes = Type.Object({
+    users: Type.Array(Type.Object({
+        ...GenericUserResponseTypes.properties
+    }), { description: "List of users" }),
+    pagination: PaginationMetadataTypes
+}, { description: "List of users with pagination metadata" });
 export type GetUserListResponse = Static<typeof GetUserListResponseTypes>;
 
 export const GetUserListSchema: FastifySchema = {

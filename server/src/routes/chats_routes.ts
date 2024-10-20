@@ -7,6 +7,7 @@ import { BadRequestError, ForbiddenError } from "../schemas/errors_schemas";
 import { getRagTemplate } from "../prompts";
 import { SenderType } from "../enums/sender_type";
 import { getRagChain, transformStream } from "../utils/stream_handler";
+import { getPaginationMetadata } from "../utils/pagination_handler";
 
 const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
     // Create a new chat
@@ -50,7 +51,6 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
             where: { chat: { id: chat.id } }
         });
         await chat.addMessage(SenderType.HUMAN, question);
-
         const ragChain = getRagChain(template, chatMessageList);
         const stream = await ragChain.stream({ question });
         return reply.send(transformStream(stream, chat));
@@ -65,15 +65,23 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         onRequest:[userAuth(server)]
     }, async (req, reply) => {
         const { page = 1, limit = 20 } = req.query;
-        const [chats, _] = await Chat.findAndCount({
+        if(page < 1) throw new BadRequestError("Invalid page number, must not be negative");
+        if(limit < 1) throw new BadRequestError("Invalid limit value, must not be negative");
+
+        const [chats, totalChats] = await Chat.findAndCount({
             skip: (page - 1) * limit,
             take: limit,
-            where: {
-                user: { id: req.user.id }
-            }
+            where: { user: { id: req.user.id } }
         });
 
-        reply.send(chats);
+        const paginationMetadata = getPaginationMetadata(page, limit, totalChats);
+        if(paginationMetadata.currentPage > paginationMetadata.totalPages)
+            throw new BadRequestError("Invalid page number, must not be greater than page amount");
+
+        reply.send({
+            chats: chats,
+            pagination: paginationMetadata
+        });
     });
 
     // Get specific chat history
@@ -93,20 +101,26 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         if (chat.user.id !== req.user.id) throw new ForbiddenError('You do not have permission to access this resource.');
 
         const { page = 1, limit = 20 } = req.query;
-        const [messages, _] = await ChatMessage.findAndCount({
+        if(page < 1) throw new BadRequestError("Invalid page number, must not be negative");
+        if(limit < 1) throw new BadRequestError("Invalid limit value, must not be negative");
+
+        const [messages, totalMessages] = await ChatMessage.findAndCount({
             skip: (page - 1) * limit,
             take: limit,
-            where: {
-                chat: {
-                    id: req.params.chatId
-                }
-            }
+            where: { chat: { id: req.params.chatId } }
         });
 
-        reply.send(messages);
+        const paginationMetadata = getPaginationMetadata(page, limit, totalMessages);
+        if(paginationMetadata.currentPage > paginationMetadata.totalPages)
+            throw new BadRequestError("Invalid page number, must not be greater than page amount");
+
+        reply.send({
+            messages: messages,
+            pagination: paginationMetadata
+        });
     });
 
-    // Change datails of specific chat
+    // Change details of specific chat
     server.put<{
         Params: Schemas.UpdateChatParams,
         Body: Schemas.UpdateChatBody,
