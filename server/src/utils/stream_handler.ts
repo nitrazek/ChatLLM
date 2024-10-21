@@ -8,6 +8,7 @@ import { ChromaService } from "../services/chroma_service";
 import { SenderType } from "../enums/sender_type";
 import { Chat } from "../models/chat";
 import { IterableReadableStream } from "@langchain/core/dist/utils/stream";
+import { getSummaryPrompt } from "../prompts";
 
 export const getRagChain = (template: string, chatMessages: ChatMessage[]) => RunnableSequence.from([
     {
@@ -73,7 +74,7 @@ const getNewChatNameStream = (stream: ReadableStream<string>, chat: Chat) => {
             const { done, value } = await reader.read();
             if(done || isCanceled) {
                 answerChunks.push(buffer[0]);
-                const summary: string = (await ollama.invoke(`Summarize this answer into 3 words: ${answerChunks.join("")}`)).content as string;
+                const summary: string = (await ollama.invoke(getSummaryPrompt(answerChunks.join("")))).content as string;
                 await Chat.update({ id: chat.id }, { name: summary });
                 controller.enqueue(JSON.stringify({ answer: buffer[0], newChatName: summary }));
                 controller.close();

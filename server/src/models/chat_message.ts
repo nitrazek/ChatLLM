@@ -18,6 +18,8 @@ export class ChatMessage extends ExtendedBaseEntity {
     @IsNotEmpty({ message: getIsInvalidMessage("Content") })
     content!: string;
 
-    @ManyToOne(() => Chat, (chat) => chat.messageHistory)
+    @ManyToOne(() => Chat, (chat) => chat.messageHistory, {
+        onDelete: "CASCADE"
+    })
     chat!: Chat;
 }

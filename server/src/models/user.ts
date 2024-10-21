@@ -33,7 +33,10 @@ export class User extends ExtendedBaseEntity {
     @IsOptional()
     role!: UserRole;
 
-    @OneToMany(() => Chat, (chat) => chat.user)
+    @OneToMany(() => Chat, (chat) => chat.user, {
+        cascade: true,
+        onDelete: "CASCADE"
+    })
     chats!: Chat[];
 
     // This property stores an original password for comparing in hashing process
