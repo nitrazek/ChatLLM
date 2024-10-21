@@ -74,7 +74,8 @@ const getNewChatNameStream = (stream: ReadableStream<string>, chat: Chat) => {
             if(done || isCanceled) {
                 answerChunks.push(buffer[0]);
                 const summary: string = (await ollama.invoke(`Summarize this answer into 3 words: ${answerChunks.join("")}`)).content as string;
-                await Chat.update({ id: chat.id }, { name: summary });
+                chat.name = summary;
+                await chat.save();
                 controller.enqueue(JSON.stringify({ answer: buffer[0], newChatName: summary }));
                 controller.close();
                 return;

@@ -51,7 +51,8 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         const question = req.body.question;
         const [chatMessageList, _] = await ChatMessage.findAndCount({
             take: 10,
-            where: { chat: { id: chat.id } }
+            where: { chat: { id: chat.id } },
+            order: { updatedAt: "DESC" }
         });
         await chat.addMessage(SenderType.HUMAN, question);
         const ragChain = getRagChain(template, chatMessageList);
@@ -75,7 +76,8 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         const [chats, totalChats] = await Chat.findAndCount({
             skip: (page - 1) * limit,
             take: limit,
-            where: { user: { id: req.user.id } }
+            where: { user: { id: req.user.id } },
+            order: { updatedAt: "DESC" }
         });
 
         const paginationMetadata = getPaginationMetadata(page, limit, totalChats);
@@ -112,7 +114,8 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         const [messages, totalMessages] = await ChatMessage.findAndCount({
             skip: (page - 1) * limit,
             take: limit,
-            where: { chat: { id: req.params.chatId } }
+            where: { chat: { id: req.params.chatId } },
+            order: { updatedAt: "DESC" }
         });
 
         const paginationMetadata = getPaginationMetadata(page, limit, totalMessages);
@@ -143,11 +146,10 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         if (chat.user.id !== req.user.id) throw new ForbiddenError('You do not have permission to access this resource.');
 
         const { name, isUsingOnlyKnowledgeBase } = req.body;
-        if (!name && !isUsingOnlyKnowledgeBase) throw new BadRequestError('Need at least 1 parameter to change.');
+        Chat.merge(chat, { name, isUsingOnlyKnowledgeBase });
+        const updatedChat = await chat.save();
 
-        await Chat.update({ id: req.params.chatId }, { name, isUsingOnlyKnowledgeBase });
-        await chat.reload();
-        reply.send(chat);
+        reply.send(updatedChat);
     });
 
     // Delete specific chat
