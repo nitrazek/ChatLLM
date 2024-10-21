@@ -92,12 +92,12 @@ class _ChatDialogState extends State<ChatDialog> {
                 Navigator.of(context).pop(isCreated);
               }
               else {
-                SnackBar(
+                const SnackBar(
                   content: Text("Nie udało się stworzyć pokoju, Przepraszamy za utrudnienia."),
                 );
               }
             },
-            child: Text(
+            child: const Text(
                 style:TextStyle(
                     color: Colors.white,
                     fontFamily: AppTextStyles.Andada

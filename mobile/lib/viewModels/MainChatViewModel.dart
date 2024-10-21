@@ -20,6 +20,7 @@ class MainChatViewModel extends ChangeNotifier {
     ChatMessage chatMessage = ChatMessage(sender : 'human', content : question);
     _chatMessages.add(chatMessage);
     notifyListeners();
+    isLoading = true;
 
     ChatMessage chatMessage2 = ChatMessage(sender: "ai", content : "");
     _chatMessages.add(chatMessage2);
@@ -36,6 +37,10 @@ class MainChatViewModel extends ChangeNotifier {
 
   void cancelAnswer() {
     _chatService.cancelAnswer();
+    if(_chatMessages[_chatMessages.length-1].sender == "ai")
+    _chatMessages[_chatMessages.length-1].content = "*Odpowiedź anulowana*";
+    isLoading = false;
+    notifyListeners();
   }
 
   Future<bool> loadHistory() async {

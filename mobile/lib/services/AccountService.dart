@@ -95,9 +95,7 @@ class AccountService {
           AccountState.token = token;
           return token;
         case 400:
-          final responseBody = await response.transform(utf8.decoder).join();
-          final errorResponse = ErrorResponse.fromJson(jsonDecode(responseBody));
-          throw BadRequestException(errorResponse.message);
+          throw BadRequestException("Nie znaleziono użytkownika");
         case 500:
           final responseBody = await response.transform(utf8.decoder).join();
           final errorResponse = ErrorResponse.fromJson(jsonDecode(responseBody));
