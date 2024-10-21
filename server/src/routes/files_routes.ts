@@ -4,10 +4,12 @@ import { adminAuth } from "../services/authentication_service";
 import { BadRequestError } from "../schemas/errors_schemas";
 import { getFileHandler } from "../utils/files_handlers";
 import { ChromaService } from "../services/chroma_service";
+import { AuthHeader } from "../schemas/base_schemas";
 
 const filesRoutes: FastifyPluginCallback = (server, _, done) => {
     // Upload a file to the knowledge base (only admin)
     server.post<{
+        Headers: AuthHeader,
         Reply: Schemas.UploadFileResponse
     }>('/', {
         schema: Schemas.MultipartFileSchema,
