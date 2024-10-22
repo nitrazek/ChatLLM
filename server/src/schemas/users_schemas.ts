@@ -77,7 +77,7 @@ const GetUserListQueryTypes = Type.Object({
     email: Type.Optional(Type.String({ description: "Filters users by partial match of their email address" })),
     role: Type.Optional(Type.String({ description: "Filters users by their assigned role" })),
     activated: Type.Optional(Type.Boolean({ description: "Filters users by activation status" }))
-}, { description: "Query parameters for fetching a list of users" });
+}, { description: "Query parameters for fetching a list of users in desc order by updated time" });
 export type GetUserListQuery = Static<typeof GetUserListQueryTypes>;
 
 const GetUserListResponseTypes = Type.Object({

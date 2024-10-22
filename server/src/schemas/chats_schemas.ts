@@ -93,7 +93,7 @@ const GetChatListResponseTypes = Type.Object({
         ...GenericChatResponseTypes.properties
     }), { description: "List of chats for the user" }),
     pagination: PaginationMetadataTypes
-}, { description: "List of chats for the user with pagination metadata" });
+}, { description: "List of chats for the user in desc order by updated time with pagination metadata" });
 export type GetChatListResponse = Static<typeof GetChatListResponseTypes>;
 
 export const GetChatListSchema: FastifySchema = {
@@ -125,7 +125,7 @@ const GetChatMessagesResponseTypes = Type.Object({
         ...GenericChatMessageResponseTypes.properties
     }), { description: "List of chat messages for the chat" }),
     pagination: PaginationMetadataTypes
-}, { description: "List of chat messages for the chat with pagination metadata" });
+}, { description: "List of chat messages for the chat in desc order by updated time with pagination metadata" });
 export type GetChatMessagesResponse = Static<typeof GetChatMessagesResponseTypes>;
 
 export const GetChatMessagesSchema: FastifySchema = {
