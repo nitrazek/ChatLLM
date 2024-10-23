@@ -160,7 +160,7 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
         const user = await User.findOneBy({ id: req.params.userId });
         if (!user) throw new BadRequestError('User do not exist.');
 
-        await User.remove(user);
+        await user.remove();
         reply.code(204).send();
     });
     
