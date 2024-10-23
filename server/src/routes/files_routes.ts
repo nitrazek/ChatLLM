@@ -11,8 +11,8 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
     server.post<{
         Headers: AuthHeader,
         Reply: Schemas.UploadFileResponse
-    }>('/', {
-        schema: Schemas.MultipartFileSchema,
+    }>('/upload', {
+        schema: Schemas.UploadFileSchema,
         onRequest: [adminAuth(server)]
     }, async (req, reply) => {
         const file = await req.file();
@@ -32,6 +32,18 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         });
 
         reply.code(204).send();
+    });
+
+    // Get list of files from knowledge base (only admin)
+    server.get<{
+        Headers: AuthHeader,
+        Querystring: Schemas.GetFileListQuery,
+        Reply: Schemas.GetFileListResponse
+    }>('/list', {
+        schema: Schemas.GetFileListSchema,
+        onRequest: [adminAuth(server)]
+    }, async (req, reply) => {
+        // dupa dupa twoja stara
     });
 
     done();
