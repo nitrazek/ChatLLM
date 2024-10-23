@@ -14,6 +14,7 @@ services:
             - "3000:3000"
         environment:
             - HOST=0.0.0.0
+            - OLLAMA_MODEL=llama3.1
             - OLLAMA_URL=http://ollama:11434
             - CHROMA_URL=http://chroma:8000
             - POSTGRES_HOST=postgres
@@ -26,17 +27,21 @@ services:
             - chroma
 
     ollama:
-        image: ollama/ollama:0.3.9
+        image: ollama/ollama:0.3.14
         container_name: ollama
         volumes:
             - ollama:/root/.ollama
 
     chroma:
-        image: chromadb/chroma:0.5.5
+        image: chromadb/chroma:0.5.15
         container_name: chroma
+        environment:
+            - IS_PERSISTENT=TRUE
+        volumes:
+            - chroma:/chroma/chroma
 
     postgres:
-        image: postgres:16-alpine
+        image: postgres:17-alpine
         container_name: postgres
         environment:
             - POSTGRES_USER=postgres
@@ -48,3 +53,4 @@ services:
 volumes:
     ollama:
     postgres:
+    chroma:

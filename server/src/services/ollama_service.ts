@@ -1,7 +1,7 @@
 import { ChatOllama } from "@langchain/ollama";
 
 export const ollamaUrl: string = process.env.OLLAMA_URL ?? "http://localhost:11434";
-export const ollamaModel: string = process.env.OLLAMA_MODEL ?? "llama3";
+export const ollamaModel: string = process.env.OLLAMA_MODEL ?? "llama3.1";
 
 export class OllamaService {
     private static instance: ChatOllama;

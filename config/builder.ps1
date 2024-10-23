@@ -42,7 +42,7 @@ while ($continue) {
 
     docker-compose -f $composeFilePath down
     docker-compose -f $composeFilePath up --build -d
-    docker exec ollama ollama run llama3
+    docker exec ollama ollama run llama3.1
     docker image prune -f
     Start-Sleep 1
     docker ps
