@@ -3,6 +3,7 @@ import { Chat } from "../models/chat";
 import { User } from "../models/user";
 import { ChatMessage } from "../models/chat_message";
 import { UserRole } from "../enums/user_role";
+import { File } from "../models/file";
 
 export const AppDataSource = new DataSource({
     type: "postgres",
@@ -13,7 +14,7 @@ export const AppDataSource = new DataSource({
     database: process.env.POSTGRES_DB ?? "chatdb",
     synchronize: true,
     logging: false,
-    entities: [User, Chat, ChatMessage],
+    entities: [User, Chat, ChatMessage, File],
     migrations: [],
     subscribers: [],
 });
