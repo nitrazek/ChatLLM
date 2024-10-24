@@ -18,7 +18,11 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
         schema: Schemas.RegisterSchema
     }, async (req, reply) => {
         const { name, email, password } = req.body;
-        const user = User.create({ name, email, password });
+        const user = User.create({
+            name,
+            email,
+            password
+        });
         await user.save();
 
         reply.code(201).send();
@@ -77,7 +81,8 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
                 ...(email != undefined && { email: Like(`%${email}%`) }),
                 ...(role !== undefined && { role: getUserRole(role) }),
                 ...(activated !== undefined && { activated })
-            }
+            },
+            order: { updatedAt: "DESC" }
         });
 
         const paginationMetadata = getPaginationMetadata(page, limit, totalUsers);
@@ -118,9 +123,9 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
         if (!user) throw new BadRequestError('User do not exist.');
 
         user.activate();
-        await user.save();
+        const activatedUser = await user.save()
 
-        reply.send(user);
+        reply.send(activatedUser);
     });
 
     // Change details of specific user (only admin)
@@ -136,12 +141,11 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
         const user = await User.findOneBy({ id: req.params.userId });
         if (!user) throw new BadRequestError('User do not exist.');
 
-        const { name, email, password } = req.body;
-        if (!name && !email && !password) throw new BadRequestError('Need at least 1 parameter to change.');
-        
-        await User.update({ id: req.params.userId }, { name, email, password });
-        await user.reload();
-        reply.send(user);
+        const { name, email, password } = req.body;        
+        User.merge(user, { name, email, password });
+        const updatedUser = await user.save();
+
+        reply.send(updatedUser);
     });
 
     // Delete specific user (only admin)
@@ -156,7 +160,7 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
         const user = await User.findOneBy({ id: req.params.userId });
         if (!user) throw new BadRequestError('User do not exist.');
 
-        await User.delete({ id: req.params.userId });
+        await user.remove();
         reply.code(204).send();
     });
     

@@ -1,5 +1,4 @@
-import { validate, validateOrReject, ValidationError } from "class-validator";
-import { FastifyError } from "fastify";
+import { validateOrReject } from "class-validator";
 import { BaseEntity, BeforeInsert, BeforeUpdate, CreateDateColumn, UpdateDateColumn } from "typeorm";
 
 export class ExtendedBaseEntity extends BaseEntity {

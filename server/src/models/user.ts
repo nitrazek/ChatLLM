@@ -2,9 +2,10 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany, Unique, BeforeInsert
 import { Chat } from "./chat";
 import { UserRole } from "../enums/user_role";
 import { ExtendedBaseEntity } from "./extended_base_entity";
-import { IsEmail, IsEnum, IsOptional, IsStrongPassword, Length, MaxLength } from "class-validator";
+import { IsEmail, IsEnum, IsOptional, IsStrongPassword, Length, MaxLength, ValidateIf } from "class-validator";
 import { getIsInvalidMessage } from "../utils/model_validation_messages";
 import { compare, hash, genSalt } from "bcrypt";
+import { File } from "./file";
 
 @Entity()
 @Unique(['email', 'name'])
@@ -21,6 +22,7 @@ export class User extends ExtendedBaseEntity {
     email!: string;
 
     @Column()
+    @ValidateIf((o: User) => o.password !== o.cachedPassword)
     @IsStrongPassword({ minLength: 6 }, { message: getIsInvalidMessage('Password') })
     @MaxLength(30, { message: getIsInvalidMessage('Password') })
     password!: string;
@@ -33,8 +35,14 @@ export class User extends ExtendedBaseEntity {
     @IsOptional()
     role!: UserRole;
 
-    @OneToMany(() => Chat, (chat) => chat.user)
+    @OneToMany(() => Chat, (chat) => chat.user, {
+        cascade: true,
+        onDelete: "CASCADE"
+    })
     chats!: Chat[];
+
+    @OneToMany(() => File, (file) => file.creator)
+    filesCreated!: File[];
 
     // This property stores an original password for comparing in hashing process
     private cachedPassword!: string;
@@ -56,7 +64,7 @@ export class User extends ExtendedBaseEntity {
         return await compare(password, this.password);
     }
 
-    activate() { 
+    activate() {
         this.activated = true;
     }
 }
