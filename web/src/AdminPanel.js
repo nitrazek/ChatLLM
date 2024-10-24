@@ -22,15 +22,14 @@ function AdminPanel() {
             const response = await fetch(`http://localhost:3000/api/v1/users/${userToActivateId}/activate`, {
                 method: 'PUT',
                 headers: {
-                    'Authorization': `Bearer ${userToken}`,
-                    'Content-Type': 'application/json'
+                    'Authorization': `Bearer ${userToken}`
                 },
             }
         );
-        window.location.reload();
+        //window.location.reload();
         }
         catch (error) {
-            alert(error.errorMessage);
+            alert(response.message);
         }
     }
     
@@ -39,15 +38,14 @@ function AdminPanel() {
             const response = await fetch(`http://localhost:3000/api/v1/users/${userToDeleteId}`, {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${userToken}`,
-                    'Content-Type': 'application/json'
+                    'Authorization': `Bearer ${userToken}`
                 },
             }
         );
         window.location.reload();
         }
         catch (error) {
-            alert(error.errorMessage);
+            alert(response.message);
         }
     }
 
@@ -61,9 +59,9 @@ function AdminPanel() {
                     },
                 });
                 const data = await response.json();
-                setUserList(data);
+                setUserList(data.users);
             } catch (error) {
-                alert(error.errorMessage);
+                alert(response.message);
             }
         };
 
@@ -106,7 +104,7 @@ function AdminPanel() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {userList.map(user => (
+                                {userList.length > 0 && (userList.map(user => (
                                     <tr key={user.id}>
                                         <td>{user.id}</td>
                                         <td>{user.name}</td>
@@ -118,7 +116,7 @@ function AdminPanel() {
                                             {user.name !== "superadmin" ? <button onClick={() => deleteUser(user.id)}>Usuń</button> : ""}
                                         </td>
                                     </tr>
-                                ))}
+                                )))}
                             </tbody>
                         </table>
                     </div>

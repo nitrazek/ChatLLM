@@ -149,6 +149,7 @@ function Login() {
     const resetForm = () => {
         setEmail("");
         setLogin("");
+        setLoginOrEmail("");
         setPassword("");
         setConfirmPassword("");
         setEmailError("");
@@ -205,7 +206,7 @@ function Login() {
             }
         }
         catch (error) {
-            alert(error.errorMessage);
+            alert(response.message);
         }
     };
 
@@ -230,7 +231,7 @@ function Login() {
                 alert(data.errorMessage);
             }
         } catch (error) {
-            alert("An error occurred. Try again later");
+            alert("An error occurred. Try again later\n" + response.message);
         }
     }
 

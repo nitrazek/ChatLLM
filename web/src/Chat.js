@@ -54,7 +54,7 @@ function Chat() {
       const data = await response.json();
       setChatHistory(data);
     } catch (error) {
-      alert(error.errorMessage);
+      alert(response.message);
     }
   };
 
@@ -143,7 +143,7 @@ function Chat() {
       setIsGeneratingAnswer(false);
       controller.current = null;
       if (error.name !== "AbortError")
-        alert(error.errorMessage);
+        alert(error.message);
     }
   };
 
@@ -195,7 +195,7 @@ function Chat() {
 
         setMessages(formattedMessages);
       } catch (error) {
-        alert(error.errorMessage);
+        alert(response.message);
       }
     };
 
