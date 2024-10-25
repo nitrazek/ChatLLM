@@ -168,7 +168,7 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         if (!chat) throw new BadRequestError('Chat do not exist.');
         if (chat.user.id !== req.user.id) throw new ForbiddenError('You do not have permission to access this resource.');
     
-        await Chat.delete({ id: req.params.chatId });
+        await chat.remove();
         reply.code(204).send();
     });
 

@@ -5,6 +5,7 @@ import { ExtendedBaseEntity } from "./extended_base_entity";
 import { IsEmail, IsEnum, IsOptional, IsStrongPassword, Length, MaxLength, ValidateIf } from "class-validator";
 import { getIsInvalidMessage } from "../utils/model_validation_messages";
 import { compare, hash, genSalt } from "bcrypt";
+import { File } from "./file";
 
 @Entity()
 @Unique(['email', 'name'])
@@ -34,8 +35,14 @@ export class User extends ExtendedBaseEntity {
     @IsOptional()
     role!: UserRole;
 
-    @OneToMany(() => Chat, (chat) => chat.user)
+    @OneToMany(() => Chat, (chat) => chat.user, {
+        cascade: true,
+        onDelete: "CASCADE"
+    })
     chats!: Chat[];
+
+    @OneToMany(() => File, (file) => file.creator)
+    filesCreated!: File[];
 
     // This property stores an original password for comparing in hashing process
     private cachedPassword!: string;
