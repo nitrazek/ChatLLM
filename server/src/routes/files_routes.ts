@@ -53,7 +53,10 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
             ids: [file.id.toString()]
         });
 
-        reply.code(204).send();
+        reply.send({
+            ...file,
+            creatorName: file.creator.name
+        });
     });
 
     // Get list of files from knowledge base (only admin)
@@ -91,6 +94,27 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         });
     });
 
+    //Get file content and information
+    server.get<{
+        Headers: AuthHeader,
+        Params: Schemas.GetFileInfoParams,
+        Reply: Schemas.GetFileInfoResponse
+    }>('/:fileId', {
+        schema: Schemas.GetFileInfoSchema,
+        onRequest: [adminAuth(server)]
+    }, async (req, reply) => {
+        const file = await File.findOne({
+            where: { id: req.params.fileId },
+            relations: ["creator"]
+        });
+        if (!file) throw new BadRequestError('File do not exist.');
+
+        reply.send({
+            ...file,
+            creatorName: file.creator.name
+        });
+    });
+
     //Change details of specified file (only admin)
     server.put<{
         Headers: AuthHeader,
@@ -111,7 +135,10 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         File.merge(file, { name });
         const updatedFile = await file.save();
 
-        reply.send({ ...updatedFile, creatorName: updatedFile.creator.name });
+        reply.send({
+            ...updatedFile,
+            creatorName: updatedFile.creator.name
+        });
     })
 
     // Delete specific file

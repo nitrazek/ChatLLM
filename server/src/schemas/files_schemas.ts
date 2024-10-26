@@ -24,7 +24,9 @@ const UploadFileQueryTypes = Type.Object({
 });
 export type UploadFileQuery = Static<typeof UploadFileQueryTypes>;
 
-const UploadFileResponseTypes = Type.Object({}, { description: "Empty response for a successful file upload" });
+const UploadFileResponseTypes = Type.Object({
+    ...GenericFileResponseTypes.properties
+}, { description: "Empty response for a successful file upload" });
 export type UploadFileResponse = Static<typeof UploadFileResponseTypes>;
 
 export const UploadFileSchema: FastifySchema = {
@@ -67,6 +69,29 @@ export const GetFileListSchema: FastifySchema = {
     tags: ["Files"],
     response: {
         200: GetFileListResponseTypes,
+        ...AdminGuardedResponseSchema
+    }
+}
+
+// Schema for getting file content and information
+const GetFileInfoParamsTypes = Type.Object({
+    fileId: Type.Number({ description: "ID of the file to retrieve content and information from" })
+}, { description: "Parameters to identify the file" });
+export type GetFileInfoParams = Static<typeof GetFileInfoParamsTypes>;
+
+const GetFileInfoResponseTypes = Type.Object({
+    ...GenericFileResponseTypes.properties
+}, { description: "Response containing file content and information" });
+export type GetFileInfoResponse = Static<typeof GetFileInfoResponseTypes>;
+
+export const GetFileInfoSchema: FastifySchema = {
+    summary: "Get file information",
+    description: "Retrieves information about specified file with its content. Only accessible by admin users.",
+    headers: AuthHeaderTypes,
+    params: GetFileInfoParamsTypes,
+    tags: ["Files"],
+    response: {
+        200: GetFileInfoResponseTypes,
         ...AdminGuardedResponseSchema
     }
 }
