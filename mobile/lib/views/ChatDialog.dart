@@ -4,10 +4,7 @@ import 'package:mobile/states/ChatState.dart';
 import 'package:mobile/viewModels/ChatDialogViewModel.dart';
 import 'package:provider/provider.dart';
 
-
-
 class ChatDialog extends StatefulWidget {
-
   @override
   _ChatDialogState createState() => _ChatDialogState();
 }
@@ -37,29 +34,24 @@ class _ChatDialogState extends State<ChatDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
-            style:TextStyle(
-                color: Colors.white,
-                fontFamily: AppTextStyles.Andada
-            ),
-            onEditingComplete: (){
-            },
+            style: TextStyle(
+                color: Colors.white, fontFamily: AppTextStyles.Andada),
+            onEditingComplete: () {},
             controller: _nameController,
-            decoration: const InputDecoration(labelText: 'Nazwa chatu', labelStyle: TextStyle(
-                color: Colors.white,
-                fontFamily: AppTextStyles.Andada
-            ),),
+            decoration: const InputDecoration(
+              labelText: 'Nazwa chatu',
+              labelStyle: TextStyle(
+                  color: Colors.white, fontFamily: AppTextStyles.Andada),
+            ),
           ),
           SizedBox(height: screenHeight * 0.017),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                style:TextStyle(
-                  color: Colors.white,
-                  fontFamily: AppTextStyles.Andada
-                ),
-                  "Używaj tylko bazy wiedzy"
-              ),
+                  style: TextStyle(
+                      color: Colors.white, fontFamily: AppTextStyles.Andada),
+                  "Używaj tylko bazy wiedzy"),
               Switch(
                 activeColor: AppColors.purple,
                 value: isUsingOnlyKnowledgeBase,
@@ -72,7 +64,6 @@ class _ChatDialogState extends State<ChatDialog> {
             ],
           ),
           SizedBox(height: screenHeight * 0.017),
-
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.purple,
@@ -83,28 +74,23 @@ class _ChatDialogState extends State<ChatDialog> {
             ),
             onPressed: () async {
               name = _nameController.text;
-              bool isCreated = await context.read<ChatDialogViewModel>().createChat(
-                  name,
-                  isUsingOnlyKnowledgeBase
-              );
-              if(isCreated == true) {
+              bool isCreated = await context
+                  .read<ChatDialogViewModel>()
+                  .createChat(name, isUsingOnlyKnowledgeBase);
+              if (isCreated == true) {
                 ChatState.isArchival = false;
                 Navigator.of(context).pop(isCreated);
-              }
-              else {
+              } else {
                 const SnackBar(
-                  content: Text("Nie udało się stworzyć pokoju, Przepraszamy za utrudnienia."),
+                  content: Text(
+                      "Nie udało się stworzyć pokoju, Przepraszamy za utrudnienia."),
                 );
               }
             },
             child: const Text(
-                style:TextStyle(
-                    color: Colors.white,
-                    fontFamily: AppTextStyles.Andada
-                ),
-                "Stwórz"
-            ),
-
+                style: TextStyle(
+                    color: Colors.white, fontFamily: AppTextStyles.Andada),
+                "Stwórz"),
           ),
         ],
       ),

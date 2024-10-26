@@ -77,9 +77,13 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     child: Padding(
                       padding: EdgeInsets.only(top: 60.h, left: 15.w),
-                      child: Text('Witaj\nZarejestruj się!',
-                          style: AppTextStyles.colorText(
-                              fontSizeScale, 30, Colors.white)),
+                      child: Text(
+                        'Witaj\nZarejestruj się!',
+                        style: TextStyle(
+                            fontFamily: AppTextStyles.Andada,
+                            color: Colors.white,
+                            fontSize: 35.sp),
+                      ),
                     ),
                   ),
                   Padding(
@@ -347,11 +351,14 @@ class _RegisterPageState extends State<RegisterPage> {
                                         ? CircularProgressIndicator(
                                             color: Colors.white,
                                           )
-                                        : Text('Zarejestruj się',
-                                            style: AppTextStyles.colorText(
-                                                fontSizeScale,
-                                                20,
-                                                Colors.white)),
+                                        : Text(
+                                            'Zarejestruj się',
+                                            style: TextStyle(
+                                                fontFamily:
+                                                    AppTextStyles.Andada,
+                                                color: Colors.white,
+                                                fontSize: 35.sp),
+                                          ),
                                   ),
                                 ),
                               ),
@@ -371,9 +378,13 @@ class _RegisterPageState extends State<RegisterPage> {
                                     ]),
                                   ),
                                   child: Center(
-                                    child: Text('Mam już konto',
-                                        style: AppTextStyles.colorText(
-                                            fontSizeScale, 20, Colors.white)),
+                                    child: Text(
+                                      'Mam już konto',
+                                      style: TextStyle(
+                                          fontFamily: AppTextStyles.Andada,
+                                          color: Colors.white,
+                                          fontSize: 35.sp),
+                                    ),
                                   ),
                                 ),
                               ),

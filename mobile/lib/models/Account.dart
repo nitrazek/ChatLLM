@@ -4,12 +4,12 @@ class Account {
   String email;
   String role;
 
-  Account ({
+  Account({
     required this.id,
     required this.name,
     required this.email,
     required this.role,
-});
+  });
 
   factory Account.fromJson(Map<String, dynamic> json) {
     return Account(

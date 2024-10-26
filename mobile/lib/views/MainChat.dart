@@ -21,8 +21,9 @@ class MainChatPage extends StatefulWidget {
 
 class _MainChatPageState extends State<MainChatPage> {
   late TextEditingController textEditingController;
-  final ScrollController scrollController = ScrollController();
-  final ScrollController scrollController2 = ScrollController();
+  late ScrollController scrollController;
+  late ScrollController scrollController2;
+
   List<Chat> chatList = [];
   final GlobalKey _one = GlobalKey();
 
@@ -34,6 +35,8 @@ class _MainChatPageState extends State<MainChatPage> {
     WidgetsBinding.instance.addPostFrameCallback(
         (_) => ShowCaseWidget.of(context).startShowCase([_one]));
     textEditingController = TextEditingController();
+    scrollController = ScrollController();
+    scrollController2 = ScrollController();
     super.initState();
   }
 
@@ -65,11 +68,28 @@ class _MainChatPageState extends State<MainChatPage> {
     }
   }
 
+  double getScrollDown() {
+    if (scrollController.hasClients &&
+        scrollController.position.hasContentDimensions) {
+      return scrollController.position.maxScrollExtent;
+    }
+    return 1000;
+  }
+
+  void _scrollDown() {
+    scrollController.animateTo(
+      getScrollDown() + 10000,
+      duration: Duration(seconds: 2),
+      curve: Curves.fastOutSlowIn,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     double fontSizeScale = screenWidth * 0.0028;
+    _scrollDown();
 
     return PopScope(
         child: ScreenUtilInit(
@@ -87,7 +107,7 @@ class _MainChatPageState extends State<MainChatPage> {
                         children: [
                           Container(
                             width: 270.w,
-                            height: 200.h,
+                            height: 120.h,
                             child: DrawerHeader(
                               padding: EdgeInsets.only(
                                 right: 5.w,
@@ -102,6 +122,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                 children: [
                                   Container(
                                     padding: EdgeInsets.only(
+                                      top: 10.w,
                                       left: 5.w,
                                     ),
                                     child: Text(
@@ -109,31 +130,8 @@ class _MainChatPageState extends State<MainChatPage> {
                                       style: TextStyle(
                                         fontFamily: AppTextStyles.Manrope,
                                         color: AppColors.purple,
-                                        fontSize: 30.sp,
+                                        fontSize: 40.sp,
                                         fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  Container(
-                                    width: 230.w,
-                                    height: 50.h,
-                                    margin: EdgeInsets.only(
-                                      left: 15,
-                                      right: 15,
-                                      top: 40.h,
-                                    ),
-                                    child: ElevatedButton(
-                                      onPressed: () {},
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppColors.purple,
-                                      ),
-                                      child: Text(
-                                        'Panel Admina',
-                                        style: TextStyle(
-                                          fontFamily: AppTextStyles.Andada,
-                                          color: Colors.white,
-                                          fontSize: 20.sp,
-                                        ),
                                       ),
                                     ),
                                   ),
@@ -491,6 +489,11 @@ class _MainChatPageState extends State<MainChatPage> {
                                   final chatMessage = context
                                       .watch<MainChatViewModel>()
                                       .chatMessages[index];
+                                  if (mounted &&
+                                      scrollController.position.pixels >=
+                                          (getScrollDown() - 50)) {
+                                    _scrollDown();
+                                  }
                                   return Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -518,11 +521,15 @@ class _MainChatPageState extends State<MainChatPage> {
                                                 color: AppColors.dark,
                                               ),
                                               child: Text(
-                                                  chatMessage.sender == 'human'
-                                                      ? chatMessage.content
-                                                      : "",
-                                                  style: AppTextStyles.chatText(
-                                                      fontSizeScale, 20)),
+                                                chatMessage.sender == 'human'
+                                                    ? chatMessage.content
+                                                    : "",
+                                                style: TextStyle(
+                                                    fontFamily:
+                                                        AppTextStyles.Andada,
+                                                    color: Colors.white,
+                                                    fontSize: 22.sp),
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -548,23 +555,19 @@ class _MainChatPageState extends State<MainChatPage> {
                                                     BorderRadius.circular(15.0),
                                                 color: const Color(0xFF424549),
                                               ),
-                                              child: ChatState.isArchival
+                                              child: !ChatState.isArchival
                                                   ? StreamBuilder<String>(
                                                       stream: chatMessage
                                                           .responseStream,
                                                       builder:
                                                           (context, snapshot) {
-                                                        if (mounted) {
-                                                          scrollController.animateTo(
-                                                              scrollController
-                                                                  .position
-                                                                  .maxScrollExtent,
-                                                              duration:
-                                                                  const Duration(
-                                                                      milliseconds:
-                                                                          300),
-                                                              curve: Curves
-                                                                  .easeOut);
+                                                        if (mounted &&
+                                                            scrollController
+                                                                    .position
+                                                                    .pixels >=
+                                                                (getScrollDown() -
+                                                                    50)) {
+                                                          _scrollDown();
                                                         }
                                                         if (snapshot.hasError) {
                                                           return Text(
@@ -579,50 +582,82 @@ class _MainChatPageState extends State<MainChatPage> {
                                                           data: data,
                                                           styleSheet:
                                                               MarkdownStyleSheet(
-                                                            p: AppTextStyles
-                                                                .chatText(
-                                                                    fontSizeScale,
-                                                                    20),
-                                                            a: AppTextStyles
-                                                                    .chatText(
-                                                                        fontSizeScale,
-                                                                        20)
+                                                            p: TextStyle(
+                                                                fontFamily:
+                                                                    AppTextStyles
+                                                                        .Andada,
+                                                                color: Colors
+                                                                    .white,
+                                                                fontSize:
+                                                                    21.sp),
+                                                            a: TextStyle(
+                                                                    fontFamily:
+                                                                        AppTextStyles
+                                                                            .Andada,
+                                                                    color: Colors
+                                                                        .white,
+                                                                    fontSize:
+                                                                        22.sp)
                                                                 .copyWith(
                                                                     decoration:
                                                                         TextDecoration
                                                                             .underline),
-                                                            strong: AppTextStyles
-                                                                    .chatText(
-                                                                        fontSizeScale,
-                                                                        20)
+                                                            strong: TextStyle(
+                                                                    fontFamily:
+                                                                        AppTextStyles
+                                                                            .Andada,
+                                                                    color: Colors
+                                                                        .white,
+                                                                    fontSize:
+                                                                        22.sp)
                                                                 .copyWith(
                                                                     fontWeight:
                                                                         FontWeight
                                                                             .bold),
-                                                            em: AppTextStyles
-                                                                    .chatText(
-                                                                        fontSizeScale,
-                                                                        20)
+                                                            em: TextStyle(
+                                                                    fontFamily:
+                                                                        AppTextStyles
+                                                                            .Andada,
+                                                                    color: Colors
+                                                                        .white,
+                                                                    fontSize:
+                                                                        22.sp)
                                                                 .copyWith(
                                                                     fontStyle:
                                                                         FontStyle
                                                                             .italic),
-                                                            h1: AppTextStyles
-                                                                .chatText(
-                                                                    fontSizeScale,
-                                                                    34),
-                                                            h2: AppTextStyles
-                                                                .chatText(
-                                                                    fontSizeScale,
-                                                                    30),
-                                                            h3: AppTextStyles
-                                                                .chatText(
-                                                                    fontSizeScale,
-                                                                    26),
-                                                            code: AppTextStyles
-                                                                    .chatText(
-                                                                        fontSizeScale,
-                                                                        20)
+                                                            h1: TextStyle(
+                                                                fontFamily:
+                                                                    AppTextStyles
+                                                                        .Andada,
+                                                                color: Colors
+                                                                    .white,
+                                                                fontSize:
+                                                                    22.sp),
+                                                            h2: TextStyle(
+                                                                fontFamily:
+                                                                    AppTextStyles
+                                                                        .Andada,
+                                                                color: Colors
+                                                                    .white,
+                                                                fontSize:
+                                                                    24.sp),
+                                                            h3: TextStyle(
+                                                                fontFamily:
+                                                                    AppTextStyles
+                                                                        .Andada,
+                                                                color: Colors
+                                                                    .white,
+                                                                fontSize:
+                                                                    26.sp),
+                                                            code: TextStyle(
+                                                                    fontFamily:
+                                                                        AppTextStyles
+                                                                            .Andada,
+                                                                    color: Colors
+                                                                        .white,
+                                                                    fontSize:
+                                                                        21.sp)
                                                                 .copyWith(
                                                                     fontFamily:
                                                                         'monospace',
@@ -637,49 +672,70 @@ class _MainChatPageState extends State<MainChatPage> {
                                                       data: chatMessage.content,
                                                       styleSheet:
                                                           MarkdownStyleSheet(
-                                                        p: AppTextStyles
-                                                            .chatText(
-                                                                fontSizeScale,
-                                                                20),
-                                                        a: AppTextStyles.chatText(
-                                                                fontSizeScale,
-                                                                20)
+                                                        p: TextStyle(
+                                                            fontFamily:
+                                                                AppTextStyles
+                                                                    .Andada,
+                                                            color: Colors.white,
+                                                            fontSize: 21.sp),
+                                                        a: TextStyle(
+                                                                fontFamily:
+                                                                    AppTextStyles
+                                                                        .Andada,
+                                                                color: Colors
+                                                                    .white,
+                                                                fontSize: 22.sp)
                                                             .copyWith(
                                                                 decoration:
                                                                     TextDecoration
                                                                         .underline),
-                                                        strong: AppTextStyles
-                                                                .chatText(
-                                                                    fontSizeScale,
-                                                                    20)
+                                                        strong: TextStyle(
+                                                                fontFamily:
+                                                                    AppTextStyles
+                                                                        .Andada,
+                                                                color: Colors
+                                                                    .white,
+                                                                fontSize: 22.sp)
                                                             .copyWith(
                                                                 fontWeight:
                                                                     FontWeight
                                                                         .bold),
-                                                        em: AppTextStyles
-                                                                .chatText(
-                                                                    fontSizeScale,
-                                                                    20)
+                                                        em: TextStyle(
+                                                                fontFamily:
+                                                                    AppTextStyles
+                                                                        .Andada,
+                                                                color: Colors
+                                                                    .white,
+                                                                fontSize: 22.sp)
                                                             .copyWith(
                                                                 fontStyle:
                                                                     FontStyle
                                                                         .italic),
-                                                        h1: AppTextStyles
-                                                            .chatText(
-                                                                fontSizeScale,
-                                                                34),
-                                                        h2: AppTextStyles
-                                                            .chatText(
-                                                                fontSizeScale,
-                                                                30),
-                                                        h3: AppTextStyles
-                                                            .chatText(
-                                                                fontSizeScale,
-                                                                26),
-                                                        code: AppTextStyles
-                                                                .chatText(
-                                                                    fontSizeScale,
-                                                                    20)
+                                                        h1: TextStyle(
+                                                            fontFamily:
+                                                                AppTextStyles
+                                                                    .Andada,
+                                                            color: Colors.white,
+                                                            fontSize: 22.sp),
+                                                        h2: TextStyle(
+                                                            fontFamily:
+                                                                AppTextStyles
+                                                                    .Andada,
+                                                            color: Colors.white,
+                                                            fontSize: 24.sp),
+                                                        h3: TextStyle(
+                                                            fontFamily:
+                                                                AppTextStyles
+                                                                    .Andada,
+                                                            color: Colors.white,
+                                                            fontSize: 26.sp),
+                                                        code: TextStyle(
+                                                                fontFamily:
+                                                                    AppTextStyles
+                                                                        .Andada,
+                                                                color: Colors
+                                                                    .white,
+                                                                fontSize: 21.sp)
                                                             .copyWith(
                                                                 fontFamily:
                                                                     'monospace',
@@ -710,22 +766,24 @@ class _MainChatPageState extends State<MainChatPage> {
                               Expanded(
                                 child: TextField(
                                   readOnly: ChatState.currentChat == null,
-                                  style:
-                                      AppTextStyles.chatText(fontSizeScale, 18),
+                                  style: TextStyle(
+                                      fontFamily: AppTextStyles.Andada,
+                                      color: Colors.white,
+                                      fontSize: 20.sp),
                                   controller: textEditingController,
                                   onSubmitted: (message) async {
-                                    if (textEditingController
-                                        .text.isNotEmpty) {
+                                    if (textEditingController.text.isNotEmpty) {
+                                      _scrollDown();
                                       context
-                                        .read<MainChatViewModel>()
-                                        .sendPrompt(message);
+                                          .read<MainChatViewModel>()
+                                          .sendPrompt(message);
                                     }
                                     textEditingController.clear();
                                   },
                                   decoration: const InputDecoration(
                                     hintText: "Message",
                                     hintStyle: TextStyle(
-                                      fontFamily: AppTextStyles.Manrope,
+                                      fontFamily: AppTextStyles.Andada,
                                       color: Colors.grey,
                                       backgroundColor: Color(0xFF424549),
                                     ),
@@ -747,6 +805,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                       onPressed: () {
                                         if (textEditingController
                                             .text.isNotEmpty) {
+                                          _scrollDown();
                                           final message =
                                               textEditingController.text;
                                           context

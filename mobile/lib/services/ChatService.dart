@@ -13,20 +13,18 @@ import 'AccountService.dart';
 
 class ChatService {
   final String baseUrl = "http://10.0.2.2:3000";
-  final HttpClient _httpClient = HttpClient();
   bool _isRequestCancelled = false;
   String? token = AccountState.token;
+  final httpClient = HttpClient();
 
   void cancelAnswer() {
     _isRequestCancelled = true;
   }
 
-
   Stream<String> postQuestion(String question) async* {
     try {
       int? currentChatId = ChatState.currentChat?.id;
       final uri = Uri.parse("$baseUrl/api/v1/chats/$currentChatId");
-      final httpClient = HttpClient();
       final request = await httpClient.postUrl(uri);
 
       request.headers.set('Content-Type', 'application/json');
@@ -37,7 +35,7 @@ class ChatService {
 
       if (response.statusCode == 200) {
         await for (var chunk in response.transform(utf8.decoder)) {
-          if(_isRequestCancelled) {
+          if (_isRequestCancelled) {
             _isRequestCancelled = false;
             break;
           }
@@ -81,25 +79,20 @@ class ChatService {
   Future<Chat> createChat(String? name, bool isUsingOnlyKnowledgeBase) async {
     try {
       final uri = Uri.parse("$baseUrl/api/v1/chats/new");
-      final httpClient = HttpClient();
       final request = await httpClient.postUrl(uri);
 
       request.headers.set('Content-Type', 'application/json');
       request.headers.set('Authorization', 'Bearer $token');
 
-
-      if(name != "") {
+      if (name != "") {
         request.add(utf8.encode(jsonEncode({
           'name': name,
           'isUsingOnlyKnowledgeBase': isUsingOnlyKnowledgeBase
         })));
+      } else {
+        request.add(utf8.encode(jsonEncode(
+            {'isUsingOnlyKnowledgeBase': isUsingOnlyKnowledgeBase})));
       }
-      else
-        {
-          request.add(utf8.encode(jsonEncode({
-            'isUsingOnlyKnowledgeBase': isUsingOnlyKnowledgeBase
-          })));
-        }
 
       final response = await request.close();
 
@@ -120,11 +113,9 @@ class ChatService {
     }
   }
 
-
   Future<List<Chat>> getChatList() async {
     try {
       final uri = Uri.parse("$baseUrl/api/v1/chats/list");
-      final httpClient = HttpClient();
       final request = await httpClient.getUrl(uri);
 
       request.headers.set('Authorization', 'Bearer $token');
@@ -132,10 +123,10 @@ class ChatService {
 
       if (response.statusCode == 200) {
         final responseBody = await response.transform(utf8.decoder).join();
-        List<dynamic> jsonList = jsonDecode(responseBody);
+        Map<String, dynamic> jsonMap = jsonDecode(responseBody);
+        List<dynamic> jsonList = jsonMap['chats'];
         return jsonList.map((json) => Chat.fromJson(json)).toList();
-      }
-      else {
+      } else {
         throw Exception('Failed to load chats');
       }
     } catch (e) {
@@ -148,7 +139,6 @@ class ChatService {
     try {
       int? currentChatId = ChatState.currentChat?.id;
       final uri = Uri.parse("$baseUrl/api/v1/chats/$currentChatId");
-      final httpClient = HttpClient();
       final request = await httpClient.getUrl(uri);
 
       request.headers.set('Authorization', 'Bearer $token');
@@ -157,20 +147,27 @@ class ChatService {
       switch (response.statusCode) {
         case 200:
           final responseBody = await response.transform(utf8.decoder).join();
-             List<dynamic> jsonList = jsonDecode(responseBody);
-             return jsonList.map((json) =>
-               ChatMessage.fromJson(json)).toList();
+          Map<String, dynamic> jsonMap = jsonDecode(responseBody);
+          if (jsonMap.containsKey('messages') && jsonMap['messages'] is List) {
+            List<dynamic> jsonList = jsonMap['messages'];
+            return jsonList.map((json) => ChatMessage.fromJson(json)).toList();
+          } else {
+            return [];
+          }
         case 400:
           final responseBody = await response.transform(utf8.decoder).join();
-          final errorResponse = ErrorResponse.fromJson(jsonDecode(responseBody));
+          final errorResponse =
+              ErrorResponse.fromJson(jsonDecode(responseBody));
           throw BadRequestException(errorResponse.message);
         case 401:
           final responseBody = await response.transform(utf8.decoder).join();
-          final errorResponse = ErrorResponse.fromJson(jsonDecode(responseBody));
+          final errorResponse =
+              ErrorResponse.fromJson(jsonDecode(responseBody));
           throw BadRequestException(errorResponse.message);
         case 500:
           final responseBody = await response.transform(utf8.decoder).join();
-          final errorResponse = ErrorResponse.fromJson(jsonDecode(responseBody));
+          final errorResponse =
+              ErrorResponse.fromJson(jsonDecode(responseBody));
           throw ServerException(errorResponse.message);
         default:
           throw ServerException('Błąd serwera: ${response.statusCode}');
@@ -187,5 +184,6 @@ class ChatService {
 
 class FetchDataException implements Exception {
   final String message;
+
   FetchDataException(this.message);
 }
