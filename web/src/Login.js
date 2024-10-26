@@ -206,7 +206,7 @@ function Login() {
             }
         }
         catch (error) {
-            alert(response.message);
+            alert(error.message);
         }
     };
 
@@ -231,7 +231,7 @@ function Login() {
                 alert(data.errorMessage);
             }
         } catch (error) {
-            alert("An error occurred. Try again later\n" + response.message);
+            alert("An error occurred. Try again later\n" + error.message);
         }
     }
 

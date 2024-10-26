@@ -24,6 +24,9 @@ function Chat() {
   const controller = useRef(null);
   const navigate = useNavigate();
   const userToken = Cookies.get("userToken");
+
+  let nextChatListPage = null;
+
   useEffect(() => {
     if (!userToken) {
       navigate('/');
@@ -32,7 +35,6 @@ function Chat() {
 
   const handleLogout = async () => {
     Cookies.remove("userToken");
-    //Cookies.remove("userId");
     Cookies.remove("userName");
     Cookies.remove("userRole");
     navigate("/");
@@ -52,12 +54,11 @@ function Chat() {
         },
       });
       const data = await response.json();
-      setChatHistory(data);
+      setChatHistory(data.chats);
     } catch (error) {
-      alert(response.message);
+      alert(error.message);
     }
   };
-
 
   const sendMessage = async () => {
     if (input.trim() === '') return;
@@ -163,21 +164,60 @@ function Chat() {
   };
 
 
-  useEffect(() => {
-    if (mainTopRef.current) {
-      mainTopRef.current.scrollTop = mainTopRef.current.scrollHeight;
+
+  const handleScroll = () => {
+    if (mainTopRef.current.scrollTop === 0 && nextChatListPage) {
+      fetchPreviousMessages();
     }
-  }, [messages]);
+  };
 
   useEffect(() => {
     fetchChatHistory();
   }, []);
 
   useEffect(() => {
+    if (mainTopRef.current) {
+      mainTopRef.current.scrollTop = mainTopRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const fetchPreviousMessages = async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/v1/chats/${chatId}?limit=10&page=${nextChatListPage}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${userToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+      nextChatListPage = data.pagination.nextPage;
+      setMessages(prevMessages => [
+        ...data.messages.map((msg, index) => ({
+          id: msg.id,
+          user: {
+            name: msg.sender === "human" ? `${Cookies.get("userName")}` : "Bot",
+            avatar: msg.sender === "human" ? "/avatars/user.png" : "/avatars/bot.png"
+          },
+          fromUser: msg.sender === "human",
+          text: msg.content
+        })),
+        ...prevMessages
+      ]);
+    }
+
+    catch (error) {
+      alert(error);
+    }
+  }
+
+
+  useEffect(() => {
     const fetchMessages = async () => {
       if (!chatId) return;
       try {
-        const response = await fetch(`http://localhost:3000/api/v1/chats/${chatId}`, {
+        const response = await fetch(`http://localhost:3000/api/v1/chats/${chatId}?limit=10`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${userToken}`,
@@ -186,16 +226,22 @@ function Chat() {
         });
 
         const data = await response.json();
-        const formattedMessages = data.map((msg, index) => ({
-          id: index + 1,
-          user: { name: msg.sender === "human" ? `${Cookies.get("userName")}` : "Bot", avatar: msg.sender === "human" ? "/avatars/user.png" : "/avatars/bot.png" },
-          fromUser: msg.sender === "human",
-          text: msg.content
-        }));
+        nextChatListPage = data.pagination.nextPage;
+        let formattedMessages = [];
+        if (data.messages.length > 0) {
+          formattedMessages = data.messages
+            .sort((a, b) => a.id - b.id)
+            .map((msg, index) => ({
+              id: index + 1,
+              user: { name: msg.sender === "human" ? `${Cookies.get("userName")}` : "Bot", avatar: msg.sender === "human" ? "/avatars/user.png" : "/avatars/bot.png" },
+              fromUser: msg.sender === "human",
+              text: msg.content
+            }));
+        }
 
         setMessages(formattedMessages);
       } catch (error) {
-        alert(response.message);
+        alert(error.message);
       }
     };
 
@@ -232,7 +278,7 @@ function Chat() {
         </div>
         <div className="lowerSide">
           <button className="button">Ustawienia</button>
-          {1==1 && <button className="button" onClick={handleAdminPanelButton}>Panel administratora</button>}
+          {role =="admin" && <button className="button" onClick={handleAdminPanelButton}>Panel administratora</button>}
           <button className="button" onClick={handleLogout}>Wyloguj się</button>
         </div>
       </div>
