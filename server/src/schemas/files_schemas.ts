@@ -49,7 +49,10 @@ export const UploadFileSchema: FastifySchema = {
 const GetFileListQueryTypes = Type.Object({
     page: Type.Optional(Type.Number({ description: "The page number for pagination" })),
     limit: Type.Optional(Type.Number({ description: "The number of files to retrieve per page" })),
-    folderId: Type.Optional(Type.Number({ description: "Folder from which files will be received" }))
+    folderId: Type.Optional(Type.Number({ description: "Folder from which files will be received" })),
+    name: Type.Optional(Type.String({ description: "Filters files by partial match of their name" })),
+    creatorName: Type.Optional(Type.String({ description: "Filters files by partial match of their creator's name" })),
+    type: Type.Optional(Type.String({ description: "Filters files by their type" }))
 }, { description: "Query parameters for paginated chat list retrieval" });
 export type GetFileListQuery = Static<typeof GetFileListQueryTypes>;
 

@@ -9,7 +9,7 @@ import { File } from "../models/file";
 import { getPaginationMetadata } from "../utils/pagination_handler";
 import path from "path";
 import { FileType } from "../enums/file_type";
-import { Auth, IsNull } from "typeorm";
+import { Auth, IsNull, Like } from "typeorm";
 
 const filesRoutes: FastifyPluginCallback = (server, _, done) => {
     // Upload a file to the knowledge base (only admin)
@@ -68,7 +68,7 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         schema: Schemas.GetFileListSchema,
         onRequest: [adminAuth(server)]
     }, async (req, reply) => {
-        const { page = 1, limit = 30, folderId } = req.query;
+        const { page = 1, limit = 30, folderId, name, creatorName, type } = req.query;
         if(page < 1) throw new BadRequestError("Invalid page number, must not be negative");
         if(limit < 1) throw new BadRequestError("Invalid limit value, must not be negative");
 
@@ -76,10 +76,23 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         if(folder && folder.type !== FileType.FOLDER)
             throw new BadRequestError("Invalid folder ID");
 
+        const getFileType = (type: string): FileType => {
+            if(Object.values(FileType).includes(type as FileType)) {
+                return type as FileType;
+            } else {
+                throw new BadRequestError("Invalid type value");
+            }
+        }
+
         const [files, totalFiles] = await File.findAndCount({
             skip: (page - 1) * limit,
             take: limit,
-            where: { parent: folder !== null ? folder : IsNull() },
+            where: {
+                parent: folder !== null ? folder : IsNull(),
+                ...(name !== undefined && { name: Like(`%${name}%`) }),
+                ...(creatorName !== undefined && { creator: { name: Like(`%${creatorName}%`) } }),
+                ...(type !== undefined && { type: getFileType(type) }),
+            },
             order: { name: "ASC" },
             relations: ["creator"]
         });
