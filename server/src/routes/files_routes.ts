@@ -41,7 +41,6 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
             creator: req.user
         });
         file = await file.save();
-        console.dir(file);
 
         const chroma = await ChromaService.getInstance();
         await chroma.addDocuments([{

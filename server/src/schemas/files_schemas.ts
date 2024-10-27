@@ -37,7 +37,7 @@ export const UploadFileSchema: FastifySchema = {
     querystring: UploadFileQueryTypes,
     tags: ["Files"],
     response: {
-        204: UploadFileResponseTypes,
+        200: UploadFileResponseTypes,
         ...AdminGuardedResponseSchema
     },
 };
