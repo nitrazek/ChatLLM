@@ -88,7 +88,7 @@ function AdminPanel() {
             <div className="adminSideBar">
                 <div className="adminUpperSideContainer">
                     <div className="adminUpperSideTop">PANEL ADMINISTRATORA</div>
-                    <button onClick={() => navigate(`/chat/`)}>Powrót</button>
+                    <a class="backbutton" onClick={() => navigate(`/chat/`)}>↶ Powrót</a>
                 </div>
                 <button
                     className={userManagement ? "userManagementButtonActive" : "userManagementButtonInactive"}
@@ -106,7 +106,6 @@ function AdminPanel() {
             <div className="adminMain">
                 {userManagement && (
                     <div>
-                        ZARZĄDZANIE UŻYTKOWNIKAMI
                         Filtry:
                         Nazwa: <input type="text"></input>
                         Email: <input type="text"></input>
@@ -123,8 +122,8 @@ function AdminPanel() {
                             <input type="checkbox" />
                             Nieaktywowany
                         </label>
-                        <button>Filtruj</button>
-                        <button>Resetuj filtry</button>
+                        <button className='adminButton'>Filtruj</button>
+                        <button className='adminButton'>Resetuj filtry</button>
                         <table className="userTable">
                             <thead>
                                 <tr>
@@ -147,25 +146,25 @@ function AdminPanel() {
                                             <td>{(user.role == "admin" ? "Administrator" : "Użytkownik")}</td>
                                             <td>{user.activated ? "Aktywne" : "Nieaktywowane"}</td>
                                             <td>
-                                                {!user.activated ? <button onClick={() => activateUser(user.id)}>Aktywuj</button> : ""}
-                                                {(user.name !== "superadmin" && user.activated) ? <button>Edytuj</button> : ""}
-                                                {user.name !== "superadmin" ? <button onClick={() => deleteUser(user.id)}>Usuń</button> : ""}
+                                                {!user.activated ? <button className='adminButton' onClick={() => activateUser(user.id)}>Aktywuj</button> : ""}
+                                                {(user.name !== "superadmin" && user.activated) ? <button className='adminButton'>Edytuj</button> : ""}
+                                                {user.name !== "superadmin" ? <button onClick={() => deleteUser(user.id)} className='adminButton'>Usuń</button> : ""}
                                             </td>
                                         </tr>
                                     )))}
                             </tbody>
                         </table>
                         <ReactPaginate
-                            breakLabel="..."
-                            nextLabel=">>"
-                            onPageChange={handlePageChange}
-                            pageRangeDisplayed={2}
+                            activeClassName={'item active '}
+                            breakClassName={'item break-me '}
+                            breakLabel={'...'}
+                            containerClassName={'pagination'}
+                            disabledClassName={'disabled-page'}
                             marginPagesDisplayed={2}
-                            pageCount={totalPages || 0}
-                            previousLabel="<<"
-                            renderOnZeroPageCount={null}
-                            containerClassName="pagination"
-                            activeClassName="active"
+                            onPageChange={handlePageChange}
+                            pageCount={totalPages}
+                            pageClassName={'item pagination-page '}
+                            pageRangeDisplayed={2}
                         />
                     </div>
                 )}

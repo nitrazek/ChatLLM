@@ -107,9 +107,11 @@ function Chat() {
         }
 
         const chunk = new TextDecoder().decode(value);
+        console.log(chunk);
         const parsedChunk = JSON.parse(chunk);
         const answer = parsedChunk.answer;
-
+        console.log(parsedChunk);
+        console.log(answer);
         accumulatedText += answer;
 
         setMessages(prevMessages => {
