@@ -12,7 +12,7 @@ export class Chat extends ExtendedBaseEntity {
     id!: number;
 
     @Column({ type: 'text', nullable: true })
-    //@Length(1, 20, { message: getIsInvalidMessage('Name') })
+    @Length(1, 20, { message: getIsInvalidMessage('Name') })
     @IsOptional()
     name!: string;
 
