@@ -9,7 +9,10 @@ import { File } from "../models/file";
 import { getPaginationMetadata } from "../utils/pagination_handler";
 import path from "path";
 import { FileType } from "../enums/file_type";
-import { Auth, IsNull, Like } from "typeorm";
+import { IsNull, Like } from "typeorm";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter"
+import { Document } from "langchain/document";
+import { Transform } from "stream";
 
 const filesRoutes: FastifyPluginCallback = (server, _, done) => {
     // Upload a file to the knowledge base (only admin)
@@ -22,8 +25,25 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         onRequest: [adminAuth(server)]
     }, async (req, reply) => {
         const { folderId } = req.query;
-        const multipartFile = await req.file();
+        const multipartFile = await req.file({
+            limits: {
+                fileSize: 1000000000
+            }
+        });
         if (!multipartFile) throw new BadRequestError('No file was provided.');
+
+        let buffer = "";
+        const chunks = [];
+        for await (const chunk of multipartFile.file) {
+            console.log(chunk);
+            buffer += chunk.toString();
+            while(buffer.length >= 10000) {
+                chunks.push(buffer.slice(0, 10000));
+                buffer = buffer.slice(10000);
+            }
+        }
+        if(buffer.length > 0)
+            chunks.push(buffer);
 
         const resolvedFile = resolveFileMimetype(multipartFile.mimetype);
         if (!resolvedFile) throw new BadRequestError('This file type is not supported.');
@@ -31,7 +51,7 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
 
         const folder = folderId ? await File.findOneBy({ id: folderId }) : null;
         if(folder && folder.type !== FileType.FOLDER)
-            throw new BadRequestError("Invalid folder id");
+            throw new BadRequestError("Invalid folder ID");
 
         const baseFilename = path.basename(multipartFile.filename, path.extname(multipartFile.filename));
         let file = File.create({
@@ -41,15 +61,11 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
             creator: req.user
         });
         file = await file.save();
-        console.dir(file);
+        console.dir(chunks);
 
+        // const fileContent = await fileHandler(multipartFile);
         const chroma = await ChromaService.getInstance();
-        await chroma.addDocuments([{
-            pageContent: await fileHandler(multipartFile),
-            metadata: {
-                id: file.id
-            }
-        }], {
+        await chroma.addDocuments(chunks.map(chunk => new Document({ pageContent: chunk, metadata: { id: file.id } })), {
             ids: [file.id.toString()]
         });
 
