@@ -72,7 +72,7 @@ export const LoginSchema: FastifySchema = {
 // Schema for getting list of users
 const GetUserListQueryTypes = Type.Object({
     page: Type.Optional(Type.Number({ description: "Page number for pagination" })),
-    limit: Type.Optional(Type.Number({ description: "Limit of users per page" })),
+    limit: Type.Optional(Type.Number({ description: "The number of users to retrieve per page" })),
     name: Type.Optional(Type.String({ description: "Filters users by partial match of their name" })),
     email: Type.Optional(Type.String({ description: "Filters users by partial match of their email address" })),
     role: Type.Optional(Type.String({ description: "Filters users by their assigned role" })),
