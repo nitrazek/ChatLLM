@@ -19,8 +19,8 @@ export class File extends ExtendedBaseEntity {
     @IsEnum(FileType, { message: getIsInvalidMessage('Type') })
     type!: FileType;
 
-    @ManyToOne(() => File, (file) => file.children)
-    parent!: File;
+    @ManyToOne(() => File, (file) => file.children, { nullable: true })
+    parent!: File | null;
 
     @OneToMany(() => File, (file) => file.parent)
     children!: File[];

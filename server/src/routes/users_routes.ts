@@ -78,7 +78,7 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
             take: limit,
             where: {
                 ...(name !== undefined && { name: Like(`%${name}%`) }),
-                ...(email != undefined && { email: Like(`%${email}%`) }),
+                ...(email !== undefined && { email: Like(`%${email}%`) }),
                 ...(role !== undefined && { role: getUserRole(role) }),
                 ...(activated !== undefined && { activated })
             },
