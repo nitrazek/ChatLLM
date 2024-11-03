@@ -39,6 +39,12 @@ class ChatService {
             _isRequestCancelled = false;
             break;
           }
+
+          final Map<String, dynamic> jsonResponse = jsonDecode(chunk);
+
+          if (jsonResponse.containsKey('newChatName')) {
+            ChatState.currentChat?.name = jsonResponse['newChatName'];
+          }
           final answers = _parseConcatenatedJson(chunk);
           for (final answer in answers) {
             yield _formatText(answer);

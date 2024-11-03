@@ -29,14 +29,17 @@ class _MainChatPageState extends State<MainChatPage> {
 
   bool chatForm = false;
   bool isUsingOnlyKnowledgeBase = false;
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
-    WidgetsBinding.instance.addPostFrameCallback(
-        (_) => ShowCaseWidget.of(context).startShowCase([_one]));
     textEditingController = TextEditingController();
     scrollController = ScrollController();
     scrollController2 = ScrollController();
+    Future.delayed(Duration.zero, () {
+      FocusScope.of(context).requestFocus(FocusNode());
+    });
+    fetchChatList();
     super.initState();
   }
 
@@ -45,12 +48,12 @@ class _MainChatPageState extends State<MainChatPage> {
     textEditingController.dispose();
     scrollController.dispose();
     scrollController2.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
   @override
   void didChangeDependencies() {
-    fetchChatList();
     super.didChangeDependencies();
   }
 
@@ -63,6 +66,8 @@ class _MainChatPageState extends State<MainChatPage> {
         if (chatList.isNotEmpty && isChatNull) {
           context.read<MainChatViewModel>().setChat(chatList.last);
           context.read<MainChatViewModel>().loadHistory();
+        } else if (isChatNull) {
+          ShowCaseWidget.of(context).startShowCase([_one]);
         }
       });
     }
@@ -73,13 +78,13 @@ class _MainChatPageState extends State<MainChatPage> {
         scrollController.position.hasContentDimensions) {
       return scrollController.position.maxScrollExtent;
     }
-    return 1000;
+    return 0;
   }
 
   void _scrollDown() {
     scrollController.animateTo(
-      getScrollDown() + 10000,
-      duration: Duration(seconds: 2),
+      getScrollDown(),
+      duration: Duration(milliseconds: 200),
       curve: Curves.fastOutSlowIn,
     );
   }
@@ -88,8 +93,7 @@ class _MainChatPageState extends State<MainChatPage> {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
-    double fontSizeScale = screenWidth * 0.0028;
-    _scrollDown();
+    bool hasToScroll = false;
 
     return PopScope(
         child: ScreenUtilInit(
@@ -233,17 +237,11 @@ class _MainChatPageState extends State<MainChatPage> {
                                                 bool? isLoaded = await context
                                                     .read<MainChatViewModel>()
                                                     .loadHistory();
+                                                hasToScroll = true;
                                                 if (isLoaded) {
                                                   ChatState.isArchival = true;
-                                                  Navigator.pushReplacement(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              ShowCaseWidget(
-                                                                builder:
-                                                                    (context) =>
-                                                                        MainChatPage(),
-                                                              )));
+                                                  Scaffold.of(context)
+                                                      .closeDrawer();
                                                 } else {
                                                   if (tempChat != null)
                                                     context
@@ -325,7 +323,9 @@ class _MainChatPageState extends State<MainChatPage> {
                                                 ),
                                               ),
                                               onTap: () {
-                                                MainChatViewModel.logOut();
+                                                context
+                                                    .read<MainChatViewModel>()
+                                                    .logOut();
                                                 Navigator.pushReplacement(
                                                   context,
                                                   MaterialPageRoute(
@@ -411,14 +411,6 @@ class _MainChatPageState extends State<MainChatPage> {
                                                   .read<MainChatViewModel>()
                                                   .chatMessages
                                                   .clear();
-                                              Navigator.pushReplacement(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          ShowCaseWidget(
-                                                            builder: (context) =>
-                                                                MainChatPage(),
-                                                          )));
                                             },
                                             child: Container(
                                               decoration: const BoxDecoration(
@@ -446,14 +438,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                                   .read<MainChatViewModel>()
                                                   .chatMessages
                                                   .clear();
-                                              Navigator.pushReplacement(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          ShowCaseWidget(
-                                                            builder: (context) =>
-                                                                MainChatPage(),
-                                                          )));
+                                              fetchChatList();
                                             }
                                           },
                                           child: Container(
@@ -486,14 +471,10 @@ class _MainChatPageState extends State<MainChatPage> {
                                     .length,
                                 controller: scrollController,
                                 itemBuilder: (context, index) {
+                                  _scrollDown();
                                   final chatMessage = context
                                       .watch<MainChatViewModel>()
                                       .chatMessages[index];
-                                  if (mounted &&
-                                      scrollController.position.pixels >=
-                                          (getScrollDown() - 50)) {
-                                    _scrollDown();
-                                  }
                                   return Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -561,14 +542,6 @@ class _MainChatPageState extends State<MainChatPage> {
                                                           .responseStream,
                                                       builder:
                                                           (context, snapshot) {
-                                                        if (mounted &&
-                                                            scrollController
-                                                                    .position
-                                                                    .pixels >=
-                                                                (getScrollDown() -
-                                                                    50)) {
-                                                          _scrollDown();
-                                                        }
                                                         if (snapshot.hasError) {
                                                           return Text(
                                                               'Error: ${snapshot.error}');
@@ -765,7 +738,11 @@ class _MainChatPageState extends State<MainChatPage> {
                             children: [
                               Expanded(
                                 child: TextField(
-                                  readOnly: ChatState.currentChat == null,
+                                  focusNode: _focusNode,
+                                  readOnly: ChatState.currentChat == null ||
+                                      context
+                                          .watch<MainChatViewModel>()
+                                          .isLoading,
                                   style: TextStyle(
                                       fontFamily: AppTextStyles.Andada,
                                       color: Colors.white,
@@ -773,12 +750,26 @@ class _MainChatPageState extends State<MainChatPage> {
                                   controller: textEditingController,
                                   onSubmitted: (message) async {
                                     if (textEditingController.text.isNotEmpty) {
-                                      _scrollDown();
-                                      context
-                                          .read<MainChatViewModel>()
-                                          .sendPrompt(message);
+                                      textEditingController.clear();
                                     }
-                                    textEditingController.clear();
+                                    bool hasName = await context
+                                        .read<MainChatViewModel>()
+                                        .sendPrompt(message);
+
+                                    if (hasName) {
+                                      setState(() {
+                                        for (int i = 0;
+                                            i < chatList.length;
+                                            i++) {
+                                          if (chatList[i].id ==
+                                              ChatState.currentChat!.id) {
+                                            chatList[i].name =
+                                                ChatState.currentChat!.name;
+                                            break;
+                                          }
+                                        }
+                                      });
+                                    }
                                   },
                                   decoration: const InputDecoration(
                                     hintText: "Message",
@@ -802,16 +793,15 @@ class _MainChatPageState extends State<MainChatPage> {
                                           color: Colors.grey),
                                     )
                                   : IconButton(
-                                      onPressed: () {
+                                      onPressed: () async {
                                         if (textEditingController
                                             .text.isNotEmpty) {
-                                          _scrollDown();
                                           final message =
                                               textEditingController.text;
+                                          textEditingController.clear();
                                           context
                                               .read<MainChatViewModel>()
                                               .sendPrompt(message);
-                                          textEditingController.clear();
                                         }
                                       },
                                       icon: const Icon(

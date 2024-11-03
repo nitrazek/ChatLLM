@@ -16,7 +16,7 @@ class MainChatViewModel extends ChangeNotifier {
 
   List<ChatMessage> get chatMessages => _chatMessages;
 
-  void sendPrompt(String question) async {
+  Future<bool> sendPrompt(String question) async {
     ChatMessage chatMessage = ChatMessage(sender: 'human', content: question);
 
     _chatMessages.add(chatMessage);
@@ -34,6 +34,10 @@ class MainChatViewModel extends ChangeNotifier {
     chatMessage2.finalizeResponse();
     isLoading = false;
     notifyListeners();
+    if(ChatState.currentChat!.name != "")
+      return true;
+    else
+      return false;
   }
 
   void cancelAnswer() {
@@ -51,7 +55,8 @@ class MainChatViewModel extends ChangeNotifier {
     return true;
   }
 
-  static void logOut() {
+   void logOut() {
+    _chatMessages.clear();
     AccountState.token = "";
   }
 
