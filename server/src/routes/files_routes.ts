@@ -26,26 +26,9 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
     }, async (req, reply) => {
         const { folderId } = req.query;
         const multipartFile = await req.file({
-            limits: {
-                fileSize: 1000000000
-            }
+            limits: { fileSize: 1e9 }
         });
         if (!multipartFile) throw new BadRequestError('No file was provided.');
-
-        let buffer = "";
-        const chunks = [];
-        for await (const chunk of multipartFile.file) {
-            console.log(chunk);
-            buffer += chunk.toString();
-            while(buffer.length >= 1000) {
-                chunks.push(buffer.slice(0, 1000));
-                buffer = buffer.slice(1000);
-            }
-        }
-        if(buffer.length > 0)
-            chunks.push(buffer);
-        console.dir(chunks);
-        console.log(chunks.length)
 
         const resolvedFile = resolveFileMimetype(multipartFile.mimetype);
         if (!resolvedFile) throw new BadRequestError('This file type is not supported.');
@@ -55,22 +38,35 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         if(folder && folder.type !== FileType.FOLDER)
             throw new BadRequestError("Invalid folder ID");
 
+        const fileContent = await fileHandler(multipartFile);
+        const document = new Document({ pageContent: fileContent });
+        const splitter = new RecursiveCharacterTextSplitter({
+            chunkSize: 1000,
+            chunkOverlap: 200
+        });
+        const splittedDocuments = await splitter.splitDocuments([document]);
+        console.log(splittedDocuments[splittedDocuments.length-2]);
+        console.log(splittedDocuments.length);
+
         const baseFilename = path.basename(multipartFile.filename, path.extname(multipartFile.filename));
         let file = File.create({
             name: baseFilename,
             type: fileType,
             parent: folder,
-            creator: req.user
+            creator: req.user,
+            chunkAmount: splittedDocuments.length
         });
         file = await file.save();
 
-        // const fileContent = await fileHandler(multipartFile);
         const chroma = await ChromaService.getInstance();
-        await Promise.all(chunks.map(chunk => {
-            return chroma.addDocuments([new Document({ pageContent: chunk, metadata: { id: file.id } })], {
-                ids: [file.id.toString()]
-            });
-        }));
+        // await Promise.all(splittedDocuments.map((document, index) => {
+        //     return chroma.addDocuments([document], {
+        //         ids: [`${file.id}-${index}`]
+        //     });
+        // }));
+        await chroma.addDocuments(splittedDocuments, {
+            ids: Array.from({ length: splittedDocuments.length }, (_, i) => i).map((index) => `${file.id}-${index}`)
+        })
 
         reply.send({
             ...file,

@@ -11,24 +11,32 @@ import { IterableReadableStream } from "@langchain/core/dist/utils/stream";
 import { getSummaryPrompt } from "../prompts";
 
 export const getRagChain = (template: string, chatMessages: ChatMessage[]) => RunnableSequence.from([
-    {
-        context: async (input, callbacks) => {
-            console.dir(input);
-            const chroma = await ChromaService.getInstance();
-            console.dir(await chroma.collection.get())
-            const retriever = chroma.asRetriever();
-            const retrieverAndFormatter = retriever.pipe(formatDocumentsAsString);
-            console.log("sickomode")
-            const something = await retrieverAndFormatter.invoke(input.question, callbacks);
-            console.log("wabulabuadboabaodbaoduads")
-            console.log(something)
-            return something
-        },
-        question: (input) => input.question,
-    },
-    (context, question) => {
-        console.dir({ context: context, question: question });
-        return { context, question }
+    // {
+    //     context: async (input, callbacks) => {
+    //         const chroma = await ChromaService.getInstance();
+    //         console.dir(await chroma.collection.get())
+    //         const retriever = chroma.asRetriever();
+    //         const retrieverAndFormatter = retriever.pipe(formatDocumentsAsString);
+    //         console.log("sickomode")
+    //         const something = await retrieverAndFormatter.invoke(input.question, callbacks);
+    //         console.log("wabulabuadboabaodbaoduads")
+    //         return something
+    //     },
+    //     question: (input) => input.question,
+    // },
+    async (input, callbacks) => {
+        const chroma = await ChromaService.getInstance();
+        console.dir(await chroma.collection.get())
+        const retriever = chroma.asRetriever();
+        const retrieverAndFormatter = retriever.pipe(formatDocumentsAsString);
+        console.log("sickomode")
+        const context = await retrieverAndFormatter.invoke(input.question, callbacks);
+        console.log("wabulabuadboabaodbaoduads")
+        console.dir({ context: context.split("\n").join("\n\n\n\n"), question: input.question });
+        return {
+            context: context,
+            question: input.question
+        }
     },
     ChatPromptTemplate.fromMessages([
         ["system", template],

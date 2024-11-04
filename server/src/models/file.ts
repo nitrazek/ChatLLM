@@ -27,4 +27,7 @@ export class File extends ExtendedBaseEntity {
 
     @ManyToOne(() => User, (user) => user.filesCreated)
     creator!: User;
+
+    @Column()
+    chunkAmount!: number;
 }
