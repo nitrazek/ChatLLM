@@ -17,6 +17,14 @@ If (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
   exit
 }
 
+# Get-Content ../docker-config.env | foreach {
+#   $name, $value = $_.split('=')
+#   if ([string]::IsNullOrWhiteSpace($name) || $name.Contains('#') || $name -eq "OLLAMA_MODEL") {
+#     continue
+#   }
+#   Set-Content env:\$name $value
+# }
+
 $gpuInfo = Get-WmiObject -Class Win32_VideoController | Where-Object {$_.Description -like '*NVIDIA*'}
 $composeFilePath = "..\docker-compose-cpu.yaml"
 if ($gpuInfo) {
@@ -42,7 +50,7 @@ while ($continue) {
 
     docker-compose -f $composeFilePath down
     docker-compose -f $composeFilePath up --build -d
-    docker exec ollama ollama run llama3.1
+    docker exec ollama ollama pull llama3.2 #$Env:OLLAMA_MODEL
     docker image prune -f
     Start-Sleep 1
     docker ps

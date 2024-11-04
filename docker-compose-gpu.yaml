@@ -5,6 +5,9 @@ services:
             context: ./web
         ports:
             - "80:80"
+        depends_on:
+            server:
+                condition: service_healthy
 
     server:
         container_name: server
@@ -14,17 +17,24 @@ services:
             - "3000:3000"
         environment:
             - HOST=0.0.0.0
-            - OLLAMA_MODEL=llama3.1
+            - POSTGRES_HOST=postgres
             - OLLAMA_URL=http://ollama:11434
             - CHROMA_URL=http://chroma:8000
-            - POSTGRES_HOST=postgres
-            - POSTGRES_USER=postgres
-            - POSTGRES_PASSWORD=postgres_pwd
-            - POSTGRES_DB=chatdb
+        env_file:
+            - docker-config.env
         depends_on:
-            - ollama
-            - postgres
-            - chroma
+            ollama:
+                condition: service_healthy
+            postgres:
+                condition: service_healthy
+            chroma:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "curl -f http://server:3000/health"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 5s
 
     ollama:
         image: ollama/ollama:0.3.14
@@ -36,6 +46,13 @@ services:
                         - capabilities: [ gpu ]
         volumes:
             - ollama:/root/.ollama
+        healthcheck:
+            test: ["CMD", "ollama" ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 5s
+            
 
     chroma:
         image: chromadb/chroma:0.5.15
@@ -44,16 +61,26 @@ services:
             - IS_PERSISTENT=TRUE
         volumes:
             - chroma:/chroma/chroma
+        healthcheck:
+            test: [ "CMD", "/bin/bash", "-c", "cat < /dev/null > /dev/tcp/chroma/8000" ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 5s
 
     postgres:
         image: postgres:17-alpine
         container_name: postgres
-        environment:
-            - POSTGRES_USER=postgres
-            - POSTGRES_PASSWORD=postgres_pwd
-            - POSTGRES_DB=chatdb
+        env_file:
+            - docker-config.env
         volumes:
             - postgres:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U postgres"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 5s
 
 volumes:
     ollama:

@@ -11,6 +11,7 @@ import errorsService from "./services/errors_service";
 import authenticationService from "./services/authentication_service";
 import { OllamaService } from "./services/ollama_service";
 import { ChromaService } from "./services/chroma_service";
+import fastifyHealthcheck from "fastify-healthcheck";
 
 class Application {
     private server: FastifyInstance;
@@ -38,6 +39,8 @@ class Application {
         try {
             console.log(`[server]: Connecting to databases and starting models (might take a while)`);
             await AppDataSource.initialize();
+            await ChromaService.getInstance();
+            OllamaService.getInstance();
             console.log(`[server]: Server connected to databases and model`);
             await populateDatabase();
             console.log(`[server]: Database populated with initial data`);
@@ -78,6 +81,7 @@ class Application {
     private registerPlugins() {
         this.server.register(errorsService);
         this.server.register(authenticationService);
+        this.server.register(fastifyHealthcheck);
     }
 
     private registerRoutes() {
