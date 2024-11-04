@@ -40,7 +40,7 @@ class Application {
             console.log(`[server]: Connecting to databases and starting models (might take a while)`);
             await AppDataSource.initialize();
             await ChromaService.getInstance();
-            OllamaService.getInstance();
+            await OllamaService.getInstance();
             console.log(`[server]: Server connected to databases and model`);
             await populateDatabase();
             console.log(`[server]: Database populated with initial data`);

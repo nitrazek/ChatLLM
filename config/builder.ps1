@@ -49,7 +49,7 @@ while ($continue) {
     }
 
     docker-compose -f $composeFilePath down
-    docker-compose -f $composeFilePath up --build -d
+    docker-compose -f $composeFilePath up --build -d #First start ollama and pull model
     docker exec ollama ollama pull llama3.2 #$Env:OLLAMA_MODEL
     docker image prune -f
     Start-Sleep 1

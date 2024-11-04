@@ -1,4 +1,4 @@
-import { ChatOllama } from "@langchain/ollama";
+import { ChatOllama, Ollama } from "@langchain/ollama";
 
 export const ollamaUrl: string = process.env.OLLAMA_URL ?? "http://localhost:11434";
 export const ollamaModel: string = process.env.OLLAMA_MODEL ?? "llama3.2";
@@ -8,15 +8,28 @@ export class OllamaService {
     
     private constructor() {}
   
-    static getInstance(): ChatOllama {
+    static async getInstance(): Promise<ChatOllama> {
         if (!this.instance) {
-            this.instance = new ChatOllama({
+            const newInstance: ChatOllama = new ChatOllama({
                 baseUrl: ollamaUrl,
-                model: ollamaModel,
-                checkOrPullModel: true
+                model: ollamaModel
             });
+
+            newInstance.client.list()
+
+            if (!(await this.checkModelExists(newInstance)))
+                throw new Error(`Ollama do not have model '${ollamaModel}'. Please pull it manually and restart server.`);
+
+            this.instance = newInstance;
         }
 
         return this.instance;
+    }
+
+    private static async checkModelExists(intance: ChatOllama): Promise<boolean> {
+        const { models } = await intance.client.list();
+        return !!models.find(
+            (m: any) => m.name === ollamaModel || m.name === `${ollamaModel}:latest`
+        );
     }
 }
