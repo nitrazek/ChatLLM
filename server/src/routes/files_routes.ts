@@ -37,13 +37,15 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         for await (const chunk of multipartFile.file) {
             console.log(chunk);
             buffer += chunk.toString();
-            while(buffer.length >= 10000) {
-                chunks.push(buffer.slice(0, 10000));
-                buffer = buffer.slice(10000);
+            while(buffer.length >= 1000) {
+                chunks.push(buffer.slice(0, 1000));
+                buffer = buffer.slice(1000);
             }
         }
         if(buffer.length > 0)
             chunks.push(buffer);
+        console.dir(chunks);
+        console.log(chunks.length)
 
         const resolvedFile = resolveFileMimetype(multipartFile.mimetype);
         if (!resolvedFile) throw new BadRequestError('This file type is not supported.');
@@ -61,13 +63,14 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
             creator: req.user
         });
         file = await file.save();
-        console.dir(chunks);
 
         // const fileContent = await fileHandler(multipartFile);
         const chroma = await ChromaService.getInstance();
-        await chroma.addDocuments(chunks.map(chunk => new Document({ pageContent: chunk, metadata: { id: file.id } })), {
-            ids: [file.id.toString()]
-        });
+        await Promise.all(chunks.map(chunk => {
+            return chroma.addDocuments([new Document({ pageContent: chunk, metadata: { id: file.id } })], {
+                ids: [file.id.toString()]
+            });
+        }));
 
         reply.send({
             ...file,

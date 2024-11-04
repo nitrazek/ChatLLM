@@ -13,12 +13,22 @@ import { getSummaryPrompt } from "../prompts";
 export const getRagChain = (template: string, chatMessages: ChatMessage[]) => RunnableSequence.from([
     {
         context: async (input, callbacks) => {
+            console.dir(input);
             const chroma = await ChromaService.getInstance();
+            console.dir(await chroma.collection.get())
             const retriever = chroma.asRetriever();
             const retrieverAndFormatter = retriever.pipe(formatDocumentsAsString);
-            return retrieverAndFormatter.invoke(input.question, callbacks);
+            console.log("sickomode")
+            const something = await retrieverAndFormatter.invoke(input.question, callbacks);
+            console.log("wabulabuadboabaodbaoduads")
+            console.log(something)
+            return something
         },
         question: (input) => input.question,
+    },
+    (context, question) => {
+        console.dir({ context: context, question: question });
+        return { context, question }
     },
     ChatPromptTemplate.fromMessages([
         ["system", template],
@@ -53,7 +63,6 @@ const getTransformedStream = (stream: ReadableStream<BaseMessageChunk>, chat: Ch
             }
             const answerChunk = value.content as string;
             answerChunks.push(answerChunk);
-            console.log(answerChunk);
             controller.enqueue(JSON.stringify({ answer: answerChunk }));
         },
         async cancel() {
