@@ -15,8 +15,6 @@ export class OllamaService {
                 model: ollamaModel
             });
 
-            newInstance.client.list()
-
             if (!(await this.checkModelExists(newInstance)))
                 throw new Error(`Ollama do not have model '${ollamaModel}'. Please pull it manually and restart server.`);
 
@@ -26,8 +24,8 @@ export class OllamaService {
         return this.instance;
     }
 
-    private static async checkModelExists(intance: ChatOllama): Promise<boolean> {
-        const { models } = await intance.client.list();
+    private static async checkModelExists(instance: ChatOllama): Promise<boolean> {
+        const { models } = await instance.client.list();
         return !!models.find(
             (m: any) => m.name === ollamaModel || m.name === `${ollamaModel}:latest`
         );
