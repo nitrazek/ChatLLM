@@ -1,5 +1,5 @@
 
-import { ollamaModel, ollamaUrl } from "./ollama_service";
+import { ollamaEmbeddingModel, ollamaUrl } from "./ollama_service";
 import { OllamaEmbeddings } from "@langchain/ollama";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
 
@@ -15,7 +15,7 @@ export class ChromaService {
         if (!this.instance) {
             this.instance = await Chroma.fromExistingCollection(new OllamaEmbeddings({
                 baseUrl: ollamaUrl,
-                model: ollamaModel
+                model: ollamaEmbeddingModel
             }), {
                 collectionName: chromaConnectionName,
                 url: chromaUrl

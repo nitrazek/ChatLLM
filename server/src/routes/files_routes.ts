@@ -12,7 +12,6 @@ import { FileType } from "../enums/file_type";
 import { IsNull, Like } from "typeorm";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter"
 import { Document } from "langchain/document";
-import { Transform } from "stream";
 
 const filesRoutes: FastifyPluginCallback = (server, _, done) => {
     // Upload a file to the knowledge base (only admin)
@@ -45,8 +44,6 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
             chunkOverlap: 200
         });
         const splittedDocuments = await splitter.splitDocuments([document]);
-        console.log(splittedDocuments[splittedDocuments.length-2]);
-        console.log(splittedDocuments.length);
 
         const baseFilename = path.basename(multipartFile.filename, path.extname(multipartFile.filename));
         let file = File.create({
@@ -119,7 +116,7 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         });
     });
 
-    // Get file content and information
+    // Get file content and information (only admin)
     server.get<{
         Headers: AuthHeader,
         Params: Schemas.GetFileInfoParams,
@@ -150,8 +147,6 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
             .map((documentObj, index) => index === 0 ? documentObj.value : documentObj.value.substring(200))
             .join();
 
-        console.log(fileContentString)
-
         reply.send({
             ...file,
             content: fileContentString,
@@ -159,7 +154,7 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         });
     });
 
-    //Change details of specified file (only admin)
+    // Change details of specified file (only admin)
     server.put<{
         Headers: AuthHeader,
         Params: Schemas.UpdateFileParams,
@@ -185,7 +180,7 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         });
     })
 
-    // Delete specific file
+    // Delete specific file (only admin)
     server.delete<{
         Headers: AuthHeader,
         Params: Schemas.DeleteFileParams,
@@ -199,8 +194,8 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
     
         const chroma = await ChromaService.getInstance();
         await chroma.delete({
-            ids: [file.id.toString()]
-        })
+            ids: Array.from({ length: file.chunkAmount }, (_, i) => i).map(index => `${file.id}_${index}`)
+        });
 
         await file.remove();
         reply.code(204).send();
