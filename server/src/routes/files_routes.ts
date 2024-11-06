@@ -59,14 +59,11 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         file = await file.save();
 
         const chroma = await ChromaService.getInstance();
-        // await Promise.all(splittedDocuments.map((document, index) => {
-        //     return chroma.addDocuments([document], {
-        //         ids: [`${file.id}-${index}`]
-        //     });
-        // }));
-        await chroma.addDocuments(splittedDocuments, {
-            ids: Array.from({ length: splittedDocuments.length }, (_, i) => i).map((index) => `${file.id}-${index}`)
-        })
+        await Promise.all(splittedDocuments.map((document, index) => {
+            return chroma.addDocuments([document], {
+                ids: [`${file.id}_${index}`]
+            });
+        }));
 
         reply.send({
             ...file,
@@ -122,7 +119,7 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         });
     });
 
-    //Get file content and information
+    // Get file content and information
     server.get<{
         Headers: AuthHeader,
         Params: Schemas.GetFileInfoParams,
@@ -137,8 +134,27 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         });
         if (!file) throw new BadRequestError('File do not exist.');
 
+        const chroma = await ChromaService.getInstance();
+        const fileContent = await chroma.collection.get({
+            ids: Array.from({ length: file.chunkAmount }, (_, i) => i).map(index => `${file.id}_${index}`)
+        });
+        const fileContentIds: string[] = fileContent.ids;
+        const fileContentDocuments: string[] = fileContent.documents;
+        const fileContentString: string = fileContentDocuments
+            .map((document, index) => ({ key: fileContentIds[index], value: document }))
+            .sort((a, b) => {
+                const numA = parseInt(a.key.split("_")[1]);
+                const numB = parseInt(b.key.split("_")[1]);
+                return numA - numB;
+            })
+            .map((documentObj, index) => index === 0 ? documentObj.value : documentObj.value.substring(200))
+            .join();
+
+        console.log(fileContentString)
+
         reply.send({
             ...file,
+            content: fileContentString,
             creatorName: file.creator.name
         });
     });

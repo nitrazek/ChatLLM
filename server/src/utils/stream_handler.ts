@@ -32,7 +32,6 @@ export const getRagChain = (template: string, chatMessages: ChatMessage[]) => Ru
         console.log("sickomode")
         const context = await retrieverAndFormatter.invoke(input.question, callbacks);
         console.log("wabulabuadboabaodbaoduads")
-        console.dir({ context: context.split("\n").join("\n\n\n\n"), question: input.question });
         return {
             context: context,
             question: input.question
