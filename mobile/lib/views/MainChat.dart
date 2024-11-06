@@ -23,6 +23,7 @@ class _MainChatPageState extends State<MainChatPage> {
   late TextEditingController textEditingController;
   late ScrollController scrollController;
   late ScrollController scrollController2;
+  bool hasToScroll = true;
 
   List<Chat> chatList = [];
   final GlobalKey _one = GlobalKey();
@@ -64,7 +65,10 @@ class _MainChatPageState extends State<MainChatPage> {
         chatList = fetchedChats;
         bool isChatNull = ChatState.currentChat == null;
         if (chatList.isNotEmpty && isChatNull) {
-          context.read<MainChatViewModel>().setChat(chatList.last);
+          chatList.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+          final latestChat = chatList.first;
+          context.read<MainChatViewModel>().setChat(latestChat);
           context.read<MainChatViewModel>().loadHistory();
         } else if (isChatNull) {
           ShowCaseWidget.of(context).startShowCase([_one]);
@@ -82,18 +86,19 @@ class _MainChatPageState extends State<MainChatPage> {
   }
 
   void _scrollDown() {
-    scrollController.animateTo(
+    if(hasToScroll) {
+      scrollController.animateTo(
       getScrollDown(),
       duration: Duration(milliseconds: 200),
       curve: Curves.fastOutSlowIn,
     );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
-    bool hasToScroll = false;
 
     return PopScope(
         child: ScreenUtilInit(
@@ -199,7 +204,6 @@ class _MainChatPageState extends State<MainChatPage> {
                                       controller: scrollController2,
                                       itemBuilder: (context, index) {
                                         final chat = chatList[index];
-                                        chat.name ??= " ";
                                         return Container(
                                             decoration: const BoxDecoration(
                                               color: AppColors.theDarkest,
@@ -460,7 +464,13 @@ class _MainChatPageState extends State<MainChatPage> {
                         ),
                         SizedBox(height: screenHeight * 0.05),
                         Expanded(
-                          child: Container(
+                          child: Listener(
+                              onPointerMove: (event) {
+                                if (event.delta.dy != 0) {
+                                  hasToScroll = false;
+                                }
+                              },
+                            child: Container(
                               color: AppColors.darkest,
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 10.0),
@@ -723,7 +733,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                     ],
                                   );
                                 },
-                              )),
+                              ))),
                         ),
                         SizedBox(height: screenHeight * 0.01),
                         Container(
@@ -752,6 +762,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                     if (textEditingController.text.isNotEmpty) {
                                       textEditingController.clear();
                                     }
+                                    hasToScroll = true;
                                     bool hasName = await context
                                         .read<MainChatViewModel>()
                                         .sendPrompt(message);
@@ -799,6 +810,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                           final message =
                                               textEditingController.text;
                                           textEditingController.clear();
+                                          hasToScroll = true;
                                           context
                                               .read<MainChatViewModel>()
                                               .sendPrompt(message);

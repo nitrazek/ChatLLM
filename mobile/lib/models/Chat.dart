@@ -4,30 +4,34 @@ class Chat {
   int id;
   String? name;
   bool isUsingOnlyKnowledgeBase;
-  String createdAt;
-  String updatedAt;
+  DateTime createdAt;
+  DateTime updatedAt;
 
-  Chat(
-      {required this.id,
-      required this.name,
-      required this.isUsingOnlyKnowledgeBase,
-      required this.createdAt,
-      required this.updatedAt});
+  Chat({
+    required this.id,
+    required this.name,
+    required this.isUsingOnlyKnowledgeBase,
+    required this.createdAt,
+    required this.updatedAt,
+  });
 
   factory Chat.fromJson(Map<String, dynamic> json) {
     return Chat(
-        id: json['id'],
-        name: json['name'],
-        isUsingOnlyKnowledgeBase: json['isUsingOnlyKnowledgeBase'],
-        createdAt: json['createdAt'],
-        updatedAt: json['updatedAt']);
+      id: json['id'],
+      name: json['name'],
+      isUsingOnlyKnowledgeBase: json['isUsingOnlyKnowledgeBase'],
+      createdAt: DateTime.parse(json['createdAt']),
+      updatedAt: DateTime.parse(json['updatedAt']),
+    );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'name': name,
-      'isUsingOnlyKnowledgeBase': isUsingOnlyKnowledgeBase
+      'isUsingOnlyKnowledgeBase': isUsingOnlyKnowledgeBase,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
     };
   }
 

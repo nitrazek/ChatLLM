@@ -34,10 +34,7 @@ class MainChatViewModel extends ChangeNotifier {
     chatMessage2.finalizeResponse();
     isLoading = false;
     notifyListeners();
-    if(ChatState.currentChat!.name != "")
-      return true;
-    else
-      return false;
+      return ChatState.currentChat!.name != "";
   }
 
   void cancelAnswer() {
