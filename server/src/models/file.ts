@@ -43,11 +43,4 @@ export class File extends ExtendedBaseEntity {
 
     @Column()
     chunkAmount!: number;
-
-    @BeforeInsert()
-    @BeforeUpdate()
-    async isNameUniqueInParent(): Promise<boolean> {
-        const files = await File.findBy({ parent: this.parent === null ? IsNull() : this.parent });
-        return !files.map(file => file.name).includes(this.name);
-    }
 }
