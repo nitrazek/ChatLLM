@@ -50,7 +50,6 @@ class _LoginPageState extends State<LoginPage> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
-    bool isKeyBoardOpen = MediaQuery.of(context).viewInsets.bottom != 0;
     bool isLogged = false;
 
     return PopScope(
@@ -90,222 +89,223 @@ class _LoginPageState extends State<LoginPage> with RouteAware {
                       ),
                       height: double.infinity,
                       width: double.infinity,
-                      child: Padding(
-                        padding: EdgeInsets.only(left: 17.w, right: 17.w),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SizedBox(height: 35.h),
-                              TextFormField(
-                                enabled: !_isLoading,
-                                style: TextStyle(
-                                  fontFamily: AppTextStyles.Andada,
-                                  color: Colors.white,
-                                  fontSize: 19.sp,
-                                ),
-                                controller: _loginController,
-                                decoration: InputDecoration(
-                                  suffixIcon: const Icon(Icons.check,
-                                      color: Colors.white),
-                                  label: Text(
-                                    'Login',
-                                    style: TextStyle(
-                                      fontFamily: AppTextStyles.Andada,
-                                      color: Colors.white,
-                                      fontSize: 17.sp,
+                      child: SingleChildScrollView(
+                        child: Padding(
+                          padding: EdgeInsets.only(left: 17.w, right: 17.w),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(height: 35.h),
+                                TextFormField(
+                                  enabled: !_isLoading,
+                                  style: TextStyle(
+                                    fontFamily: AppTextStyles.Andada,
+                                    color: Colors.white,
+                                    fontSize: 19.sp,
+                                  ),
+                                  controller: _loginController,
+                                  decoration: InputDecoration(
+                                    suffixIcon: const Icon(Icons.check,
+                                        color: Colors.white),
+                                    label: Text(
+                                      'Login',
+                                      style: TextStyle(
+                                        fontFamily: AppTextStyles.Andada,
+                                        color: Colors.white,
+                                        fontSize: 17.sp,
+                                      ),
                                     ),
                                   ),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Wprowadź swój login';
+                                    }
+                                    if (value.length < 6) {
+                                      return 'Login jest zbyt krótki';
+                                    }
+                                    return null;
+                                  },
                                 ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Wprowadź swój login';
-                                  }
-                                  if (value.length < 6) {
-                                    return 'Login jest zbyt krótki';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              TextFormField(
-                                enabled: !_isLoading,
-                                style: TextStyle(
-                                  fontFamily: AppTextStyles.Andada,
-                                  color: Colors.white,
-                                  fontSize: 17.sp,
-                                ),
-                                controller: _passwordController,
-                                decoration: InputDecoration(
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      _obscureText
-                                          ? Icons.visibility_off
-                                          : Icons.visibility,
-                                      color: Colors.white,
-                                    ),
-                                    onPressed: _togglePasswordVisibility,
-                                  ),
-                                  label: Text(
-                                    'Hasło',
-                                    style: TextStyle(
-                                      fontFamily: AppTextStyles.Andada,
-                                      color: Colors.white,
-                                      fontSize: 17.sp,
-                                    ),
-                                  ),
-                                ),
-                                obscureText: _obscureText,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Wprowadź swoje hasło';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              SizedBox(height: 11.h),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: Text(
-                                  'Zapomniałeś hasła?',
+                                TextFormField(
+                                  enabled: !_isLoading,
                                   style: TextStyle(
                                     fontFamily: AppTextStyles.Andada,
                                     color: Colors.white,
                                     fontSize: 17.sp,
                                   ),
-                                ),
-                              ),
-                              SizedBox(height: 45.h),
-                              InkWell(
-                                onTap: () async {
-                                  setState(() {
-                                    _isLoading = true;
-                                  });
-                                  String login = _loginController.text;
-                                  String password = _passwordController.text;
-
-                                  Future.delayed(Duration(seconds: 7), () {
-                                    if (_isLoading && mounted) {
-                                      setState(() {
-                                        _isLoading = false;
-                                      });
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                            content: Text(
-                                                'Brak odpowiedzi z serwera')),
-                                      );
-                                    }
-                                  });
-
-                                  if (!_formKey.currentState!.validate()) {
-                                    _isLoading = false;
-                                  }
-                                  if (_formKey.currentState!.validate()) {
-                                    try {
-                                      isLogged = await context
-                                          .read<LoginViewModel>()
-                                          .login(login, password);
-
-                                      if (isLogged) {
-                                        Navigator.pushReplacement(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    ShowCaseWidget(
-                                                      builder: (context) =>
-                                                          MainChatPage(),
-                                                    )));
-                                      } else {
-                                        String errorMessage = context
-                                            .read<LoginViewModel>()
-                                            .errorMessage;
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Text(errorMessage),
-                                          ),
-                                        );
-                                        setState(() {
-                                          _isLoading = false;
-                                        });
-                                      }
-                                    } catch (e) {
-                                      setState(() {
-                                        _isLoading = false;
-                                      });
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                              'Nie udało się połączyć z serwerem. Spróbuj ponownie później.'),
-                                        ),
-                                      );
-                                    }
-                                  }
-                                },
-                                child: Container(
-                                  height: 45.h,
-                                  width: 340.w,
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(30),
-                                      color: AppColors.purple),
-                                  child: Center(
-                                    child: _isLoading
-                                        ? CircularProgressIndicator(
-                                            color: Colors.white,
-                                          )
-                                        : Text(
-                                            'Zaloguj się',
-                                            style: TextStyle(
-                                                fontFamily:
-                                                    AppTextStyles.Andada,
-                                                color: Colors.white,
-                                                fontSize: 23.sp,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: 15.h),
-                              Align(
-                                alignment: Alignment.bottomRight,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      "Nie masz konta?",
+                                  controller: _passwordController,
+                                  decoration: InputDecoration(
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        _obscureText
+                                            ? Icons.visibility_off
+                                            : Icons.visibility,
+                                        color: Colors.white,
+                                      ),
+                                      onPressed: _togglePasswordVisibility,
+                                    ),
+                                    label: Text(
+                                      'Hasło',
                                       style: TextStyle(
                                         fontFamily: AppTextStyles.Andada,
                                         color: Colors.white,
-                                        fontSize: 15.sp,
+                                        fontSize: 17.sp,
                                       ),
                                     ),
-                                    InkWell(
-                                        onTap: _isLoading
-                                            ? null
-                                            : () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          const RegisterPage()),
-                                                );
-                                              },
-                                        child: Text(
-                                          "Zarejestruj się",
-                                          style: TextStyle(
-                                            fontFamily: AppTextStyles.Andada,
-                                            color: Colors.white,
-                                            fontSize: 17.sp,
-                                          ),
-                                        )),
-                                  ],
+                                  ),
+                                  obscureText: _obscureText,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Wprowadź swoje hasło';
+                                    }
+                                    return null;
+                                  },
                                 ),
-                              ),
-                              if (!isKeyBoardOpen) SizedBox(height: 200.h),
-                            ],
+                                SizedBox(height: 11.h),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Text(
+                                    'Zapomniałeś hasła?',
+                                    style: TextStyle(
+                                      fontFamily: AppTextStyles.Andada,
+                                      color: Colors.white,
+                                      fontSize: 17.sp,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 45.h),
+                                InkWell(
+                                  onTap: () async {
+                                    setState(() {
+                                      _isLoading = true;
+                                    });
+                                    String login = _loginController.text;
+                                    String password = _passwordController.text;
+
+                                    Future.delayed(Duration(seconds: 7), () {
+                                      if (_isLoading && mounted) {
+                                        setState(() {
+                                          _isLoading = false;
+                                        });
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                              content: Text(
+                                                  'Brak odpowiedzi z serwera')),
+                                        );
+                                      }
+                                    });
+
+                                    if (!_formKey.currentState!.validate()) {
+                                      _isLoading = false;
+                                    }
+                                    if (_formKey.currentState!.validate()) {
+                                      try {
+                                        isLogged = await context
+                                            .read<LoginViewModel>()
+                                            .login(login, password);
+
+                                        if (isLogged) {
+                                          Navigator.pushReplacement(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      ShowCaseWidget(
+                                                        builder: (context) =>
+                                                            MainChatPage(),
+                                                      )));
+                                        } else {
+                                          String errorMessage = context
+                                              .read<LoginViewModel>()
+                                              .errorMessage;
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(errorMessage),
+                                            ),
+                                          );
+                                          setState(() {
+                                            _isLoading = false;
+                                          });
+                                        }
+                                      } catch (e) {
+                                        setState(() {
+                                          _isLoading = false;
+                                        });
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                                'Nie udało się połączyć z serwerem. Spróbuj ponownie później.'),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  child: Container(
+                                    height: 45.h,
+                                    width: 340.w,
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(30),
+                                        color: AppColors.purple),
+                                    child: Center(
+                                      child: _isLoading
+                                          ? CircularProgressIndicator(
+                                              color: Colors.white,
+                                            )
+                                          : Text(
+                                              'Zaloguj się',
+                                              style: TextStyle(
+                                                  fontFamily:
+                                                      AppTextStyles.Andada,
+                                                  color: Colors.white,
+                                                  fontSize: 23.sp,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 15.h),
+                                Align(
+                                  alignment: Alignment.bottomRight,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        "Nie masz konta?",
+                                        style: TextStyle(
+                                          fontFamily: AppTextStyles.Andada,
+                                          color: Colors.white,
+                                          fontSize: 15.sp,
+                                        ),
+                                      ),
+                                      InkWell(
+                                          onTap: _isLoading
+                                              ? null
+                                              : () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            const RegisterPage()),
+                                                  );
+                                                },
+                                          child: Text(
+                                            "Zarejestruj się",
+                                            style: TextStyle(
+                                              fontFamily: AppTextStyles.Andada,
+                                              color: Colors.white,
+                                              fontSize: 17.sp,
+                                            ),
+                                          )),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),

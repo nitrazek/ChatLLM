@@ -8,7 +8,6 @@ import '../services/ChatService.dart';
 class MainChatViewModel extends ChangeNotifier {
   final ChatService _chatService = ChatService();
   List<ChatMessage> _chatMessages = [];
-  List<ChatMessage> _reversedChatMessages = [];
   bool isLoading = false;
   double chatListHeight = 460;
   bool isChatListVisible = true;
@@ -34,13 +33,11 @@ class MainChatViewModel extends ChangeNotifier {
     chatMessage2.finalizeResponse();
     isLoading = false;
     notifyListeners();
-      return ChatState.currentChat!.name != "";
+    return ChatState.currentChat!.name != "";
   }
 
   void cancelAnswer() {
     _chatService.cancelAnswer();
-    if (_chatMessages[_chatMessages.length - 1].sender == "ai")
-      _chatMessages[_chatMessages.length - 1].content = "*Odpowiedź anulowana*";
     isLoading = false;
     notifyListeners();
   }
@@ -52,7 +49,7 @@ class MainChatViewModel extends ChangeNotifier {
     return true;
   }
 
-   void logOut() {
+  void logOut() {
     _chatMessages.clear();
     AccountState.token = "";
   }

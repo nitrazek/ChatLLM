@@ -86,12 +86,12 @@ class _MainChatPageState extends State<MainChatPage> {
   }
 
   void _scrollDown() {
-    if(hasToScroll) {
+    if (hasToScroll) {
       scrollController.animateTo(
-      getScrollDown(),
-      duration: Duration(milliseconds: 200),
-      curve: Curves.fastOutSlowIn,
-    );
+        getScrollDown(),
+        duration: Duration(milliseconds: 200),
+        curve: Curves.fastOutSlowIn,
+      );
     }
   }
 
@@ -411,6 +411,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                                   return ChatDialog();
                                                 },
                                               );
+                                              fetchChatList();
                                               context
                                                   .read<MainChatViewModel>()
                                                   .chatMessages
@@ -470,99 +471,195 @@ class _MainChatPageState extends State<MainChatPage> {
                                   hasToScroll = false;
                                 }
                               },
-                            child: Container(
-                              color: AppColors.darkest,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 10.0),
-                              child: ListView.builder(
-                                itemCount: context
-                                    .watch<MainChatViewModel>()
-                                    .chatMessages
-                                    .length,
-                                controller: scrollController,
-                                itemBuilder: (context, index) {
-                                  _scrollDown();
-                                  final chatMessage = context
-                                      .watch<MainChatViewModel>()
-                                      .chatMessages[index];
-                                  return Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      if (chatMessage.sender == "human")
-                                        Row(
-                                          children: [
-                                            const Icon(
-                                              Icons.person,
-                                              color: Colors.white,
-                                              size: 30,
-                                            ),
-                                            Container(
-                                              constraints: BoxConstraints(
-                                                  maxWidth: screenWidth * 0.8),
-                                              margin:
-                                                  const EdgeInsets.symmetric(
+                              child: Container(
+                                  color: AppColors.darkest,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10.0),
+                                  child: ListView.builder(
+                                    itemCount: context
+                                        .watch<MainChatViewModel>()
+                                        .chatMessages
+                                        .length,
+                                    controller: scrollController,
+                                    itemBuilder: (context, index) {
+                                      _scrollDown();
+                                      final chatMessage = context
+                                          .watch<MainChatViewModel>()
+                                          .chatMessages[index];
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          if (chatMessage.sender == "human")
+                                            Row(
+                                              children: [
+                                                const Icon(
+                                                  Icons.person,
+                                                  color: Colors.white,
+                                                  size: 30,
+                                                ),
+                                                Container(
+                                                  constraints: BoxConstraints(
+                                                      maxWidth:
+                                                          screenWidth * 0.8),
+                                                  margin: const EdgeInsets
+                                                      .symmetric(
                                                       vertical: 5.0,
                                                       horizontal: 10.0),
-                                              padding:
-                                                  const EdgeInsets.all(10.0),
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(15.0),
-                                                color: AppColors.dark,
-                                              ),
-                                              child: Text(
-                                                chatMessage.sender == 'human'
-                                                    ? chatMessage.content
-                                                    : "",
-                                                style: TextStyle(
-                                                    fontFamily:
-                                                        AppTextStyles.Andada,
-                                                    color: Colors.white,
-                                                    fontSize: 22.sp),
-                                              ),
+                                                  padding: const EdgeInsets.all(
+                                                      10.0),
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            15.0),
+                                                    color: AppColors.dark,
+                                                  ),
+                                                  child: Text(
+                                                    chatMessage.sender ==
+                                                            'human'
+                                                        ? chatMessage.content
+                                                        : "",
+                                                    style: TextStyle(
+                                                        fontFamily:
+                                                            AppTextStyles
+                                                                .Andada,
+                                                        color: Colors.white,
+                                                        fontSize: 22.sp),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                          ],
-                                        ),
-                                      if (chatMessage.sender != "human")
-                                        Row(
-                                          children: [
-                                            const Icon(
-                                              Icons.chat,
-                                              color: Colors.white,
-                                              size: 30,
-                                            ),
-                                            Container(
-                                              constraints: BoxConstraints(
-                                                  maxWidth: screenWidth * 0.8),
-                                              margin:
-                                                  const EdgeInsets.symmetric(
+                                          if (chatMessage.sender != "human")
+                                            Row(
+                                              children: [
+                                                const Icon(
+                                                  Icons.chat,
+                                                  color: Colors.white,
+                                                  size: 30,
+                                                ),
+                                                Container(
+                                                  constraints: BoxConstraints(
+                                                      maxWidth:
+                                                          screenWidth * 0.8),
+                                                  margin: const EdgeInsets
+                                                      .symmetric(
                                                       vertical: 5.0,
                                                       horizontal: 10.0),
-                                              padding:
-                                                  const EdgeInsets.all(10.0),
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(15.0),
-                                                color: const Color(0xFF424549),
-                                              ),
-                                              child: !ChatState.isArchival
-                                                  ? StreamBuilder<String>(
-                                                      stream: chatMessage
-                                                          .responseStream,
-                                                      builder:
-                                                          (context, snapshot) {
-                                                        if (snapshot.hasError) {
-                                                          return Text(
-                                                              'Error: ${snapshot.error}');
-                                                        }
+                                                  padding: const EdgeInsets.all(
+                                                      10.0),
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            15.0),
+                                                    color:
+                                                        const Color(0xFF424549),
+                                                  ),
+                                                  child: !ChatState.isArchival
+                                                      ? StreamBuilder<String>(
+                                                          stream: chatMessage
+                                                              .responseStream,
+                                                          builder: (context,
+                                                              snapshot) {
+                                                            if (snapshot
+                                                                .hasError) {
+                                                              return Text(
+                                                                  'Error: ${snapshot.error}');
+                                                            }
 
-                                                        final data = snapshot
-                                                                .data ??
-                                                            chatMessage.content;
+                                                            final data =
+                                                                snapshot.data ??
+                                                                    chatMessage
+                                                                        .content;
 
-                                                        return MarkdownBody(
-                                                          data: data,
+                                                            return MarkdownBody(
+                                                              data: data,
+                                                              styleSheet:
+                                                                  MarkdownStyleSheet(
+                                                                p: TextStyle(
+                                                                    fontFamily:
+                                                                        AppTextStyles
+                                                                            .Andada,
+                                                                    color: Colors
+                                                                        .white,
+                                                                    fontSize:
+                                                                        21.sp),
+                                                                a: TextStyle(
+                                                                        fontFamily:
+                                                                            AppTextStyles
+                                                                                .Andada,
+                                                                        color: Colors
+                                                                            .white,
+                                                                        fontSize: 22
+                                                                            .sp)
+                                                                    .copyWith(
+                                                                        decoration:
+                                                                            TextDecoration.underline),
+                                                                strong: TextStyle(
+                                                                        fontFamily:
+                                                                            AppTextStyles
+                                                                                .Andada,
+                                                                        color: Colors
+                                                                            .white,
+                                                                        fontSize: 22
+                                                                            .sp)
+                                                                    .copyWith(
+                                                                        fontWeight:
+                                                                            FontWeight.bold),
+                                                                em: TextStyle(
+                                                                        fontFamily:
+                                                                            AppTextStyles
+                                                                                .Andada,
+                                                                        color: Colors
+                                                                            .white,
+                                                                        fontSize: 22
+                                                                            .sp)
+                                                                    .copyWith(
+                                                                        fontStyle:
+                                                                            FontStyle.italic),
+                                                                h1: TextStyle(
+                                                                    fontFamily:
+                                                                        AppTextStyles
+                                                                            .Andada,
+                                                                    color: Colors
+                                                                        .white,
+                                                                    fontSize:
+                                                                        22.sp),
+                                                                h2: TextStyle(
+                                                                    fontFamily:
+                                                                        AppTextStyles
+                                                                            .Andada,
+                                                                    color: Colors
+                                                                        .white,
+                                                                    fontSize:
+                                                                        24.sp),
+                                                                h3: TextStyle(
+                                                                    fontFamily:
+                                                                        AppTextStyles
+                                                                            .Andada,
+                                                                    color: Colors
+                                                                        .white,
+                                                                    fontSize:
+                                                                        26.sp),
+                                                                code: TextStyle(
+                                                                        fontFamily:
+                                                                            AppTextStyles
+                                                                                .Andada,
+                                                                        color: Colors
+                                                                            .white,
+                                                                        fontSize: 21
+                                                                            .sp)
+                                                                    .copyWith(
+                                                                        fontFamily:
+                                                                            'monospace',
+                                                                        backgroundColor:
+                                                                            Colors.grey[400]),
+                                                              ),
+                                                            );
+                                                          },
+                                                        )
+                                                      : MarkdownBody(
+                                                          data: chatMessage
+                                                              .content,
                                                           styleSheet:
                                                               MarkdownStyleSheet(
                                                             p: TextStyle(
@@ -648,92 +745,14 @@ class _MainChatPageState extends State<MainChatPage> {
                                                                         Colors.grey[
                                                                             400]),
                                                           ),
-                                                        );
-                                                      },
-                                                    )
-                                                  : MarkdownBody(
-                                                      data: chatMessage.content,
-                                                      styleSheet:
-                                                          MarkdownStyleSheet(
-                                                        p: TextStyle(
-                                                            fontFamily:
-                                                                AppTextStyles
-                                                                    .Andada,
-                                                            color: Colors.white,
-                                                            fontSize: 21.sp),
-                                                        a: TextStyle(
-                                                                fontFamily:
-                                                                    AppTextStyles
-                                                                        .Andada,
-                                                                color: Colors
-                                                                    .white,
-                                                                fontSize: 22.sp)
-                                                            .copyWith(
-                                                                decoration:
-                                                                    TextDecoration
-                                                                        .underline),
-                                                        strong: TextStyle(
-                                                                fontFamily:
-                                                                    AppTextStyles
-                                                                        .Andada,
-                                                                color: Colors
-                                                                    .white,
-                                                                fontSize: 22.sp)
-                                                            .copyWith(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold),
-                                                        em: TextStyle(
-                                                                fontFamily:
-                                                                    AppTextStyles
-                                                                        .Andada,
-                                                                color: Colors
-                                                                    .white,
-                                                                fontSize: 22.sp)
-                                                            .copyWith(
-                                                                fontStyle:
-                                                                    FontStyle
-                                                                        .italic),
-                                                        h1: TextStyle(
-                                                            fontFamily:
-                                                                AppTextStyles
-                                                                    .Andada,
-                                                            color: Colors.white,
-                                                            fontSize: 22.sp),
-                                                        h2: TextStyle(
-                                                            fontFamily:
-                                                                AppTextStyles
-                                                                    .Andada,
-                                                            color: Colors.white,
-                                                            fontSize: 24.sp),
-                                                        h3: TextStyle(
-                                                            fontFamily:
-                                                                AppTextStyles
-                                                                    .Andada,
-                                                            color: Colors.white,
-                                                            fontSize: 26.sp),
-                                                        code: TextStyle(
-                                                                fontFamily:
-                                                                    AppTextStyles
-                                                                        .Andada,
-                                                                color: Colors
-                                                                    .white,
-                                                                fontSize: 21.sp)
-                                                            .copyWith(
-                                                                fontFamily:
-                                                                    'monospace',
-                                                                backgroundColor:
-                                                                    Colors.grey[
-                                                                        400]),
-                                                      ),
-                                                    ),
+                                                        ),
+                                                ),
+                                              ],
                                             ),
-                                          ],
-                                        ),
-                                    ],
-                                  );
-                                },
-                              ))),
+                                        ],
+                                      );
+                                    },
+                                  ))),
                         ),
                         SizedBox(height: screenHeight * 0.01),
                         Container(
@@ -811,9 +830,24 @@ class _MainChatPageState extends State<MainChatPage> {
                                               textEditingController.text;
                                           textEditingController.clear();
                                           hasToScroll = true;
-                                          context
+                                          bool hasName = await context
                                               .read<MainChatViewModel>()
                                               .sendPrompt(message);
+
+                                          if (hasName) {
+                                            setState(() {
+                                              for (int i = 0;
+                                                  i < chatList.length;
+                                                  i++) {
+                                                if (chatList[i].id ==
+                                                    ChatState.currentChat!.id) {
+                                                  chatList[i].name = ChatState
+                                                      .currentChat!.name;
+                                                  break;
+                                                }
+                                              }
+                                            });
+                                          }
                                         }
                                       },
                                       icon: const Icon(
