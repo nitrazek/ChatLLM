@@ -6,7 +6,7 @@
 }
 
 .adminSideBar {
-  flex: 2;
+  flex: 1;
   border-right: 2px solid #1e2124;
   background-color: #1e2124;
   display: flex;
@@ -16,16 +16,21 @@
 }
 
 .adminMain {
-  flex: 7;
+  flex: 12;
   margin: 15px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
+  transition: flex 0.7s ease, margin-right 0.7s ease, padding 0.7s ease, transform 0.7 ease;
+}
+
+.adminMainFilters {
+  flex: 10; 
 }
 
 .adminUpperSideTop {
   color: white;
-  margin-bottom: 15px;
   font-weight: bold;
   z-index: 3;
   background-color: #7289da;
@@ -41,7 +46,6 @@
   padding: 20px 0;
   background-color: #7289da;
   z-index: 3;
-  margin-bottom: 15px;
 }
 
 .userTable {
@@ -49,6 +53,7 @@
   font-size: 7;
   width: 100%;
   table-layout: fixed;
+  margin-top: 15px;
 }
 
 .userTable thead tr {
@@ -60,17 +65,16 @@
 
 .userTable th,
 .userTable td {
-  padding: 12px 15px;
+  padding: 5px 15px;
+  font-size: 14px;
 }
 
 .userTable tbody tr {
   border-bottom: 1px solid #dddddd;
-  font-size: 7;
 }
 
 .userTable tbody tr:last-of-type {
   border-bottom: 2px solid #7289da;
-  font-size: 7;
 }
 
 .userTable th:nth-child(1) {
@@ -97,52 +101,23 @@
   width: 15%;
 }
 
-.userManagementButtonActive {
-  background-color: white;
-  padding: 10px 20px;
-  border-radius: 10px;
-  margin-top: 10px;
-  margin-bottom: 10px;
-  width: 180px;
-  color: #1e2124;
-  font-size: large;
-  font-weight: bold;
-}
-
+.userManagementButtonActive,
 .fileManagementButtonActive {
   background-color: white;
   padding: 10px 20px;
-  border-radius: 10px;
-  margin-top: 10px;
-  margin-bottom: 10px;
-  width: 180px;
+  width: 100%;
+  border: transparent;
   color: #1e2124;
   font-size: large;
   font-weight: bold;
 }
 
-
-.fileManagementButtonInactive {
-  background-color: #1e2124;
-  padding: 10px 20px;
-  border-radius: 10px;
-  margin-top: 10px;
-  margin-bottom: 10px;
-  width: 180px;
-  border: 2px solid white;
-  color: white;
-  font-size: large;
-  font-weight: bold;
-}
-
+.fileManagementButtonInactive,
 .userManagementButtonInactive {
   background-color: #1e2124;
   padding: 10px 20px;
-  border-radius: 10px;
-  margin-top: 10px;
-  margin-bottom: 10px;
-  width: 180px;
-  border: 2px solid white;
+  width: 100%;
+  border-bottom: 1px solid #484d52;
   color: white;
   font-size: large;
   font-weight: bold;
@@ -150,18 +125,50 @@
 
 .userManagementButtonInactive:hover,
 .fileManagementButtonInactive:hover {
-  background-color: #ffffff70;
+  background-color: #72727270;
 }
-
 
 .adminButton {
   background-color: #1e2124;
   border-radius: 10px;
-  padding: 5px;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  border: 2px solid #1e2124;
+  padding: 7px;
+  margin: 6px, 15px, 6px, 15px;
   color: white;
+  width: 80px;
+  font-size: 14px;
+}
 
+.adminButton:hover {
+  background-color: #424549;
+  border: 2px solid white;
+}
+
+.activateButton {
+  background-color: green;
+  border: solid 2px green;
+}
+
+.activateButton:hover {
+  background-color: rgb(0, 200, 0);
+  border: 2px solid white;
+}
+
+.deleteButton {
+  background-color: darkred;
+  border: solid 2px darkred;
+}
+
+.deleteButton:hover {
+  background-color: rgb(200, 0, 0);
+  border: 2px solid white;
+}
+
+.inactiveButton,
+.inactiveButton:hover {
+  background-color: #484d52;
+  color: #ffffff70;
+  border: solid 2px #484d52;
 }
 
 .item {
@@ -185,8 +192,6 @@
   color: #808e9b;
 }
 
-.break-me {}
-
 .next {
   color: white;
   font-size: 10px;
@@ -202,7 +207,7 @@
   justify-content: center;
   list-style-type: none;
   position: relative;
-  width: 100%;
+  width: 60%;
 }
 
 .pagination-page {
@@ -221,5 +226,62 @@
 }
 
 .backbutton:hover {
-  color:#0000ff90;
+  color: #0000ff90;
+}
+
+.buttonContainer {
+  display: flex;
+  gap: 5px;
+}
+
+.userFiltersContainter {
+  padding: 10px;
+  border-radius: 15px;
+  background-color: #36393e;
+  display: flex;
+}
+
+.userFiltersColumn {
+  flex: 1;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; 
+  align-items: center; 
+  height: 100%; 
+}
+
+.filterButtonContainer {
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  margin: 10px;
+}
+
+.filterButton {
+  width: 150px;
+}
+
+.filterLabel {
+  width: 85px;
+}
+
+.filterTextInput {
+  width: 200px;
+}
+
+/* Sidebar with a fixed width that slides in/out */
+.filterSideBar {
+  flex: 2; /* Fixed width for filterSideBar */
+  background-color: #36393e;
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  transform: translateX(100%); /* Initially off-screen */
+  transition: flex 0.7s ease, margin-right 0.7s ease, padding 0.7s ease, transform 0.7 ease;
+}
+
+/* Show filterSideBar by translating it to the left */
+.filterSideBar.show {
+  transform: translateX(0); /* Slide in from right */
 }
