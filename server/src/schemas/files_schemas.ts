@@ -83,7 +83,8 @@ const GetFileInfoParamsTypes = Type.Object({
 export type GetFileInfoParams = Static<typeof GetFileInfoParamsTypes>;
 
 const GetFileInfoResponseTypes = Type.Object({
-    ...GenericFileResponseTypes.properties
+    ...GenericFileResponseTypes.properties,
+    content: Type.String({ description: "Content of a file" })
 }, { description: "Response containing file content and information" });
 export type GetFileInfoResponse = Static<typeof GetFileInfoResponseTypes>;
 
