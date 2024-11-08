@@ -5,17 +5,17 @@ function CheckDockerRunning {
         if ($LASTEXITCODE -eq 0) {
             $dockerRunning = $true
         }
-    } catch {
-        
-    }
+    } catch {}
     return $dockerRunning
 }
 
-Set-Location -Path $PSScriptRoot
 If (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
   Start-Process powershell.exe "-File",('"{0}"' -f $MyInvocation.MyCommand.Path) -Verb RunAs
   exit
 }
+
+Set-Location -Path $PSScriptRoot
+Clear-Host
 
 # Get-Content ../docker-config.env | foreach {
 #   $name, $value = $_.split('=')
@@ -42,15 +42,18 @@ while ($continue) {
     Clear-Host
 
     if (-not (CheckDockerRunning)) {
-        Write-Host "Docker is still not running. Check it manually"
+        Write-Host "Docker is not running. Check it manually"
         Write-Host -NoNewLine 'Press any key to close program...'
         $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
         exit
     }
 
     docker-compose -f $composeFilePath down
-    docker-compose -f $composeFilePath up --build -d #First start ollama and pull model
+
+    docker-compose -f $composeFilePath up ollama -d
     docker exec ollama ollama pull llama3.2 #$Env:OLLAMA_MODEL
+
+    docker-compose -f $composeFilePath up --build -d
     docker image prune -f
     Start-Sleep 1
     docker ps
