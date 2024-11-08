@@ -2,6 +2,7 @@ import { ChatOllama, Ollama } from "@langchain/ollama";
 
 export const ollamaUrl: string = process.env.OLLAMA_URL ?? "http://localhost:11434";
 export const ollamaModel: string = process.env.OLLAMA_MODEL ?? "llama3.2";
+export const ollamaEmbeddingModel: string = process.env.OLLAMA_EMBEDDING_MODEL ?? "nomic-embed-text";
 
 export class OllamaService {
     private static instance: ChatOllama;

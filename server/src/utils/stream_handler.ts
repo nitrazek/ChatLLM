@@ -11,14 +11,15 @@ import { IterableReadableStream } from "@langchain/core/dist/utils/stream";
 import { getSummaryPrompt } from "../prompts";
 
 export const getRagChain = async (template: string, chatMessages: ChatMessage[]) => RunnableSequence.from([
-    {
-        context: async (input, callbacks) => {
-            const chroma = await ChromaService.getInstance();
-            const retriever = chroma.asRetriever();
-            const retrieverAndFormatter = retriever.pipe(formatDocumentsAsString);
-            return retrieverAndFormatter.invoke(input.question, callbacks);
-        },
-        question: (input) => input.question,
+    async (input, callbacks) => {
+        const chroma = await ChromaService.getInstance();
+        const retriever = chroma.asRetriever();
+        const retrieverAndFormatter = retriever.pipe(formatDocumentsAsString);
+        const context = await retrieverAndFormatter.invoke(input.question, callbacks);
+        return {
+            context: context,
+            question: input.question
+        }
     },
     ChatPromptTemplate.fromMessages([
         ["system", template],
@@ -53,7 +54,6 @@ const getTransformedStream = (stream: ReadableStream<BaseMessageChunk>, chat: Ch
             }
             const answerChunk = value.content as string;
             answerChunks.push(answerChunk);
-            console.log(answerChunk);
             controller.enqueue(JSON.stringify({ answer: answerChunk }));
         },
         async cancel() {
@@ -75,7 +75,7 @@ const getNewChatNameStream = async (stream: ReadableStream<string>, chat: Chat) 
             if(done || isCanceled) {
                 answerChunks.push(buffer[0]);
                 const summary: string = (await ollama.invoke(getSummaryPrompt(answerChunks.join("")))).content as string;
-                chat.name = summary;
+                chat.name = summary.substring(0, 29);
                 await chat.save();
                 controller.enqueue(JSON.stringify({ answer: buffer[0], newChatName: summary }));
                 controller.close();
