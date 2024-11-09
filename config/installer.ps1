@@ -15,8 +15,7 @@ if($wsl.State -eq "Enabled") {
     try {
         $ProgressPreference = 'SilentlyContinue'
         Write-Output "    Downloading necessary features..."
-        Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux -NoRestart -ErrorAction Stop
-        Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart -ErrorAction Stop
+        wsl --install --no-distribution
 
         Start-Sleep 10
 
