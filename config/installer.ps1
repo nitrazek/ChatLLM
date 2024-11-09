@@ -16,6 +16,7 @@ if($wsl.State -eq "Enabled") {
         $ProgressPreference = 'SilentlyContinue'
         Write-Output "    Downloading necessary features..."
         wsl --install --no-distribution
+        wsl --set-default-version 2
 
         Start-Sleep 10
 
