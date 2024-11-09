@@ -9,7 +9,7 @@ import { File } from "../models/file";
 import { getPaginationMetadata } from "../utils/pagination_handler";
 import path from "path";
 import { FileType } from "../enums/file_type";
-import { IsNull, Like } from "typeorm";
+import { Auth, IsNull, Like } from "typeorm";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter"
 import { Document } from "langchain/document";
 
@@ -68,6 +68,35 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         });
     });
 
+    // Create a folder for files in knowledge base (only admin)
+    server.post<{
+        Headers: AuthHeader,
+        Body: Schemas.CreateFolderBody,
+        Reply: Schemas.CreateFolderResponse
+    }>('/folders/new', {
+        schema: Schemas.CreateFolderSchema,
+        onRequest: [adminAuth(server)]
+    }, async (req, reply) => {
+        const { name, parentFolderId } = req.body;
+        const parentFolder = parentFolderId ? await File.findOneBy({ id: parentFolderId }) : null;
+        if(parentFolder && parentFolder.type !== FileType.FOLDER)
+            throw new BadRequestError("Invalid parent folder ID");
+
+        const folder = File.create({
+            name: name,
+            type: FileType.FOLDER,
+            parent: parentFolder,
+            creator: req.user,
+            chunkAmount: 0
+        });
+        await folder.save();
+
+        reply.send({
+            ...folder,
+            creatorName: folder.creator.name
+        });
+    });
+
     // Get list of files from knowledge base (only admin)
     server.get<{
         Headers: AuthHeader,
@@ -97,7 +126,7 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
             skip: (page - 1) * limit,
             take: limit,
             where: {
-                parent: folder !== null ? folder : IsNull(),
+                parent: folder !== null ? { id: folder.id } : IsNull(),
                 ...(name !== undefined && { name: Like(`%${name}%`) }),
                 ...(creatorName !== undefined && { creator: { name: Like(`%${creatorName}%`) } }),
                 ...(type !== undefined && { type: getFileType(type) }),

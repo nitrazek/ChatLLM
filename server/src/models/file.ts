@@ -9,7 +9,7 @@ import { getIsInvalidMessage } from "../utils/model_validation_messages";
 class IsNameUniqueInParent implements ValidatorConstraintInterface {
     async validate(name: string, args: ValidationArguments): Promise<boolean> {
         const validatedFile = args.object as File;
-        const files = await File.findBy({ parent: validatedFile.parent === null ? IsNull() : validatedFile.parent });
+        const files = await File.findBy({ parent: validatedFile.parent === null ? IsNull() : { id: validatedFile.parent.id } });
         return !files.map(file => file.name).includes(name);
     }
 
@@ -43,11 +43,4 @@ export class File extends ExtendedBaseEntity {
 
     @Column()
     chunkAmount!: number;
-
-    @BeforeInsert()
-    @BeforeUpdate()
-    async isNameUniqueInParent(): Promise<boolean> {
-        const files = await File.findBy({ parent: this.parent === null ? IsNull() : this.parent });
-        return !files.map(file => file.name).includes(this.name);
-    }
 }

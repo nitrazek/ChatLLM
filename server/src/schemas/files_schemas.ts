@@ -12,8 +12,9 @@ const GenericFileResponseTypes = Type.Object({
     name: Type.String({ description: "Name of the file" }),
     type: Type.Enum(FileType, { description: "Type of the file" }),
     creatorName: Type.String({ description: "Name of the user who created that file" }),
+    chunkAmount: Type.Number({ description: "Amount of chunks to which file was divided and saved in knowledge base, for folders this amount is 0" }),
     createdAt: Type.Unsafe<Date>({ type: 'string', format: 'date', description: "Creation date of the file" }),
-    updatedAt: Type.Unsafe<Date>({ type: 'string', format: 'date', description: "Update date of the file" })
+    updatedAt: Type.Unsafe<Date>({ type: 'string', format: 'date', description: "Update date of the file" }),
 }, { description: "Basic information about a file" });
 
 //////////////////// Schemas for POST requests ////////////////////
@@ -26,7 +27,7 @@ export type UploadFileQuery = Static<typeof UploadFileQueryTypes>;
 
 const UploadFileResponseTypes = Type.Object({
     ...GenericFileResponseTypes.properties
-}, { description: "Empty response for a successful file upload" });
+}, { description: "Response containing newly created file" });
 export type UploadFileResponse = Static<typeof UploadFileResponseTypes>;
 
 export const UploadFileSchema: FastifySchema = {
@@ -38,6 +39,30 @@ export const UploadFileSchema: FastifySchema = {
     tags: ["Files"],
     response: {
         200: UploadFileResponseTypes,
+        ...AdminGuardedResponseSchema
+    },
+};
+
+// Schema for creating folder for files in knowledge base
+const CreateFolderBodyTypes = Type.Object({
+    name: Type.String({ description: "Name of the folder" }),
+    parentFolderId: Type.Optional(Type.Number({ description: "Folder in which new folder will be created" }))
+}, { description: "Payload to create a new folder" });
+export type CreateFolderBody = Static<typeof CreateFolderBodyTypes>;
+
+const CreateFolderResponseTypes = Type.Object({
+    ...GenericFileResponseTypes.properties
+}, { description: "Response containing newly created folder" });
+export type CreateFolderResponse = Static<typeof CreateFolderResponseTypes>;
+
+export const CreateFolderSchema: FastifySchema = {
+    summary: "Create a folder",
+    description: "Endpoint to create new folder for files in knowledge base. Only accessible by admin users.",
+    headers: AuthHeaderTypes,
+    body: CreateFolderBodyTypes,
+    tags: ["Files"],
+    response: {
+        200: CreateFolderResponseTypes,
         ...AdminGuardedResponseSchema
     },
 };
