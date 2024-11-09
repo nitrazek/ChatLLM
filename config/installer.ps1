@@ -6,78 +6,36 @@ If (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 Set-Location -Path $PSScriptRoot
 Clear-Host
 
-$hyperv = Get-WindowsOptionalFeature -FeatureName Microsoft-Hyper-V-All -Online -ErrorAction SilentlyContinue
-if($hyperv.State -eq "Enabled") {
-    Write-Host "[+] Hyper-V is already enabled." -ForegroundColor Green
-} else {
-    Write-Host "[x] Hyper-V is not enabled." -ForegroundColor Yellow
-    $response = Read-Host -Prompt "    Do you want to install Hyper-V? (y/n)"
-    if ($response -eq 'y') {
-        Write-Output "    Enabling, please wait..."
-        try {
-            $ProgressPreference = 'SilentlyContinue'
-            Enable-WindowsOptionalFeature -FeatureName Microsoft-Hyper-V-All -Online -ErrorAction SilentlyContinue
-
-            Write-Output "    Downloading necessary features... (estimated 30s)"
-            Start-Sleep 30
-
-            Write-Host "    Hyper-V is enabled now. Reboot the system to continue the installation.`n" -ForegroundColor Green
-            Write-Host -NoNewLine '    Press any key to close program...'
-            $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
-            exit
-        } catch {
-            Write-Host "    Failed to enable Hyper-V." -ForegroundColor Red
-            Write-Host "    It's likely that this computer does not support Hyper-V." -ForegroundColor Red
-            $response = Read-Host -Prompt "    Do you want to continue anyway? It may cause problems. (y/n)"
-            if ($response -ne 'y') {
-                Write-Host "    Script aborted. Try enabling Hyper-V manually." -ForegroundColor Yellow
-                Write-Host -NoNewLine '    Press any key to close program...'
-                $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
-                exit
-            } else {
-                Write-Output "    Continuing...`n"
-            }
-        }
-    } else {
-        Write-Output "    Skipping installation...`n"
-    }
-}
-
 $wsl = Get-WindowsOptionalFeature -FeatureName Microsoft-Windows-Subsystem-Linux -Online -ErrorAction SilentlyContinue
 if($wsl.State -eq "Enabled") {
     Write-Host "[+] WSL2 is already enabled." -ForegroundColor Green
 } else {
     Write-Host "[x] WSL2 is not enabled." -ForegroundColor Yellow -ErrorAction SilentlyContinue
-    $response = Read-Host -Prompt "    Do you want to install WSL2? (y/n)"
-    if ($response -eq 'y') {
-        Write-Output "    Enabling, please wait..."
-        try {
-            $ProgressPreference = 'SilentlyContinue'
-            Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux -All -NoRestart
-            Enable-WindowsOptionalFeature -FeatureName VirtualMachinePlatform -Online -All -NoRestart
+    Write-Output "    Enabling, please wait..."
+    try {
+        $ProgressPreference = 'SilentlyContinue'
+        Write-Output "    Downloading necessary features..."
+        Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux -NoRestart -ErrorAction Stop
+        Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart -ErrorAction Stop
 
-            Write-Output "    Downloading necessary features... (estimated 30s)"
-            Start-Sleep 30
+        Start-Sleep 10
 
-            Write-Host "    WSL2 is enabled now. Reboot the system to continue the installation.`n" -ForegroundColor Green
-            Write-Host -NoNewLine 'Press any key to close program...'
+        Write-Host "    WSL2 is enabled now. Reboot the system to continue the installation.`n" -ForegroundColor Green
+        Write-Host -NoNewLine 'Press any key to close program...'
+        $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+        exit
+    } catch {
+        Write-Host "    Failed to enable WSL2." -ForegroundColor Red
+        Write-Host "    It's likely that this computer does not support WSL2." -ForegroundColor Red
+        $response = Read-Host -Prompt "    Do you want to continue anyway? It may cause problems. (y/n)"
+        if ($response -ne 'y') {
+            Write-Host "    Script aborted. Try enabling WSL2 manually." -ForegroundColor Yellow
+            Write-Host -NoNewLine '    Press any key to close program...'
             $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
             exit
-        } catch {
-            Write-Host "    Failed to enable WSL2." -ForegroundColor Red
-            Write-Host "    It's likely that this computer does not support WSL2." -ForegroundColor Red
-            $response = Read-Host -Prompt "    Do you want to continue anyway? It may cause problems. (y/n)"
-            if ($response -ne 'y') {
-                Write-Host "    Script aborted. Try enabling WSL2 manually." -ForegroundColor Yellow
-                Write-Host -NoNewLine '    Press any key to close program...'
-                $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
-                exit
-            } else {
-                Write-Output "    Continuing...`n"
-            }
+        } else {
+            Write-Output "    Continuing...`n"
         }
-    } else {
-        Write-Output "    Skipping installation...`n"
     }
 }
 

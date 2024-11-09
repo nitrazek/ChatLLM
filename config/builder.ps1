@@ -1,11 +1,9 @@
 function CheckDockerRunning {
     $dockerRunning = $false
-    try {
-        docker ps 2>$null
-        if ($LASTEXITCODE -eq 0) {
-            $dockerRunning = $true
-        }
-    } catch {}
+    docker ps 2>$null
+    if ($LASTEXITCODE -eq 0) {
+        $dockerRunning = $true
+    }
     return $dockerRunning
 }
 
@@ -17,13 +15,18 @@ If (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 Set-Location -Path $PSScriptRoot
 Clear-Host
 
-# Get-Content ../docker-config.env | foreach {
-#   $name, $value = $_.split('=')
-#   if ([string]::IsNullOrWhiteSpace($name) || $name.Contains('#') || $name -eq "OLLAMA_MODEL") {
-#     continue
-#   }
-#   Set-Content env:\$name $value
-# }
+# Defaults for models
+$OLLAMA_MODEL = "llama3.2"
+$OLLAMA_EMBEDDING_MODEL = "nomic-embed-text"
+
+Get-Content ../docker-config.env | ForEach-Object {
+    if ($_ -match "^OLLAMA_MODEL\s*=\s*(.*)") {
+        $OLLAMA_MODEL = $matches[1].Trim()
+    }
+    elseif ($_ -match "^OLLAMA_EMBEDDING_MODEL\s*=\s*(.*)") {
+        $OLLAMA_EMBEDDING_MODEL = $matches[1].Trim()
+    }
+}
 
 $gpuInfo = Get-WmiObject -Class Win32_VideoController | Where-Object {$_.Description -like '*NVIDIA*'}
 $composeFilePath = "..\docker-compose-cpu.yaml"
@@ -51,9 +54,11 @@ while ($continue) {
     docker-compose -f $composeFilePath down
 
     docker-compose -f $composeFilePath up ollama -d
-    docker exec ollama ollama pull llama3.2 #$Env:OLLAMA_MODEL
+    docker exec ollama ollama pull $OLLAMA_MODEL
+    docker exec ollama ollama pull $OLLAMA_EMBEDDING_MODEL
 
     docker-compose -f $composeFilePath up --build -d
+    docker builder prune -f
     docker image prune -f
     Start-Sleep 1
     docker ps

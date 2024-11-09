@@ -1,10 +1,19 @@
 function Set-OpenUiOnStartup {
     param ([bool] $disable)
 
-    $settingsJson = "$env:APPDATA\Docker\settings.json"
-    if (!(Test-Path $settingsJson -PathType Leaf)) {
+    $oldSettingsJson = "$env:APPDATA\Docker\settings.json"
+    $newSettingsJson = "$env:APPDATA\Docker\settings-store.json"
+
+    $settingsJson = $null
+    if (Test-Path $newSettingsJson -PathType Leaf) {
+        $settingsJson = $newSettingsJson
+    } elseif (Test-Path $oldSettingsJson -PathType Leaf) {
+        $settingsJson = $oldSettingsJson
+    }
+
+    if (-not $settingsJson) {
         if ($disable) {
-            Write-Host "    No Docker settings found. Switching to window mode..." -ForegroundColor Yellow
+            Write-Host "No Docker settings found. Switching to window mode..." -ForegroundColor Yellow
         }
         return
     }
@@ -12,7 +21,7 @@ function Set-OpenUiOnStartup {
     $settings = Get-Content $settingsJson | ConvertFrom-Json 
     if ($settings.openUIOnStartupDisabled -ne $disable) {
         if (!(Test-Path "$settingsJson.bak" -PathType Leaf)) {
-            Write-Output "    Creating backup file for docker desktop settings..."
+            Write-Output "Creating backup file for docker desktop settings..."
             Copy-Item $settingsJson "$settingsJson.bak" -ErrorAction SilentlyContinue
         }
         $settings.openUIOnStartupDisabled = $disable
@@ -30,42 +39,36 @@ Set-Location -Path $PSScriptRoot
 Clear-Host
 Write-Host "Scanning for Docker Desktop..."
 
-$maxWaitTime = 120 
-$waitInterval = 5
+$timeout = 90
 $elapsedTime = 0
-
-if (Test-Path "C:\Program Files\Docker\Docker\Docker Desktop.exe") {
+$dockerPath = "C:\Program Files\Docker\Docker\Docker Desktop.exe"
+if (Test-Path $dockerPath) {
     Set-OpenUiOnStartup -disable $true
     Write-Output "Starting docker desktop..."
-    Start-Process -FilePath "C:\Program Files\Docker\Docker\Docker Desktop.exe"
-    Start-Sleep 5
-    Set-OpenUiOnStartup -disable $false
+    Start-Process -FilePath $dockerPath
 
-    while ($elapsedTime -lt $maxWaitTime) {
-        try {
-            docker info >$null 2>&1
-            if ($LASTEXITCODE -eq 0) {
-                Write-Host "Docker Desktop is fully started and ready." -ForegroundColor Green
-                break
-            }
-        } catch {}
+    $dockerReady = $false
+    while (-not $dockerReady -and $elapsedTime -lt $timeout) {
+        Write-Host -NoNewline "."
+        Start-Sleep -Seconds 1
 
-        Start-Sleep -Seconds $waitInterval
-        $elapsedTime += $waitInterval
-
-        if ($elapsedTime -ge $maxWaitTime) {
-            Write-Host "Docker Desktop failed to start within the expected time limit." -ForegroundColor Red
-            Write-Host -NoNewLine 'Press any key to continue...'
-            $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
-            exit
+        docker ps >$null 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            $dockerReady = $true
         }
 
-        Write-Host "Waiting for Docker Desktop... [$elapsedTime/$maxWaitTime sec]" -ForegroundColor Yellow
+        $elapsedTime++
+    }
+    Set-OpenUiOnStartup -disable $false
+
+    Write-Host "."
+    if ($dockerReady) {
+        Write-Host "Docker Desktop is fully started and ready." -ForegroundColor Green
+    } else {
+        Write-Host "Docker Desktop failed to start within $timeout seconds. Please start it manually." -ForegroundColor Red
     }
 } else {
     Write-Host "Couldn't find docker desktop in default location. Start it manually." -ForegroundColor Red
-    Write-Host -NoNewLine 'Press any key to continue...'
-    $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
 }
 
 Write-Host -NoNewLine "`nPress any key to continue..."

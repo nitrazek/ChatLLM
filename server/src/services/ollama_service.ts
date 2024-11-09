@@ -16,8 +16,8 @@ export class OllamaService {
                 model: ollamaModel
             });
 
-            if (!(await this.checkModelExists(newInstance)))
-                throw new Error(`Ollama do not have model '${ollamaModel}'. Please pull it manually and restart server.`);
+            if (!(await this.checkModelsExists(newInstance)))
+                throw new Error(`Ollama do not have '${ollamaModel}' or '${ollamaEmbeddingModel}' model. Please pull them manually and restart server.`);
 
             this.instance = newInstance;
         }
@@ -25,10 +25,17 @@ export class OllamaService {
         return this.instance;
     }
 
-    private static async checkModelExists(instance: ChatOllama): Promise<boolean> {
+    private static async checkModelsExists(instance: ChatOllama): Promise<boolean> {
         const { models } = await instance.client.list();
-        return !!models.find(
+        
+        const hasOllamaModel = models.find(
             (m: any) => m.name === ollamaModel || m.name === `${ollamaModel}:latest`
         );
+
+        const hasEmbeddingModel = models.find(
+            (m: any) => m.name === ollamaEmbeddingModel || m.name === `${ollamaEmbeddingModel}:latest`
+        );
+
+        return hasOllamaModel && hasEmbeddingModel;
     }
 }
