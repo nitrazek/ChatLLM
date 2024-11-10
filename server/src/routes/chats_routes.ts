@@ -55,9 +55,9 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
             order: { updatedAt: "DESC" }
         });
         await chat.addMessage(SenderType.HUMAN, question);
-        const ragChain = getRagChain(template, chatMessageList);
+        const ragChain = await getRagChain(template, chatMessageList);
         const stream = await ragChain.stream({ question });
-        return reply.send(transformStream(stream, chat));
+        return reply.send(await transformStream(stream, chat));
     });
 
     // Get a list of chats for a specific user
