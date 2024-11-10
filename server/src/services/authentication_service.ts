@@ -44,7 +44,7 @@ const authenticationService: FastifyPluginCallback = (server, _, done) => {
         try {
             await req.jwtVerify();
             
-            if (req.user.role !== UserRole.ADMIN) {
+            if (req.user.role !== UserRole.ADMIN && req.user.role !== UserRole.SUPERADMIN) {
                 const errorReply: ErrorReply = {
                     statusCode: 403,
                     error: 'Forbidden',

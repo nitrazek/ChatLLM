@@ -2,10 +2,10 @@ import { FastifyPluginCallback } from "fastify";
 import * as Schemas from "../schemas/users_schemas";
 import { User } from "../models/user";
 import { adminAuth, userAuth } from "../services/authentication_service";
-import { BadRequestError } from "../schemas/errors_schemas";
+import { BadRequestError, ForbiddenError } from "../schemas/errors_schemas";
 import { isEmail } from "class-validator";
 import { getPaginationMetadata } from "../utils/pagination_handler";
-import { Like } from "typeorm";
+import { Like, Not } from "typeorm";
 import { UserRole } from "../enums/user_role";
 import { AuthHeader } from "../schemas/base_schemas";
 
@@ -48,7 +48,9 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
 
         if (!user.activated) throw new BadRequestError('User is not activated.');
 
-        const token = server.jwt.sign({ ...user });
+        const token = server.jwt.sign({ ...user }, {
+             expiresIn: '1d'
+        });
         reply.send({ name: user.name, role: user.role, token });
     });
 
@@ -80,7 +82,8 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
                 ...(name !== undefined && { name: Like(`%${name}%`) }),
                 ...(email !== undefined && { email: Like(`%${email}%`) }),
                 ...(role !== undefined && { role: getUserRole(role) }),
-                ...(activated !== undefined && { activated })
+                ...(activated !== undefined && { activated }),
+                role: Not(UserRole.SUPERADMIN)
             },
             order: { updatedAt: "DESC" }
         });
@@ -106,6 +109,7 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
     }, async (req, reply) => {
         const user = await User.findOneBy({ id: req.params.userId });
         if (!user) throw new BadRequestError('User do not exist.');
+        if (user.role === UserRole.SUPERADMIN) throw new ForbiddenError('You do not have permission to access this resource.');
 
         reply.send(user);
     });
@@ -121,6 +125,7 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
     }, async (req, reply) => {
         const user = await User.findOneBy({ id: req.params.userId });
         if (!user) throw new BadRequestError('User do not exist.');
+        if (user.role === UserRole.SUPERADMIN) throw new ForbiddenError('You do not have permission to access this resource.');
 
         user.activate();
         const activatedUser = await user.save()
@@ -140,6 +145,7 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
     }, async (req, reply) => {
         const user = await User.findOneBy({ id: req.params.userId });
         if (!user) throw new BadRequestError('User do not exist.');
+        if (user.role === UserRole.SUPERADMIN) throw new ForbiddenError('You do not have permission to access this resource.');
 
         const { name, email, password } = req.body;        
         User.merge(user, { name, email, password });
@@ -159,6 +165,7 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
     }, async (req, reply) => {
         const user = await User.findOneBy({ id: req.params.userId });
         if (!user) throw new BadRequestError('User do not exist.');
+        if (user.role === UserRole.SUPERADMIN) throw new ForbiddenError('You do not have permission to access this resource.');
 
         await user.remove();
         reply.code(204).send();
