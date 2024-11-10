@@ -7,22 +7,24 @@ import 'package:mobile/viewModels/MainChatViewModel.dart';
 import 'package:provider/provider.dart';
 
 import '../models/Chat.dart';
+import '../models/ErrorResponse.dart';
+import '../states/AccountState.dart';
+import 'AccountService.dart';
 
-class ChatService extends ChangeNotifier {
+class ChatService {
   final String baseUrl = "http://10.0.2.2:3000";
-  final HttpClient _httpClient = HttpClient();
   bool _isRequestCancelled = false;
-  HttpClientRequest? _request;
+  String? token = AccountState.token;
+  final httpClient = HttpClient();
 
   void cancelAnswer() {
     _isRequestCancelled = true;
   }
 
-
-  Stream<String> postQuestion(String question, int chatId, String token) async* {
+  Stream<String> postQuestion(String question) async* {
     try {
-      final uri = Uri.parse("$baseUrl/api/v1/chats/$chatId");
-      final httpClient = HttpClient();
+      int? currentChatId = ChatState.currentChat?.id;
+      final uri = Uri.parse("$baseUrl/api/v1/chats/$currentChatId");
       final request = await httpClient.postUrl(uri);
 
       request.headers.set('Content-Type', 'application/json');
@@ -33,9 +35,15 @@ class ChatService extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         await for (var chunk in response.transform(utf8.decoder)) {
-          if(_isRequestCancelled) {
+          if (_isRequestCancelled) {
             _isRequestCancelled = false;
             break;
+          }
+
+          final Map<String, dynamic> jsonResponse = jsonDecode(chunk);
+
+          if (jsonResponse.containsKey('newChatName')) {
+            ChatState.currentChat?.name = jsonResponse['newChatName'];
           }
           final answers = _parseConcatenatedJson(chunk);
           for (final answer in answers) {
@@ -56,23 +64,15 @@ class ChatService extends ChangeNotifier {
 
   List<String> _parseConcatenatedJson(String responseBody) {
     final List<String> answers = [];
-    ChatState chatState = ChatState();
 
-    final answerRegex = RegExp(r'\{"answer":"(.*?)"\}');
-    final matches = answerRegex.allMatches(responseBody);
+    final answerRegex = RegExp(r'"answer":"(.*?)"');
+    Iterable<Match> matches = answerRegex.allMatches(responseBody);
 
     for (final match in matches) {
       final answer = match.group(1);
       if (answer != null) {
         answers.add(answer);
       }
-    }
-
-    final newChatNameRegex = RegExp(r'"newChatName":"(.*?)"');
-    final chatNameMatch = newChatNameRegex.firstMatch(responseBody);
-
-    if (chatNameMatch != null) {
-      final newChatName = chatNameMatch.group(1);
     }
 
     return answers;
@@ -82,35 +82,30 @@ class ChatService extends ChangeNotifier {
     return text.replaceAll(r'\n', '\n').replaceAll(r'\t', '    ');
   }
 
-  Future<Chat> createChat(String? name, bool isUsingOnlyKnowledgeBase,
-      String token) async {
+  Future<Chat> createChat(String? name, bool isUsingOnlyKnowledgeBase) async {
     try {
       final uri = Uri.parse("$baseUrl/api/v1/chats/new");
-      final httpClient = HttpClient();
       final request = await httpClient.postUrl(uri);
 
       request.headers.set('Content-Type', 'application/json');
       request.headers.set('Authorization', 'Bearer $token');
 
-
-      if(name != "") {
+      if (name != "") {
         request.add(utf8.encode(jsonEncode({
           'name': name,
           'isUsingOnlyKnowledgeBase': isUsingOnlyKnowledgeBase
         })));
+      } else {
+        request.add(utf8.encode(jsonEncode(
+            {'isUsingOnlyKnowledgeBase': isUsingOnlyKnowledgeBase})));
       }
-      else
-        {
-          request.add(utf8.encode(jsonEncode({
-            'isUsingOnlyKnowledgeBase': isUsingOnlyKnowledgeBase
-          })));
-        }
 
       final response = await request.close();
 
       if (response.statusCode == 200) {
         final responseBody = await response.transform(utf8.decoder).join();
         Map<String, dynamic> json = jsonDecode(responseBody);
+        ChatState.currentChat = Chat.fromJson(json);
         return Chat.fromJson(json);
       } else {
         throw Exception('Nie udało się utworzyć czatu: ${response.statusCode}');
@@ -124,11 +119,9 @@ class ChatService extends ChangeNotifier {
     }
   }
 
-
-  Future<List<Chat>> getChatList(String token) async {
+  Future<List<Chat>> getChatList() async {
     try {
       final uri = Uri.parse("$baseUrl/api/v1/chats/list");
-      final httpClient = HttpClient();
       final request = await httpClient.getUrl(uri);
 
       request.headers.set('Authorization', 'Bearer $token');
@@ -136,10 +129,10 @@ class ChatService extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         final responseBody = await response.transform(utf8.decoder).join();
-        List<dynamic> jsonList = jsonDecode(responseBody);
+        Map<String, dynamic> jsonMap = jsonDecode(responseBody);
+        List<dynamic> jsonList = jsonMap['chats'];
         return jsonList.map((json) => Chat.fromJson(json)).toList();
-      }
-      else {
+      } else {
         throw Exception('Failed to load chats');
       }
     } catch (e) {
@@ -148,33 +141,55 @@ class ChatService extends ChangeNotifier {
     }
   }
 
-  Future<List<ChatMessage>> loadHistory(int currentChatId, String token) async {
+  Future<List<ChatMessage>> loadHistory() async {
     try {
+      int? currentChatId = ChatState.currentChat?.id;
       final uri = Uri.parse("$baseUrl/api/v1/chats/$currentChatId");
-      final httpClient = HttpClient();
       final request = await httpClient.getUrl(uri);
 
       request.headers.set('Authorization', 'Bearer $token');
       final response = await request.close();
 
-      if (response.statusCode == 200) {
-        final responseBody = await response.transform(utf8.decoder).join();
-        List<dynamic> jsonList = jsonDecode(responseBody);
-        return jsonList.map((json) =>
-            ChatMessage.fromJson(json)).toList();
+      switch (response.statusCode) {
+        case 200:
+          final responseBody = await response.transform(utf8.decoder).join();
+          Map<String, dynamic> jsonMap = jsonDecode(responseBody);
+          if (jsonMap.containsKey('messages') && jsonMap['messages'] is List) {
+            List<dynamic> jsonList = jsonMap['messages'];
+            return jsonList.map((json) => ChatMessage.fromJson(json)).toList();
+          } else {
+            return [];
+          }
+        case 400:
+          final responseBody = await response.transform(utf8.decoder).join();
+          final errorResponse =
+              ErrorResponse.fromJson(jsonDecode(responseBody));
+          throw BadRequestException(errorResponse.message);
+        case 401:
+          final responseBody = await response.transform(utf8.decoder).join();
+          final errorResponse =
+              ErrorResponse.fromJson(jsonDecode(responseBody));
+          throw BadRequestException(errorResponse.message);
+        case 500:
+          final responseBody = await response.transform(utf8.decoder).join();
+          final errorResponse =
+              ErrorResponse.fromJson(jsonDecode(responseBody));
+          throw ServerException(errorResponse.message);
+        default:
+          throw ServerException('Błąd serwera: ${response.statusCode}');
       }
-      else {
-        throw Exception('Failed to load chats');
+    } catch (e) {
+      if (e is SocketException) {
+        throw FetchDataException('Błąd sieci: ${e.message}');
+      } else {
+        rethrow;
       }
-    }
-    catch(e) {
-      print("Error: $e");
-      return [];
     }
   }
 }
 
 class FetchDataException implements Exception {
   final String message;
+
   FetchDataException(this.message);
 }
