@@ -13,7 +13,7 @@ function AdminPanel() {
     const [userList, setUserList] = useState([]);
     const [prevPage, setPrevPage] = useState(null);
     const [nextPage, setNextPage] = useState(null);
-    const [totalPages, setTotalPages] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
     const [currentPage, setCurrentPage] = useState(1);
     const [usernameFilter, setUsernameFilter] = useState("");
     const [emailFilter, setEmailFilter] = useState("");
@@ -23,6 +23,12 @@ function AdminPanel() {
     const [usersPerPage, setUsersPerPage] = useState(10);
     const [showEditUserPopup, setShowEditUserPopup] = useState(false);
     const [userToEditId, setUserToEditId] = useState(null);
+
+    useEffect(() => {
+        if (!userToken) {
+          navigate('/');
+        }
+      })
 
     const handleToggleUserManagement = () => {
         setUserManagement(true);
@@ -121,8 +127,8 @@ function AdminPanel() {
             {showEditUserPopup && <EditUserPopup userId={userToEditId} />}
             <div className="adminSideBar">
                 <div className="adminUpperSideContainer">
+                    <button className="backButton" onClick={() => navigate(`/chat/`)}>⯇</button>
                     <div className="adminUpperSideTop">ADMIN</div>
-                    <a className="backbutton" onClick={() => navigate(`/chat/`)}>↶ Powrót</a>
                 </div>
                 <button
                     className={userManagement ? "userManagementButtonActive" : "userManagementButtonInactive"}
@@ -142,14 +148,18 @@ function AdminPanel() {
             <div className={showFilters ? "adminMain adminMainFilters" : "adminMain"}>
                 {userManagement && (
                     <div>
-                        <div className='buttonContainer filterButtonContainer'>
-                            <label className='filterLabel'>Szukaj użytkownika:</label>
-                            <input
-                                className="filterTextInput"
-                                type="text"
-                                placeholder='Nazwa/email'
-                                value={usernameFilter}
-                                onChange={(e) => setUsernameFilter(e.target.value)} />
+                        <div className='adminUserTopContainer'>
+                            <div>
+                                <label>Szuka użytkownika:</label>
+                                <input
+                                    className="filterTextInput"
+                                    type="text"
+                                    placeholder='Nazwa lub email'
+                                    value={usernameFilter}
+                                    onChange={(e) => setUsernameFilter(e.target.value)} />
+                                <button className='adminButton filterButton' onClick={handleSearch}>Szukaj</button>
+                            </div>
+                            <button className='adminButton filterButton' onClick={() => setShowFilters(!showFilters)}>{showFilters ? "Ukryj filtry" : "Pokaż filtry"}</button>
                         </div>
                         <table className="userTable">
                             <thead>
@@ -188,7 +198,6 @@ function AdminPanel() {
                                                         onClick={() => deleteUser(user.id)}>
                                                         Usuń
                                                     </button>
-                                                    <button onClick={() => setShowFilters(!showFilters)}></button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -196,7 +205,7 @@ function AdminPanel() {
                             </tbody>
                         </table>
                         <ReactPaginate
-                            activeClassName={'item active '}
+                            activeClassName={'item paginationActive '}
                             breakClassName={'item break-me '}
                             breakLabel={'...'}
                             containerClassName={'pagination'}
@@ -218,50 +227,41 @@ function AdminPanel() {
             </div>
             {(showFilters && userManagement) && (
                 <div className={`filterSideBar ${showFilters ? 'show' : ''}`}>
-                    <div className='buttonContainer filterButtonContainer'>
-                        <label className='filterLabel'>Email:</label>
-                        <input
-                            className="filterTextInput"
-                            type="text"
-                            value={emailFilter}
-                            onChange={(e) => setEmailFilter(e.target.value)}
-                        />
-                    </div>
-                    <div className='buttonContainer filterButtonContainer'>
-                        Rola:
-                        <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
-                            <option value="">dowolna</option>
-                            <option value="admin">Administrator</option>
-                            <option value="user">Użytkownik</option>
-                        </select>
-                    </div>
-                    <div className='buttonContainer filterButtonContainer'>
+                    <div className='filterTitle'>Filtry</div>
+                    <hr className='line'/>
+                    <label>Rola:</label><br/>
+                    <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+                        <option value="">dowolna</option>
+                        <option value="admin">Administrator</option>
+                        <option value="user">Użytkownik</option>
+                    </select>
+                    <hr className='line'/>
+                    <label>Status konta:</label>
+                    <div className='labelContainer'>
+                        <label>Aktywowany   </label>
                         <input
                             type="checkbox"
                             checked={activatedFilter === "true"}
                             onChange={() => setActivatedFilter(!activatedFilter)}
                         />
-                        <label>Aktywowany</label>
                     </div>
-                    <div className='buttonContainer filterButtonContainer'>
+                    <div className='labelContainer'>
+                        <label>Nieaktywowany</label>
                         <input
                             type="checkbox"
                             checked={notActivatedFilter === "true"}
                             onChange={() => setNotActivatedFilter(!notActivatedFilter)}
                         />
-                        <label>Nieaktywowany</label>
                     </div>
-
+                    <hr className='line'/>
+                    <label>Ilość wyświetlanych użytkowników na stronie:</label><br />
+                    <select value={usersPerPage} onChange={(e) => setUsersPerPage(e.target.value)}>
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="15">15</option>
+                    </select>
                     <div className='buttonContainer filterButtonContainer'>
-                        Ilość wyświetlanych użytkowników na stronie:
-                        <select value={usersPerPage} onChange={(e) => setUsersPerPage(e.target.value)}>
-                            <option value="5">5</option>
-                            <option value="10">10</option>
-                            <option value="15">15</option>
-                        </select>
-                    </div>
-                    <div className='buttonContainer filterButtonContainer'>
-                        <button className='adminButton filterButton' onClick={handleSearch}>Szukaj</button>
+                        <button className='adminButton filterButton' onClick={handleSearch}>Zastosuj filtry</button>
                         <button className='adminButton filterButton' onClick={handleResetFilters}>Resetuj filtry</button>
                     </div>
                 </div>

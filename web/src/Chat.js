@@ -319,7 +319,7 @@ function Chat() {
           {chatId && (
             <div className="chatFooter">
               <input
-                className="input"
+                className="chatInput"
                 type="text"
                 placeholder="Napisz wiadomość..."
                 value={input}

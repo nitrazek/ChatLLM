@@ -59,7 +59,7 @@ h4 {
     -moz-transform: scale(2); /* Dla Firefox */
 }
 
-.popup-container input[type="text"] {
+.popup-container input[type="text"], .popup-container input[type="password"] {
     width: 320px;
 }
 

@@ -7,7 +7,6 @@
 
 .adminSideBar {
   flex: 1;
-  border-right: 2px solid #1e2124;
   background-color: #1e2124;
   display: flex;
   flex-direction: column;
@@ -26,12 +25,11 @@
 }
 
 .adminMainFilters {
-  flex: 10; 
+  flex: 10;
 }
 
 .adminUpperSideTop {
   color: white;
-  font-weight: bold;
   z-index: 3;
   background-color: #7289da;
   font-size: 1.2em;
@@ -39,7 +37,7 @@
 
 .adminUpperSideContainer {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: center;
   align-items: center;
   width: 100%;
@@ -110,7 +108,27 @@
   color: #1e2124;
   font-size: large;
   font-weight: bold;
+  position: relative;
+  overflow: hidden; /* Ukrywa wszystko poza granicami przycisku */
 }
+
+.userManagementButtonActive::after,
+.fileManagementButtonActive::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  font-size: large;
+  border-right: 15px solid #282b30; /* Kolor wypełnienia „wcięcia” */
+  border-top: 25px solid transparent; /* Tworzy górny kąt trójkąta */
+  border-bottom: 25px solid transparent; /* Tworzy dolny kąt trójkąta */
+}
+
+
+
 
 .fileManagementButtonInactive,
 .userManagementButtonInactive {
@@ -118,6 +136,9 @@
   padding: 10px 20px;
   width: 100%;
   border-bottom: 1px solid #484d52;
+  border-top: 1px solid #484d52;
+  border-left: none;
+  border-right: none;
   color: white;
   font-size: large;
   font-weight: bold;
@@ -137,6 +158,28 @@
   color: white;
   width: 80px;
   font-size: 14px;
+}
+
+.backButton {
+  width: 46px;
+  height: 46px;
+  border-radius: 23px;
+  background-color: white;
+  color: #7289da;
+  margin-right: 25px;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+.backButton:hover {
+  background-color: #ffffff30;
+  border: 2px solid white;
+  color: white;
+}
+
+.filterButton {
+  width: 120px;
 }
 
 .adminButton:hover {
@@ -186,7 +229,7 @@
   color: #808e9b;
 }
 
-.active {
+.paginationActive {
   border: solid 1px #808e9b;
   border-radius: 40px;
   color: #808e9b;
@@ -234,6 +277,7 @@
   gap: 5px;
 }
 
+
 .userFiltersContainter {
   padding: 10px;
   border-radius: 15px;
@@ -246,9 +290,9 @@
   padding: 10px;
   display: flex;
   flex-direction: column;
-  justify-content: center; 
-  align-items: center; 
-  height: 100%; 
+  justify-content: center;
+  align-items: center;
+  height: 100%;
 }
 
 .filterButtonContainer {
@@ -268,20 +312,57 @@
 
 .filterTextInput {
   width: 200px;
+  margin: 15px
 }
 
 /* Sidebar with a fixed width that slides in/out */
 .filterSideBar {
-  flex: 2; /* Fixed width for filterSideBar */
+  flex: 2;
+  /* Fixed width for filterSideBar */
   background-color: #36393e;
   display: flex;
   flex-direction: column;
   padding: 15px;
-  transform: translateX(100%); /* Initially off-screen */
+  transform: translateX(100%);
+  /* Initially off-screen */
   transition: flex 0.7s ease, margin-right 0.7s ease, padding 0.7s ease, transform 0.7 ease;
 }
 
 /* Show filterSideBar by translating it to the left */
 .filterSideBar.show {
-  transform: translateX(0); /* Slide in from right */
+  transform: translateX(0);
+  /* Slide in from right */
+}
+
+select {
+  width: auto;
+  align-items: center;
+}
+
+.labelContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: center; /* Aligns checkboxes with labels */
+  text-align: left; /* Ensures text aligns to the left */
+  margin: 15px;
+  justify-content: flex-start; /* Forces flex items to align to the left */
+}
+
+.adminUserTopContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+}
+
+.line {
+  border: none;
+  width: 100%;
+  margin: 20px 0;
+  border-top: 2px solid #808e9b;
+}
+
+.filterTitle {
+  text-align: center;
+  
 }
