@@ -32,10 +32,16 @@ export class File extends ExtendedBaseEntity {
     @IsEnum(FileType, { message: getIsInvalidMessage('Type') })
     type!: FileType;
 
-    @ManyToOne(() => File, (file) => file.children, { nullable: true })
+    @ManyToOne(() => File, (file) => file.children, {
+        nullable: true,
+        onDelete: "CASCADE"
+    })
     parent!: File | null;
 
-    @OneToMany(() => File, (file) => file.parent)
+    @OneToMany(() => File, (file) => file.parent, {
+        cascade: true,
+        onDelete: "CASCADE"
+    })
     children!: File[];
 
     @ManyToOne(() => User, (user) => user.filesCreated)

@@ -55,12 +55,8 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         });
         file = await file.save();
 
-        const chroma = await ChromaService.getInstance();
-        await Promise.all(splittedDocuments.map((document, index) => {
-            return chroma.addDocuments([document], {
-                ids: [`${file.id}_${index}`]
-            });
-        }));
+        const chromaService = await ChromaService.getInstance();
+        await chromaService.addDocuments(file.id, splittedDocuments);
 
         reply.send({
             ...file,
@@ -160,25 +156,12 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         });
         if (!file) throw new BadRequestError('File do not exist.');
 
-        const chroma = await ChromaService.getInstance();
-        const fileContent = await chroma.collection.get({
-            ids: Array.from({ length: file.chunkAmount }, (_, i) => i).map(index => `${file.id}_${index}`)
-        });
-        const fileContentIds: string[] = fileContent.ids;
-        const fileContentDocuments: string[] = fileContent.documents;
-        const fileContentString: string = fileContentDocuments
-            .map((document, index) => ({ key: fileContentIds[index], value: document }))
-            .sort((a, b) => {
-                const numA = parseInt(a.key.split("_")[1]);
-                const numB = parseInt(b.key.split("_")[1]);
-                return numA - numB;
-            })
-            .map((documentObj, index) => index === 0 ? documentObj.value : documentObj.value.substring(200))
-            .join();
+        const chromaService = await ChromaService.getInstance();
+        const fileContent = await chromaService.getFileContent(file);
 
         reply.send({
             ...file,
-            content: fileContentString,
+            content: fileContent,
             creatorName: file.creator.name
         });
     });
@@ -221,10 +204,8 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         const file = await File.findOneBy({ id: req.params.fileId });
         if (!file) throw new BadRequestError('File do not exist.');
     
-        const chroma = await ChromaService.getInstance();
-        await chroma.delete({
-            ids: Array.from({ length: file.chunkAmount }, (_, i) => i).map(index => `${file.id}_${index}`)
-        });
+        const chromaService = await ChromaService.getInstance();
+        await chromaService.deleteFile(file);
 
         await file.remove();
         reply.code(204).send();
