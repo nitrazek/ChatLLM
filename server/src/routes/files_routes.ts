@@ -60,7 +60,7 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
 
         reply.send({
             ...file,
-            creatorName: file.creator.name
+            creatorName: file.creator ? file.creator.name : null
         });
     });
 
@@ -89,7 +89,7 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
 
         reply.send({
             ...folder,
-            creatorName: folder.creator.name
+            creatorName: folder.creator ? folder.creator.name : null
         });
     });
 
@@ -136,7 +136,10 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
             throw new BadRequestError("Invalid page number, must not be greater than page amount");
 
         reply.send({
-            files: files.map(file => ({ ...file, creatorName: file.creator.name })),
+            files: files.map(file => ({
+                ...file,
+                creatorName: file.creator ? file.creator.name : null
+            })),
             pagination: paginationMetadata
         });
     });
@@ -162,7 +165,7 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         reply.send({
             ...file,
             content: fileContent,
-            creatorName: file.creator.name
+            creatorName: file.creator ? file.creator.name : null
         });
     });
 
@@ -188,7 +191,7 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
 
         reply.send({
             ...updatedFile,
-            creatorName: updatedFile.creator.name
+            creatorName: updatedFile.creator ? updatedFile.creator.name : null
         });
     })
 

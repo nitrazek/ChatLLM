@@ -11,7 +11,7 @@ const GenericFileResponseTypes = Type.Object({
     id: Type.Number({ description: "Unique identifier of the file" }),
     name: Type.String({ description: "Name of the file" }),
     type: Type.Enum(FileType, { description: "Type of the file" }),
-    creatorName: Type.String({ description: "Name of the user who created that file" }),
+    creatorName: Type.Union([Type.Null(), Type.String({ description: "Name of the user who created that file" })]),
     chunkAmount: Type.Number({ description: "Amount of chunks to which file was divided and saved in knowledge base, for folders this amount is 0" }),
     createdAt: Type.Unsafe<Date>({ type: 'string', format: 'date', description: "Creation date of the file" }),
     updatedAt: Type.Unsafe<Date>({ type: 'string', format: 'date', description: "Update date of the file" }),

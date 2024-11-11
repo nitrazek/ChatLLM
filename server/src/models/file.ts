@@ -44,8 +44,11 @@ export class File extends ExtendedBaseEntity {
     })
     children!: File[];
 
-    @ManyToOne(() => User, (user) => user.filesCreated)
-    creator!: User;
+    @ManyToOne(() => User, (user) => user.filesCreated, {
+        nullable: true,
+        onDelete: "SET NULL"
+    })
+    creator!: User | null;
 
     @Column()
     chunkAmount!: number;
