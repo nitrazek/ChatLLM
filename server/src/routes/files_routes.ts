@@ -33,7 +33,7 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         if (!resolvedFile) throw new BadRequestError('This file type is not supported.');
         const [fileHandler, fileType] = resolvedFile;
 
-        const folder = folderId ? await File.findOneBy({ id: folderId }) : null;
+        const folder = await getFolder(folderId);
         if(folder && folder.type !== FileType.FOLDER)
             throw new BadRequestError("Invalid folder ID");
 
@@ -60,6 +60,7 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
 
         reply.send({
             ...file,
+            parentId: folder ? folder.id : null,
             creatorName: file.creator ? file.creator.name : null
         });
     });
@@ -74,7 +75,7 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         onRequest: [adminAuth(server)]
     }, async (req, reply) => {
         const { name, parentFolderId } = req.body;
-        const parentFolder = parentFolderId ? await File.findOneBy({ id: parentFolderId }) : null;
+        const parentFolder = await getFolder(parentFolderId);
         if(parentFolder && parentFolder.type !== FileType.FOLDER)
             throw new BadRequestError("Invalid parent folder ID");
 
@@ -89,6 +90,7 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
 
         reply.send({
             ...folder,
+            parentId: parentFolder ? parentFolder.id : null,
             creatorName: folder.creator ? folder.creator.name : null
         });
     });
@@ -106,7 +108,7 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         if(page < 1) throw new BadRequestError("Invalid page number, must not be negative");
         if(limit < 1) throw new BadRequestError("Invalid limit value, must not be negative");
 
-        const folder = folderId ? await File.findOneBy({ id: folderId }) : null;
+        const folder = await getFolder(folderId);
         if(folder && folder.type !== FileType.FOLDER)
             throw new BadRequestError("Invalid folder ID");
 
@@ -138,6 +140,7 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         reply.send({
             files: files.map(file => ({
                 ...file,
+                parentId: folder ? folder.id : null,
                 creatorName: file.creator ? file.creator.name : null
             })),
             pagination: paginationMetadata
@@ -155,7 +158,7 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
     }, async (req, reply) => {
         const file = await File.findOne({
             where: { id: req.params.fileId },
-            relations: ["creator"]
+            relations: ["creator", "parent"]
         });
         if (!file) throw new BadRequestError('File do not exist.');
 
@@ -164,6 +167,7 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
 
         reply.send({
             ...file,
+            parentId: file.parent ? file.parent.id : null,
             content: fileContent,
             creatorName: file.creator ? file.creator.name : null
         });
@@ -177,11 +181,11 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         Reply: Schemas.UpdateFileResponse
     }>('/:fileId', {
         schema: Schemas.UpdateFileSchema,
-        onRequest:[adminAuth(server)]
+        onRequest: [adminAuth(server)]
     }, async(req, reply) => {
         const file = await File.findOne({
             where: { id: req.params.fileId },
-            relations: ["creator"]
+            relations: ["creator", "parent"]
         });
         if (!file) throw new BadRequestError('File do not exist.');
 
@@ -191,8 +195,40 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
 
         reply.send({
             ...updatedFile,
+            parentId: updatedFile.parent ? updatedFile.parent.id : null,
             creatorName: updatedFile.creator ? updatedFile.creator.name : null
         });
+    })
+
+    // Move file between folders (only admin)
+    server.put<{
+        Headers: AuthHeader,
+        Params: Schemas.MoveFileParams,
+        Body: Schemas.MoveFileBody,
+        Reply: Schemas.MoveFileResponse
+    }>('/move/:fileId', {
+        schema: Schemas.MoveFileSchema,
+        onRequest: [adminAuth(server)]
+    }, async(req, reply) => {
+        const file = await File.findOne({
+            where: { id: req.params.fileId },
+            relations: ["creator"]
+        });
+        if (!file) throw new BadRequestError('File do not exist.');
+
+        const { newParentFolderId } = req.body;
+        const newParentFolder = await getFolder(newParentFolderId);
+        if(newParentFolder && newParentFolder.type !== FileType.FOLDER)
+            throw new BadRequestError("Invalid folder ID");
+
+        File.merge(file, { parent: newParentFolder });
+        const updatedFile = await file.save();
+
+        reply.send({
+            ...updatedFile,
+            parentId: newParentFolder ? newParentFolder.id : null,
+            creatorName: updatedFile.creator ? updatedFile.creator.name : null
+        })
     })
 
     // Delete specific file (only admin)
@@ -215,6 +251,13 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
     });
 
     done();
+}
+
+const getFolder = async (folderId: number | undefined): Promise<File | null> => {
+    if(folderId === undefined) return null;
+    const folder = await File.findOneBy({ id: folderId });
+    if(folder === null) throw new BadRequestError('Folder do not exist.');
+    return folder;
 }
 
 export default filesRoutes;

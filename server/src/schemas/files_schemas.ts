@@ -9,6 +9,7 @@ import { FileType } from "../enums/file_type";
 // Schema for generic file response
 const GenericFileResponseTypes = Type.Object({
     id: Type.Number({ description: "Unique identifier of the file" }),
+    parentId: Type.Union([Type.Null(), Type.Number({ description: "Unique identifier of the folder in which is the file"})]),
     name: Type.String({ description: "Name of the file" }),
     type: Type.Enum(FileType, { description: "Type of the file" }),
     creatorName: Type.Union([Type.Null(), Type.String({ description: "Name of the user who created that file" })]),
@@ -152,6 +153,35 @@ export const UpdateFileSchema: FastifySchema = {
     tags: ["Files"],
     response: {
         200: UpdateFileResponseTypes,
+        ...AdminGuardedResponseSchema
+    }
+};
+
+// Schema for moving files between folders
+const MoveFileParamsTypes = Type.Object({
+    fileId: Type.Number({ description: "ID of the file to move" })
+}, { description: "Parameters to identify the file to move" });
+export type MoveFileParams = Static<typeof MoveFileParamsTypes>;
+
+const MoveFileBodyTypes = Type.Object({
+    newParentFolderId: Type.Optional(Type.Number({ description: "ID of the new parent folder" }))
+}, { description: "Payload containing information to which folder move this file" });
+export type MoveFileBody = Static<typeof MoveFileBodyTypes>;
+
+const MoveFileResponseTypes = Type.Object({
+    ...GenericFileResponseTypes.properties
+}, { description: "Response containing the updated file details" });
+export type MoveFileResponse = Static<typeof MoveFileResponseTypes>;
+
+export const MoveFileSchema: FastifySchema = {
+    summary: "Move file between folders",
+    description: "Moves file to specified folder. Only accessible by admin users.",
+    headers: AuthHeaderTypes,
+    params: MoveFileParamsTypes,
+    body: MoveFileBodyTypes,
+    tags: ["Files"],
+    response: {
+        200: MoveFileResponseTypes,
         ...AdminGuardedResponseSchema
     }
 };
