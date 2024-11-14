@@ -41,7 +41,7 @@ export class ChromaService {
         });
         const fileContentIds: string[] = fileContent.ids;
         const fileContentDocuments: string[] = fileContent.documents;
-        return fileContentDocuments
+        const fileContentString = fileContentDocuments
             .map((document, index) => ({ key: fileContentIds[index], value: document }))
             .sort((a, b) => {
                 const numA = parseInt(a.key.split("_")[1]);
@@ -50,6 +50,8 @@ export class ChromaService {
             })
             .map((documentObj, index) => index === 0 ? documentObj.value : documentObj.value.substring(200))
             .join();
+
+        return fileContentString.length > 1000 ? fileContentString.substring(0, 1000) + "..." : fileContentString;
     }
 
     async addDocuments(fileId: number, documents: Document[]): Promise<void> {
