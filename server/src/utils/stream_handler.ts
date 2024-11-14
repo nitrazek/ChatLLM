@@ -10,15 +10,16 @@ import { Chat } from "../models/chat";
 import { IterableReadableStream } from "@langchain/core/dist/utils/stream";
 import { getSummaryPrompt } from "../prompts";
 
-export const getRagChain = (template: string, chatMessages: ChatMessage[]) => RunnableSequence.from([
-    {
-        context: async (input, callbacks) => {
-            const chroma = await ChromaService.getInstance();
-            const retriever = chroma.asRetriever();
-            const retrieverAndFormatter = retriever.pipe(formatDocumentsAsString);
-            return retrieverAndFormatter.invoke(input.question, callbacks);
-        },
-        question: (input) => input.question,
+export const getRagChain = async (template: string, chatMessages: ChatMessage[]) => RunnableSequence.from([
+    async (input, callbacks) => {
+        const chroma = await ChromaService.getInstance();
+        const retriever = chroma.asRetriever();
+        const retrieverAndFormatter = retriever.pipe(formatDocumentsAsString);
+        const context = await retrieverAndFormatter.invoke(input.question, callbacks);
+        return {
+            context: context,
+            question: input.question
+        }
     },
     ChatPromptTemplate.fromMessages([
         ["system", template],
@@ -30,13 +31,13 @@ export const getRagChain = (template: string, chatMessages: ChatMessage[]) => Ru
         }),
         [SenderType.HUMAN.toString(), "{question}"]
     ]),
-    OllamaService.getInstance()
+    await OllamaService.getInstance()
 ]);
 
-export const transformStream = (stream: IterableReadableStream<BaseMessageChunk>, chat: Chat) => {
+export const transformStream = async (stream: IterableReadableStream<BaseMessageChunk>, chat: Chat) => {
     const transformedStream = getTransformedStream(stream, chat);
     if(chat.name !== null) return transformedStream;
-    return getNewChatNameStream(transformedStream, chat);
+    return await getNewChatNameStream(transformedStream, chat);
 }
 
 const getTransformedStream = (stream: ReadableStream<BaseMessageChunk>, chat: Chat): ReadableStream<string> => {
@@ -53,7 +54,6 @@ const getTransformedStream = (stream: ReadableStream<BaseMessageChunk>, chat: Ch
             }
             const answerChunk = value.content as string;
             answerChunks.push(answerChunk);
-            console.log(answerChunk);
             controller.enqueue(JSON.stringify({ answer: answerChunk }));
         },
         async cancel() {
@@ -63,8 +63,8 @@ const getTransformedStream = (stream: ReadableStream<BaseMessageChunk>, chat: Ch
     });
 };
 
-const getNewChatNameStream = (stream: ReadableStream<string>, chat: Chat) => {
-    const ollama = OllamaService.getInstance();
+const getNewChatNameStream = async (stream: ReadableStream<string>, chat: Chat) => {
+    const ollama = await OllamaService.getInstance();
     const answerChunks: string[] = [];
     const buffer: string[] = [];
     const reader = stream.getReader();
