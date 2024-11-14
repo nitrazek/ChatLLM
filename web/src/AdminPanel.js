@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './AdminPanel.css';
 import { useNavigate } from "react-router-dom";
 import Cookies from 'js-cookie';
-import ReactPaginate from 'react-paginate';
+import Pagination from '@mui/material/Pagination';
+import TextField from '@mui/material/TextField';
 import EditUserPopup from './EditUserPopup';
+import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
+import { Toast, toast } from 'primereact/toast';
+
 
 function AdminPanel() {
     const navigate = useNavigate();
@@ -15,6 +19,7 @@ function AdminPanel() {
     const [nextPage, setNextPage] = useState(null);
     const [totalPages, setTotalPages] = useState(1);
     const [currentPage, setCurrentPage] = useState(1);
+    const [pageInputValue, setPageInputValue] = useState(1);
     const [usernameFilter, setUsernameFilter] = useState("");
     const [emailFilter, setEmailFilter] = useState("");
     const [roleFilter, setRoleFilter] = useState("");
@@ -24,11 +29,14 @@ function AdminPanel() {
     const [showEditUserPopup, setShowEditUserPopup] = useState(false);
     const [userToEditId, setUserToEditId] = useState(null);
 
+    const toast = useRef(null);
+
+
     useEffect(() => {
         if (!userToken) {
-          navigate('/');
+            navigate('/');
         }
-      })
+    })
 
     const handleToggleUserManagement = () => {
         setUserManagement(true);
@@ -65,6 +73,32 @@ function AdminPanel() {
         setShowEditUserPopup(true);
     }
 
+    const confirmActivateUser = (userToActivateId) => {
+        confirmDialog({
+            message: 'Czy na pewno chcesz aktywować tego użytkownika?',
+            header: 'Aktywuj użytkownika',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => activateUser(userToActivateId),
+            acceptClassName: 'p-button-success', 
+            acceptLabel: "Tak",
+            rejectClassName: 'p-button-danger',
+            rejectLabel: "Nie" 
+        });
+    };
+
+    const confirmDeleteUser = (userToDeleteId) => {
+        confirmDialog({
+            message: 'Czy na pewno chcesz usunąć tego użytkownika?',
+            header: 'Usuń użytkownika',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => deleteUser(userToDeleteId),
+            acceptClassName: 'p-button-success', 
+            acceptLabel: "Tak",
+            rejectClassName: 'p-button-danger',
+            rejectLabel: "Nie" 
+        });
+    };
+
     const activateUser = async (userToActivateId) => {
         try {
             await fetch(`http://localhost:3000/api/v1/users/${userToActivateId}/activate`, {
@@ -73,6 +107,7 @@ function AdminPanel() {
                     'Authorization': `Bearer ${userToken}`
                 },
             });
+            toast.current.show({ severity: 'success', summary: 'Sukces!', detail: 'Pomyślnie aktywowano konto', life: 3000 });
             fetchUsers();
         } catch (error) {
             alert(error.message);
@@ -87,6 +122,7 @@ function AdminPanel() {
                     'Authorization': `Bearer ${userToken}`
                 },
             });
+            toast.current.show({ severity: 'success', summary: 'Sukces!', detail: 'Pomyślnie usunięto konto', life: 3000 });
             fetchUsers();
         } catch (error) {
             alert(error.message);
@@ -117,10 +153,11 @@ function AdminPanel() {
         fetchUsers("limit=10");
     }, [currentPage, userToken]);
 
-    const handlePageChange = (selectedPage) => {
-        const newPage = selectedPage.selected + 1;
-        setCurrentPage(newPage);
+    const handlePageChange = (event, value) => {
+        setCurrentPage(value);
+        setPageInputValue(value);
     };
+
 
     return (
         <div className="adminApp">
@@ -148,9 +185,11 @@ function AdminPanel() {
             <div className={showFilters ? "adminMain adminMainFilters" : "adminMain"}>
                 {userManagement && (
                     <div>
+                        <ConfirmDialog />
+                        <Toast ref={toast} />
                         <div className='adminUserTopContainer'>
                             <div>
-                                <label>Szuka użytkownika:</label>
+                                <label>Szukaj użytkownika:</label>
                                 <input
                                     className="filterTextInput"
                                     type="text"
@@ -184,7 +223,11 @@ function AdminPanel() {
                                             <td>{user.activated ? "Aktywne" : "Nieaktywowane"}</td>
                                             <td>
                                                 <div className='buttonContainer'>
-                                                    {!user.activated ? <button className='adminButton activateButton' onClick={() => activateUser(user.id)}>Aktywuj</button> : null}
+                                                    {!user.activated ? <button
+                                                        className='adminButton activateButton'
+                                                        onClick={() => confirmActivateUser(user.id)}>
+                                                        Aktywuj
+                                                    </button> : null}
                                                     {user.activated ? (
                                                         <button
                                                             className={user.name === "superadmin" ? "adminButton inactiveButton" : "adminButton"}
@@ -195,7 +238,7 @@ function AdminPanel() {
                                                     <button
                                                         className={user.name === "superadmin" ? "adminButton inactiveButton" : "adminButton deleteButton"}
                                                         disabled={user.name === "superadmin"}
-                                                        onClick={() => deleteUser(user.id)}>
+                                                        onClick={() => confirmDeleteUser(user.id)}>
                                                         Usuń
                                                     </button>
                                                 </div>
@@ -204,19 +247,9 @@ function AdminPanel() {
                                     )))}
                             </tbody>
                         </table>
-                        <ReactPaginate
-                            activeClassName={'item paginationActive '}
-                            breakClassName={'item break-me '}
-                            breakLabel={'...'}
-                            containerClassName={'pagination'}
-                            disabledClassName={'disabled-page'}
-                            marginPagesDisplayed={2}
-                            onPageChange={handlePageChange}
-                            pageCount={totalPages}
-                            pageClassName={'item pagination-page '}
-                            pageRangeDisplayed={2}
-                        />
-
+                        <div className="pagination-container">
+                            <Pagination className="custom-pagination" count={totalPages} page={currentPage} siblingCount={1} onChange={handlePageChange} />
+                        </div>
                     </div>
                 )}
                 {!userManagement && (
@@ -228,14 +261,14 @@ function AdminPanel() {
             {(showFilters && userManagement) && (
                 <div className={`filterSideBar ${showFilters ? 'show' : ''}`}>
                     <div className='filterTitle'>Filtry</div>
-                    <hr className='line'/>
-                    <label>Rola:</label><br/>
+                    <hr className='line' />
+                    <label>Rola:</label><br />
                     <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
                         <option value="">dowolna</option>
                         <option value="admin">Administrator</option>
                         <option value="user">Użytkownik</option>
                     </select>
-                    <hr className='line'/>
+                    <hr className='line' />
                     <label>Status konta:</label>
                     <div className='labelContainer'>
                         <label>Aktywowany   </label>
@@ -253,7 +286,7 @@ function AdminPanel() {
                             onChange={() => setNotActivatedFilter(!notActivatedFilter)}
                         />
                     </div>
-                    <hr className='line'/>
+                    <hr className='line' />
                     <label>Ilość wyświetlanych użytkowników na stronie:</label><br />
                     <select value={usersPerPage} onChange={(e) => setUsersPerPage(e.target.value)}>
                         <option value="5">5</option>
