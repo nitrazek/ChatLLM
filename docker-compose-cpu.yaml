@@ -5,6 +5,8 @@ services:
             context: ./web
         ports:
             - "80:80"
+        depends_on:
+            - server
 
     server:
         container_name: server
@@ -14,25 +16,61 @@ services:
             - "3000:3000"
         environment:
             - HOST=0.0.0.0
+            - POSTGRES_HOST=postgres
             - OLLAMA_URL=http://ollama:11434
             - CHROMA_URL=http://chroma:8000
+        env_file:
+            - docker-config.env
         depends_on:
-            - ollama
-            - chroma
+            ollama:
+                condition: service_healthy
+            postgres:
+                condition: service_healthy
+            chroma:
+                condition: service_healthy
 
     ollama:
-        image: ollama/ollama
+        image: ollama/ollama:0.3.14
         container_name: ollama
         volumes:
             - ollama:/root/.ollama
-        ports:
-            - "11434:11434"
+        healthcheck:
+            test: ["CMD", "ollama" ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 5s
+            
 
     chroma:
-        image: chromadb/chroma
+        image: chromadb/chroma:0.5.15
         container_name: chroma
-        ports:
-            - "8000:8000"
+        environment:
+            - IS_PERSISTENT=TRUE
+        volumes:
+            - chroma:/chroma/chroma
+        healthcheck:
+            test: [ "CMD", "/bin/bash", "-c", "cat < /dev/null > /dev/tcp/chroma/8000" ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 5s
+
+    postgres:
+        image: postgres:17-alpine
+        container_name: postgres
+        env_file:
+            - docker-config.env
+        volumes:
+            - postgres:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U postgres"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 5s
 
 volumes:
     ollama:
+    postgres:
+    chroma:

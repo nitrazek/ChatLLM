@@ -1,152 +1,178 @@
-import { FastifyInstance } from "fastify";
-import { ollamaLLM } from "../services/ollama_service";
-import {
-  Answer,
-  ChatInfo,
-  ErrorChatNotFound,
-  GetChatsResponse,
-  GetMessagesParams,
-  GetMessagesResponse,
-  Message,
-  PostChat,
-  PostMessage,
-  PostMessageParams,
-  TAnswer,
-  TChatInfo,
-  TErrorChatNotFound,
-  TGetChatsResponse,
-  TGetMessagesParams, 
-  TGetMessagesResponse, 
-  TMessage,
-  TPostChat,
-  TPostMessage,
-  TPostMessageParams
-} from "../schemas/chats_schemas";
-import { RunnablePassthrough, RunnableSequence, RunnableWithMessageHistory, RunnableConfig } from "@langchain/core/runnables";
-import { formatDocumentsAsString } from "langchain/util/document";
-import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
-import { StringOutputParser } from "@langchain/core/output_parsers";
-import { getChromaConnection } from "../services/chroma_service";
-import { Chroma } from "@langchain/community/vectorstores/chroma";
-import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
-import { Chat, createChat, getChats, getChatById, getChatInfo, editChatName } from "../repositories/chat_repository";
-import { AIMessage, AIMessageChunk, BaseMessage, BaseMessageChunk, HumanMessage, SystemMessage } from "langchain/schema";
-import { PromptTemplate } from "langchain/prompts";
-import { ChatTogetherAI } from "@langchain/community/chat_models/togetherai";
-import { ONLY_RAG_TEMPLATE, RAG_TEMPLATE } from "../prompts";
-import { getTransformStream, getTransformStreamNewChatName } from "../utils/custom_stream_transforms";
-import { Type } from "@sinclair/typebox";
-import { push } from "langchain/hub";
-import { TaggingChainOptions } from "langchain/chains";
+import { FastifyPluginCallback } from "fastify";
+import * as Schemas from "../schemas/chats_schemas";
+import { userAuth } from "../services/authentication_service";
+import { Chat } from "../models/chat";
+import { ChatMessage } from "../models/chat_message";
+import { BadRequestError, ForbiddenError } from "../schemas/errors_schemas";
+import { getRagTemplate } from "../prompts";
+import { SenderType } from "../enums/sender_type";
+import { getRagChain, transformStream } from "../utils/stream_handler";
+import { getPaginationMetadata } from "../utils/pagination_handler";
+import { AuthHeader } from "../schemas/base_schemas";
 
-const chatsRoutes = async (fastify: FastifyInstance) => {
-  fastify.get<{
-    Reply: TGetChatsResponse
-  }>("", {
-    schema: {
-      response: {
-        200: GetChatsResponse
-      }
-    }
-  }, async (request, response) => {
-    const chats: Chat[] = getChats();
-    return response.status(200).send(chats.map(getChatInfo));
-  });
-
-  fastify.post<{
-    Body: TPostChat
-    Reply: TChatInfo
-  }>("", {
-    schema: {
-      body: PostChat,
-      response: {
-        200: ChatInfo
-      }
-    }
-  }, async (request, response) => {
-    const { name, isUsingOnlyKnowledgeBase } = request.body;
-    const chatInfo: TChatInfo = createChat(name, isUsingOnlyKnowledgeBase);
-    return response.status(200).send(chatInfo);
-  });
-
-  fastify.get<{
-    Params: TGetMessagesParams
-    Reply: TGetMessagesResponse | TErrorChatNotFound
-  }>("/:chatId", {
-    schema: {
-      params: GetMessagesParams,
-      response: {
-        200: GetMessagesResponse,
-        404: ErrorChatNotFound
-      }
-    }
-  }, async (request, response) => {
-    const { chatId } = request.params;
-    console.log(chatId);
-    console.log(typeof chatId);
-    const optChat: Chat | undefined = getChatById(chatId);
-    console.log(optChat);
-    if(optChat === undefined) return response.status(404).send({ errorMessage: "Chat with given id was not found." });
-    const messages: BaseMessage[] = await optChat.messageHistory.getMessages();
-    return response.status(200).send(messages.map(baseMessage => {
-      const sender = baseMessage.lc_id.includes("HumanMessage") ? "human" : "ai";
-      const content = baseMessage.lc_kwargs.content;
-      return { sender, content };
-    }));
-  });
-
-  fastify.post<{
-    Body: TPostMessage,
-    Params: TPostMessageParams,
-    Reply: ReadableStream<string> | TErrorChatNotFound
-  }>("/:chatId", {
-    schema: {
-      body: PostMessage,
-      params: PostMessageParams,
-      response: {
-        200: Answer,
-        404: ErrorChatNotFound
-      }
-    }
-  }, async (request, response) => {
-    const { question } = request.body;
-    const { chatId } = request.params;
-
-    const chat: Chat | undefined = getChatById(chatId);
-    if(chat === undefined) return response.status(404).send({ errorMessage: "Chat with given id was not found." });
-
-    const template: string = chat.isUsingOnlyKnowledgeBase ? ONLY_RAG_TEMPLATE : RAG_TEMPLATE;
-    const chain = RunnableSequence.from([
-      {
-        context: async (input, callbacks) => {
-          const chroma: Chroma = await getChromaConnection();
-          const retriever = chroma.asRetriever();
-          const retrieverAndFormatter = retriever.pipe(formatDocumentsAsString);
-          return retrieverAndFormatter.invoke(input.question, callbacks);
-        },
-        question: (input) => input.question,
-        history: (input) => input.history
-      },
-      ChatPromptTemplate.fromMessages([
-        ["system", template],
-        new MessagesPlaceholder("history"),
-        ["human", "{question}"]
-      ]),
-      ollamaLLM
-    ]);
-
-    const chainWithHistory = new RunnableWithMessageHistory({
-      runnable: chain,
-      getMessageHistory: (sessionId: number) => chat.messageHistory,
-      inputMessagesKey: "question",
-      historyMessagesKey: "history"
+const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
+    // Create a new chat
+    server.post<{
+        Headers: AuthHeader,
+        Body: Schemas.CreateChatBody,
+        Reply: Schemas.CreateChatResponse
+    }>('/new', {
+        schema: Schemas.CreateChatSchema,
+        onRequest:[userAuth(server)]
+    }, async (req, reply) => {
+        const { name, isUsingOnlyKnowledgeBase } = req.body;
+        const chat = Chat.create({
+            name,
+            isUsingOnlyKnowledgeBase,
+            user: req.user
+        });
+        await chat.save();
+        reply.send(chat);
     });
 
-    const config: RunnableConfig = { configurable: { sessionId: chatId } };
-    const stream: ReadableStream<BaseMessageChunk> = await chainWithHistory.stream({ question }, config);
-    const transformStream: TransformStream<BaseMessageChunk, string> = chat.name == null ? getTransformStreamNewChatName(chatId) : getTransformStream();
-    return response.status(200).send(stream.pipeThrough(transformStream));
-  }); 
+    // Send a message to specific chat
+    server.post<{
+        Headers: AuthHeader,
+        Params: Schemas.SendMessageParams,
+        Body: Schemas.SendMessageBody,
+        Response: Schemas.SendMessageResponse
+    }>('/:chatId', {
+        schema: Schemas.SendMessageSchema,
+        onRequest:[userAuth(server)]
+    }, async (req, reply) => {
+        const chat = await Chat.findOne({
+            where: { id: req.params.chatId },
+            relations: ["user"]
+        });
+        if (!chat) throw new BadRequestError('Chat do not exist.');
+        if (chat.user.id !== req.user.id) throw new ForbiddenError('You do not have permission to access this resource.');
+
+        const template = getRagTemplate(chat.isUsingOnlyKnowledgeBase);
+        const question = req.body.question;
+        const [chatMessageList, _] = await ChatMessage.findAndCount({
+            take: 10,
+            where: { chat: { id: chat.id } },
+            order: { updatedAt: "DESC" }
+        });
+        await chat.addMessage(SenderType.HUMAN, question);
+        const ragChain = await getRagChain(template, chatMessageList);
+        const stream = await ragChain.stream({ question });
+        return reply.send(await transformStream(stream, chat));
+    });
+
+    // Get a list of chats for a specific user
+    server.get<{
+        Headers: AuthHeader,
+        Querystring: Schemas.GetChatListQuery,
+        Reply: Schemas.GetChatListResponse
+    }>('/list', {
+        schema: Schemas.GetChatListSchema,
+        onRequest:[userAuth(server)]
+    }, async (req, reply) => {
+        const { page = 1, limit = 20 } = req.query;
+        if(page < 1) throw new BadRequestError("Invalid page number, must not be negative");
+        if(limit < 1) throw new BadRequestError("Invalid limit value, must not be negative");
+
+        const [chats, totalChats] = await Chat.findAndCount({
+            skip: (page - 1) * limit,
+            take: limit,
+            where: { user: { id: req.user.id } },
+            order: { updatedAt: "DESC" }
+        });
+
+        const paginationMetadata = getPaginationMetadata(page, limit, totalChats);
+        if(paginationMetadata.currentPage > paginationMetadata.totalPages)
+            throw new BadRequestError("Invalid page number, must not be greater than page amount");
+
+        reply.send({
+            chats: chats,
+            pagination: paginationMetadata
+        });
+    });
+
+    // Get specific chat history
+    server.get<{
+        Headers: AuthHeader,
+        Params: Schemas.GetChatMessagesParams,
+        Querystring: Schemas.GetChatMessagesQuery,
+        Reply: Schemas.GetChatMessagesResponse
+    }>('/:chatId', {
+        schema: Schemas.GetChatMessagesSchema,
+        onRequest:[userAuth(server)]
+    }, async (req, reply) => {
+        const chat = await Chat.findOne({
+            where: { id: req.params.chatId },
+            relations: ["user"]
+        });
+        if (!chat) throw new BadRequestError('Chat do not exist.');
+        if (chat.user.id !== req.user.id) throw new ForbiddenError('You do not have permission to access this resource.');
+
+        const { page = 1, limit = 20 } = req.query;
+        if(page < 1) throw new BadRequestError("Invalid page number, must not be negative");
+        if(limit < 1) throw new BadRequestError("Invalid limit value, must not be negative");
+
+        const [messages, totalMessages] = await ChatMessage.findAndCount({
+            skip: (page - 1) * limit,
+            take: limit,
+            where: { chat: { id: req.params.chatId } },
+            order: { updatedAt: "DESC" }
+        });
+
+        const paginationMetadata = getPaginationMetadata(page, limit, totalMessages);
+        if(paginationMetadata.currentPage > paginationMetadata.totalPages)
+            throw new BadRequestError("Invalid page number, must not be greater than page amount");
+
+        reply.send({
+            messages: messages,
+            pagination: paginationMetadata
+        });
+    });
+
+    // Change details of specific chat
+    server.put<{
+        Headers: AuthHeader,
+        Params: Schemas.UpdateChatParams,
+        Body: Schemas.UpdateChatBody,
+        Reply: Schemas.UpdateChatResponse
+    }>('/:chatId', {
+        schema: Schemas.UpdateChatSchema,
+        onRequest:[userAuth(server)]
+    }, async (req, reply) => {
+        const chat = await Chat.findOne({
+            where: { id: req.params.chatId },
+            relations: ["user"]
+        });
+        if (!chat) throw new BadRequestError('Chat do not exist.');
+        if (chat.user.id !== req.user.id) throw new ForbiddenError('You do not have permission to access this resource.');
+
+        const { name, isUsingOnlyKnowledgeBase } = req.body;
+        Chat.merge(chat, { name, isUsingOnlyKnowledgeBase });
+        const updatedChat = await chat.save();
+
+        reply.send(updatedChat);
+    });
+
+    // Delete specific chat
+    server.delete<{
+        Headers: AuthHeader,
+        Params: Schemas.DeleteChatParams,
+        Reply: Schemas.DeleteChatResponse
+    }>('/:chatId', {
+        schema: Schemas.DeleteChatSchema,
+        onRequest:[userAuth(server)]
+    }, async (req, reply) => {
+        const chat = await Chat.findOne({
+            where: { id: req.params.chatId },
+            relations: ["user"]
+        });
+        if (!chat) throw new BadRequestError('Chat do not exist.');
+        if (chat.user.id !== req.user.id) throw new ForbiddenError('You do not have permission to access this resource.');
+    
+        await chat.remove();
+        reply.code(204).send();
+    });
+
+    done();
 };
 
 export default chatsRoutes;
