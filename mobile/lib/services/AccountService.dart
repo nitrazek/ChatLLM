@@ -3,11 +3,13 @@ import 'dart:io';
 
 import 'package:mobile/states/AccountState.dart';
 
+import '../constants/Constants.dart';
 import '../models/ErrorResponse.dart';
 import 'ChatService.dart';
 
 class AccountService {
-  final String baseUrl = "http://10.0.2.2:3000";
+  final String baseUrl = Constants.baseUrl;
+
   final httpClient = HttpClient();
 
   Future<bool> register(String name, String email, String password) async {
