@@ -8,15 +8,12 @@ import EditUserPopup from './EditUserPopup';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { Toast, toast } from 'primereact/toast';
 
-
 function AdminPanel() {
     const navigate = useNavigate();
     const userToken = Cookies.get("userToken");
     const [userManagement, setUserManagement] = useState(true);
     const [showFilters, setShowFilters] = useState(false);
     const [userList, setUserList] = useState([]);
-    const [prevPage, setPrevPage] = useState(null);
-    const [nextPage, setNextPage] = useState(null);
     const [totalPages, setTotalPages] = useState(1);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageInputValue, setPageInputValue] = useState(1);
@@ -31,12 +28,11 @@ function AdminPanel() {
 
     const toast = useRef(null);
 
-
     useEffect(() => {
         if (!userToken) {
             navigate('/');
         }
-    })
+    }, [userToken, navigate]);
 
     const handleToggleUserManagement = () => {
         setUserManagement(true);
@@ -47,14 +43,13 @@ function AdminPanel() {
     };
 
     const handleSearch = async () => {
-
-        let newQuery = `limit=${usersPerPage.toString()}`;
+        let newQuery = `limit=${usersPerPage.toString()}&page=${currentPage}`;
         if (usernameFilter) newQuery += `&name=${usernameFilter}`;
         if (emailFilter) newQuery += `&email=${emailFilter}`;
         if (roleFilter) newQuery += `&role=${roleFilter}`;
         if (activatedFilter && !notActivatedFilter) newQuery += `&activated=true`;
         if (!activatedFilter && notActivatedFilter) newQuery += `&activated=false`;
-        console.log(newQuery);
+        setCurrentPage(1);
         fetchUsers(newQuery);
     };
 
@@ -65,13 +60,14 @@ function AdminPanel() {
         setActivatedFilter(false);
         setNotActivatedFilter(false);
         setUsersPerPage(10);
-        fetchUsers("limit=10");
+        setCurrentPage(1);
+        fetchUsers("limit=10&page=1");
     };
 
     const handleEditUser = (userId) => {
         setUserToEditId(userId);
         setShowEditUserPopup(true);
-    }
+    };
 
     const confirmActivateUser = (userToActivateId) => {
         confirmDialog({
@@ -112,7 +108,7 @@ function AdminPanel() {
         } catch (error) {
             alert(error.message);
         }
-    }
+    };
 
     const deleteUser = async (userToDeleteId) => {
         try {
@@ -127,11 +123,11 @@ function AdminPanel() {
         } catch (error) {
             alert(error.message);
         }
-    }
+    };
 
     const fetchUsers = async (queryParams) => {
         try {
-            const response = await fetch(`http://localhost:3000/api/v1/users/list?page=${currentPage}&${queryParams}`, {
+            const response = await fetch(`http://localhost:3000/api/v1/users/list?${queryParams}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${userToken}`,
@@ -139,25 +135,22 @@ function AdminPanel() {
                 },
             });
             const data = await response.json();
-            setUserList(data.users);
-            setPrevPage(data.pagination.prevPage);
-            setNextPage(data.pagination.nextPage);
+            setUserList(data.users || []); 
             const total = data.pagination.totalPages || 0;
             setTotalPages(Math.ceil(total));
         } catch (error) {
-            alert(error.message);
+            console.error("Error fetching users:", error);
+            setUserList([]); 
         }
     };
 
     useEffect(() => {
-        fetchUsers("limit=10");
-    }, [currentPage, userToken]);
+        fetchUsers(`limit=${usersPerPage}&page=${currentPage}`);
+    }, [currentPage, usersPerPage, userToken]);
 
     const handlePageChange = (event, value) => {
         setCurrentPage(value);
-        setPageInputValue(value);
     };
-
 
     return (
         <div className="adminApp">
@@ -198,7 +191,14 @@ function AdminPanel() {
                                     onChange={(e) => setUsernameFilter(e.target.value)} />
                                 <button className='adminButton filterButton' onClick={handleSearch}>Szukaj</button>
                             </div>
-                            <button className='adminButton filterButton' onClick={() => setShowFilters(!showFilters)}>{showFilters ? "Ukryj filtry" : "Pokaż filtry"}</button>
+                            <div className='filtersContainer'>
+                                <button
+                                    className="adminButton filterButton"
+                                    onClick={() => setShowFilters(!showFilters)}
+                                >
+                                    Filtry
+                                </button>
+                            </div>
                         </div>
                         <table className="userTable">
                             <thead>
@@ -207,34 +207,37 @@ function AdminPanel() {
                                     <th>Nazwa</th>
                                     <th>Email</th>
                                     <th>Rola</th>
-                                    <th>Status konta</th>
+                                    <th>Status</th>
                                     <th>Akcje</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {userList.length > 0 && (userList
+                                {userList.length > 0 && userList
                                     .sort((a, b) => b.id - a.id)
                                     .map(user => (
                                         <tr key={user.id}>
                                             <td>{user.id}</td>
                                             <td>{user.name}</td>
                                             <td>{user.email}</td>
-                                            <td>{(user.role == "admin" ? "Administrator" : "Użytkownik")}</td>
+                                            <td>{user.role === "admin" ? "Administrator" : "Użytkownik"}</td>
                                             <td>{user.activated ? "Aktywne" : "Nieaktywowane"}</td>
                                             <td>
                                                 <div className='buttonContainer'>
-                                                    {!user.activated ? <button
-                                                        className='adminButton activateButton'
-                                                        onClick={() => confirmActivateUser(user.id)}>
-                                                        Aktywuj
-                                                    </button> : null}
-                                                    {user.activated ? (
+                                                    {!user.activated && (
+                                                        <button
+                                                            className='adminButton activateButton'
+                                                            onClick={() => confirmActivateUser(user.id)}>
+                                                            Aktywuj
+                                                        </button>
+                                                    )}
+                                                    {user.activated && (
                                                         <button
                                                             className={user.name === "superadmin" ? "adminButton inactiveButton" : "adminButton"}
                                                             disabled={user.name === "superadmin"}
                                                             onClick={() => handleEditUser(user.id)}>
                                                             Edytuj
-                                                        </button>) : ""}
+                                                        </button>
+                                                    )}
                                                     <button
                                                         className={user.name === "superadmin" ? "adminButton inactiveButton" : "adminButton deleteButton"}
                                                         disabled={user.name === "superadmin"}
@@ -244,11 +247,17 @@ function AdminPanel() {
                                                 </div>
                                             </td>
                                         </tr>
-                                    )))}
+                                    ))}
                             </tbody>
                         </table>
                         <div className="pagination-container">
-                            <Pagination className="custom-pagination" count={totalPages} page={currentPage} siblingCount={1} onChange={handlePageChange} />
+                            <Pagination
+                                className="custom-pagination"
+                                count={totalPages}
+                                page={currentPage}
+                                siblingCount={1}
+                                onChange={handlePageChange}
+                            />
                         </div>
                     </div>
                 )}
@@ -258,7 +267,7 @@ function AdminPanel() {
                     </div>
                 )}
             </div>
-            {(showFilters && userManagement) && (
+            {showFilters && userManagement && (
                 <div className={`filterSideBar ${showFilters ? 'show' : ''}`}>
                     <div className='filterTitle'>Filtry</div>
                     <hr className='line' />
