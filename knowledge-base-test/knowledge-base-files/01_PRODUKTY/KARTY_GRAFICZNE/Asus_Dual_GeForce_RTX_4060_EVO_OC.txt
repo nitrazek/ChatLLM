@@ -1,0 +1,58 @@
+1. Specyfikacja produktu
+
+Nazwa produktu: Asus Dual GeForce RTX 4060 EVO OC
+Opis: Karta graficzna z serii NVIDIA GeForce RTX 40, zoptymalizowana pod kątem wydajności i niezawodności, idealna do gier oraz tworzenia treści multimedialnych.
+
+Parametry techniczne:
+- Architektura: NVIDIA Ada Lovelace
+- Pamięć VRAM: 8 GB GDDR6
+- Zegar Boost: 2535 MHz
+- Interfejs pamięci: 128-bitowy
+- Złącza: HDMI 2.1, 3x DisplayPort 1.4a
+- Pobór mocy: 115 W
+- Zasilanie: Wymaga jednego złącza 8-pinowego
+- Technologie: Ray Tracing, DLSS 3
+
+2. Instrukcja użytkowania i montażu
+
+Kroki instalacji:
+- Przygotowanie: Wyłącz komputer, odłącz zasilanie i otwórz obudowę.
+- Montaż karty:
+  - Umieść kartę w złączu PCIe x16.
+  - Dokładnie dociśnij kartę, aż usłyszysz kliknięcie.
+- Podłączenie zasilania: Podłącz przewód zasilający do złącza 8-pinowego.
+- Sterowniki: Po uruchomieniu systemu, zainstaluj najnowsze sterowniki ze strony producenta (Asus lub NVIDIA).
+
+Uwagi:
+- Upewnij się, że zasilacz ma moc minimum 450 W.
+- W przypadku korzystania z wielu monitorów, skonfiguruj je w ustawieniach systemu.
+
+3. Raport testowy
+
+Wydajność:
+- 3DMark Time Spy: 11,500 punktów
+- Gry (Cyberpunk 2077, Ultra, 1080p): 72 FPS (średnia liczba klatek)
+- Chłodzenie: Temperatura maksymalna pod obciążeniem: 72°C
+- Poziom hałasu: 34 dB przy 70% prędkości wentylatorów
+- Wnioski:
+  - Asus Dual GeForce RTX 4060 EVO OC doskonale sprawdza się w rozdzielczości Full HD i obsługuje ray tracing przy zachowaniu stabilnych temperatur.
+
+4. Instrukcja diagnostyki i serwisowania
+
+Typowe problemy i rozwiązania:
+
+Brak sygnału wideo:
+- Sprawdź, czy karta jest poprawnie zamontowana.
+- Upewnij się, że przewód zasilania jest podłączony.
+
+Artefakty graficzne:
+- Zaktualizuj sterowniki lub obniż ustawienia podkręcania GPU.
+
+Przegrzewanie:
+- Wyczyść radiator i wentylatory z kurzu.
+- Upewnij się, że obudowa ma odpowiedni przepływ powietrza.
+
+Wentylatory nie działają:
+- Sprawdź w oprogramowaniu, czy ustawienia prędkości wentylatorów są prawidłowe.
+
+Zalecenia serwisowe: Regularnie aktualizuj sterowniki i czyść komponenty z kurzu, aby zapewnić długotrwałe działanie.
