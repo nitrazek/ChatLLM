@@ -86,7 +86,7 @@ function EditUserPopup({ userId }) {
         </label>
         <br />
         <label>Hasło:</label>
-        <label><input type="password"></input></label>
+        <label><input type="password" value={userPassword} onChange={(e) => setUserPassword(e.target.value)}></input></label>
         <br />
 
         <label>Rola:</label>
