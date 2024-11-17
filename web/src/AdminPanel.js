@@ -75,10 +75,10 @@ function AdminPanel() {
             header: 'Aktywuj użytkownika',
             icon: 'pi pi-exclamation-triangle',
             accept: () => activateUser(userToActivateId),
-            acceptClassName: 'p-button-success', 
+            acceptClassName: 'p-button-success',
             acceptLabel: "Tak",
             rejectClassName: 'p-button-danger',
-            rejectLabel: "Nie" 
+            rejectLabel: "Nie"
         });
     };
 
@@ -88,10 +88,10 @@ function AdminPanel() {
             header: 'Usuń użytkownika',
             icon: 'pi pi-exclamation-triangle',
             accept: () => deleteUser(userToDeleteId),
-            acceptClassName: 'p-button-success', 
+            acceptClassName: 'p-button-success',
             acceptLabel: "Tak",
             rejectClassName: 'p-button-danger',
-            rejectLabel: "Nie" 
+            rejectLabel: "Nie"
         });
     };
 
@@ -135,12 +135,12 @@ function AdminPanel() {
                 },
             });
             const data = await response.json();
-            setUserList(data.users || []); 
+            setUserList(data.users || []);
             const total = data.pagination.totalPages || 0;
             setTotalPages(Math.ceil(total));
         } catch (error) {
             console.error("Error fetching users:", error);
-            setUserList([]); 
+            setUserList([]);
         }
     };
 
@@ -280,21 +280,32 @@ function AdminPanel() {
                     <hr className='line' />
                     <label>Status konta:</label>
                     <div className='labelContainer'>
-                        <label>Aktywowany   </label>
+                        <label>Aktywowany</label>
                         <input
                             type="checkbox"
-                            checked={activatedFilter === "true"}
-                            onChange={() => setActivatedFilter(!activatedFilter)}
+                            checked={activatedFilter}
+                            onChange={() => {
+                                setActivatedFilter(!activatedFilter);
+                                if (notActivatedFilter && !activatedFilter) {
+                                    setNotActivatedFilter(false); // Odznaczenie przeciwstawnego filtra
+                                }
+                            }}
                         />
                     </div>
                     <div className='labelContainer'>
                         <label>Nieaktywowany</label>
                         <input
                             type="checkbox"
-                            checked={notActivatedFilter === "true"}
-                            onChange={() => setNotActivatedFilter(!notActivatedFilter)}
+                            checked={notActivatedFilter}
+                            onChange={() => {
+                                setNotActivatedFilter(!notActivatedFilter);
+                                if (activatedFilter && !notActivatedFilter) {
+                                    setActivatedFilter(false); // Odznaczenie przeciwstawnego filtra
+                                }
+                            }}
                         />
                     </div>
+
                     <hr className='line' />
                     <label>Ilość wyświetlanych użytkowników na stronie:</label><br />
                     <select value={usersPerPage} onChange={(e) => setUsersPerPage(e.target.value)}>
