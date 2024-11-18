@@ -1,7 +1,12 @@
 import os
 import requests
+from typing import NamedTuple
 
 BASE_URL = "http://localhost:3000/api/v1/files"
+
+class File(NamedTuple):
+  id: int
+  name: str
 
 def insert_file(file_url: str, parent_folder_url: str | None):
   pass
@@ -14,7 +19,7 @@ def insert_folder(folder_url: str, parent_folder_url: str | None):
     url=f"{BASE_URL}/folders/new",
     json={
       "name": folder_name,
-      
+      ""
     }
   )
 
