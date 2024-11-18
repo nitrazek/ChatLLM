@@ -1,0 +1,65 @@
+1. Specyfikacja produktu
+
+Nazwa produktu: ASUS GeForce RTX 4060 Dual EVO OC 8GB
+Opis: Wysokowydajna karta graficzna, oparta na architekturze NVIDIA Ada Lovelace, zoptymalizowana do gier w rozdzielczości 1080p z włączonym ray tracingiem i DLSS 3.
+
+Parametry techniczne:
+- Architektura GPU: NVIDIA Ada Lovelace
+- Pamięć: 8 GB GDDR6
+- Szyna pamięci: 128-bit
+- Taktowanie Boost: 2475 MHz (OC)
+- Rdzenie CUDA: 3072
+- Złącza: 1x HDMI 2.1a, 3x DisplayPort 1.4a
+- TDP: 115 W
+- Zalecany zasilacz: 500 W
+- Technologie: DLSS 3, Ray Tracing, NVIDIA Reflex, Adaptive Sync
+
+2. Instrukcja użytkowania i montażu
+
+Kroki instalacji:
+- Przygotowanie:
+  - Wyłącz komputer i odłącz zasilanie.
+  - Sprawdź kompatybilność karty z płytą główną oraz obudową (slot PCIe i dostępna przestrzeń).
+- Montaż:
+  - Otwórz obudowę i usuń zaślepkę z odpowiedniego slotu PCIe x16.
+  - Umieść kartę w slocie i zabezpiecz ją śrubami.
+  - Podłącz dodatkowe zasilanie PCIe (8-pin).
+- Konfiguracja:
+  - Włącz komputer i zainstaluj sterowniki ze strony ASUS lub NVIDIA.
+  - Skonfiguruj opcje w ASUS GPU Tweak III, aby zoptymalizować wydajność lub obniżyć hałas.
+
+3. Raport testowy
+
+Wydajność w grach:
+- Cyberpunk 2077 (1080p, Ultra, DLSS 3): 92 FPS
+- Red Dead Redemption 2 (1080p, Ultra): 85 FPS
+- Fortnite (1080p, Epic, DLSS): 155 FPS
+Benchmarki:
+- 3DMark Time Spy: 10,200 punktów
+- Unigine Superposition (1080p Extreme): 5,000 punktów
+Temperatury:
+- Spoczynek: 33°C
+- Obciążenie: 65°C (chłodzenie fabryczne Dual Fan)
+
+Wnioski:
+- Karta ASUS RTX 4060 Dual EVO OC oferuje cichą pracę i doskonałą wydajność w grach 1080p. Technologia DLSS 3 pozwala na płynną rozgrywkę z ray tracingiem.
+
+4. Instrukcja diagnostyki i serwisowania
+
+Typowe problemy i rozwiązania:
+
+Brak obrazu po instalacji:
+- Upewnij się, że karta jest prawidłowo włożona do slotu PCIe.
+- Sprawdź, czy kabel zasilania 8-pin jest podłączony.
+
+Przegrzewanie:
+- Regularnie czyść wentylatory i radiator z kurzu.
+- Zapewnij odpowiednią cyrkulację powietrza w obudowie.
+
+Artefakty graficzne:
+- Zaktualizuj sterowniki GPU.
+- Sprawdź stabilność ustawień OC w ASUS GPU Tweak III.
+
+Zalecenia serwisowe:
+- Aktualizuj sterowniki graficzne i firmware karty.
+- Okresowo wymieniaj pastę termoprzewodzącą oraz termopady w przypadku intensywnego użytkowania.

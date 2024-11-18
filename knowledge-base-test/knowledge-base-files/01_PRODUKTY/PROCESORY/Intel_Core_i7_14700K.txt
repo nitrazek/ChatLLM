@@ -32,9 +32,9 @@ Wydajność:
 - Cinebench R23: 28,500 punktów (wielowątkowy), 2,050 punktów (jednowątkowy).
 - 3DMark CPU Profile: 12,800 punktów (maksymalna wydajność wielowątkowa).
 - Gry (Cyberpunk 2077, 1080p, Ultra): Stabilne 150 FPS w połączeniu z RTX 4070.
-- Temperatury:
-  - Spoczynek: 34°C
-  - Pod obciążeniem: 85°C (chłodzenie powietrzne)
+Temperatury:
+- Spoczynek: 34°C
+- Pod obciążeniem: 85°C (chłodzenie powietrzne)
 
 Wnioski:
 - Intel Core i7-14700K to procesor o doskonałym stosunku wydajności do ceny, szczególnie w grach i aplikacjach wielowątkowych.
