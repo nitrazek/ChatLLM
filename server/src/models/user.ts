@@ -41,7 +41,10 @@ export class User extends ExtendedBaseEntity {
     })
     chats!: Chat[];
 
-    @OneToMany(() => File, (file) => file.creator)
+    @OneToMany(() => File, (file) => file.creator, {
+        cascade: true,
+        onDelete: "SET NULL"
+    })
     filesCreated!: File[];
 
     // This property stores an original password for comparing in hashing process

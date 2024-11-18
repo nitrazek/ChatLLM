@@ -9,7 +9,7 @@ import { getIsInvalidMessage } from "../utils/model_validation_messages";
 class IsNameUniqueInParent implements ValidatorConstraintInterface {
     async validate(name: string, args: ValidationArguments): Promise<boolean> {
         const validatedFile = args.object as File;
-        const files = await File.findBy({ parent: validatedFile.parent === null ? IsNull() : validatedFile.parent });
+        const files = await File.findBy({ parent: validatedFile.parent === null ? IsNull() : { id: validatedFile.parent.id } });
         return !files.map(file => file.name).includes(name);
     }
 
@@ -32,14 +32,23 @@ export class File extends ExtendedBaseEntity {
     @IsEnum(FileType, { message: getIsInvalidMessage('Type') })
     type!: FileType;
 
-    @ManyToOne(() => File, (file) => file.children, { nullable: true })
+    @ManyToOne(() => File, (file) => file.children, {
+        nullable: true,
+        onDelete: "CASCADE"
+    })
     parent!: File | null;
 
-    @OneToMany(() => File, (file) => file.parent)
+    @OneToMany(() => File, (file) => file.parent, {
+        cascade: true,
+        onDelete: "CASCADE"
+    })
     children!: File[];
 
-    @ManyToOne(() => User, (user) => user.filesCreated)
-    creator!: User;
+    @ManyToOne(() => User, (user) => user.filesCreated, {
+        nullable: true,
+        onDelete: "SET NULL"
+    })
+    creator!: User | null;
 
     @Column()
     chunkAmount!: number;
