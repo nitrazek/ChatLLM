@@ -25,6 +25,11 @@ def insert_file(file: File, parent_folder: File, auth_token: str):
   print()
 
 def insert_folder(folder: File, parent_folder: File, auth_token: str, only_content: bool = False):
+  print("insert_folder called")
+  print(folder)
+  print(parent_folder)
+  print()
+
   if not only_content:
     print(f"Inserting folder {folder.name}...")
     insertFolderResponse = requests.post(
