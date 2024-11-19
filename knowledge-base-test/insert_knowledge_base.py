@@ -11,12 +11,11 @@ class File(NamedTuple):
   path: str
 
 def insert_file(file: File, parent_folder: File, auth_token: str):
-  print(f"Inserting file {file.name}...")
+  print(f"Inserting file {file.name} into {parent_folder.name}...")
 
   url = f"{BASE_URL}/files/upload"
   if parent_folder.id is not None:
     url += f"?folderId={parent_folder.id}"
-  print(url)
   
   requests.post(
     url=url,
@@ -29,14 +28,9 @@ def insert_file(file: File, parent_folder: File, auth_token: str):
   print()
 
 def insert_folder(folder: File, parent_folder: File, auth_token: str, only_content: bool = False):
-  print("insert_folder called")
-  print(folder)
-  print(parent_folder)
-  print()
-
   inserted_folder = folder
   if not only_content:
-    print(f"Inserting folder {folder.name}...")
+    print(f"Inserting folder {folder.name} into {parent_folder.name}...")
     insert_folder_response = requests.post(
       url=f"{BASE_URL}/files/folders/new",
       headers={
@@ -52,7 +46,7 @@ def insert_folder(folder: File, parent_folder: File, auth_token: str, only_conte
       name=insert_folder_response["name"],
       path=folder.path
     )
-    print(f"Inserted folder - {inserted_folder}")
+    print("Inserted folder")
     print()
 
   for file_name in os.listdir(inserted_folder.path):
