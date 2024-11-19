@@ -1,0 +1,4 @@
+Pytanie:
+Jaki typ pamięci RAM obsługuje procesor Intel Core i7-14700K?
+Odpowiedź:
+Procesor Intel Core i7-14700K obsługuje pamięć RAM DDR4-3200 i DDR5-5600.
