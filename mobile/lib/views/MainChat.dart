@@ -572,6 +572,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                                                         .content;
 
                                                             return MarkdownBody(
+                                                              selectable: true,
                                                               data: data,
                                                               styleSheet:
                                                                   MarkdownStyleSheet(
@@ -658,6 +659,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                                           },
                                                         )
                                                       : MarkdownBody(
+                                                    selectable: true,
                                                           data: chatMessage
                                                               .content,
                                                           styleSheet:
