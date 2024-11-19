@@ -1,9 +1,8 @@
 import os
 import requests
+import argparse
 from typing import NamedTuple
 
-SUPERADMIN_LOGIN = "superadmin"
-SUPERADMIN_PASSWORD = "Superadmin1!"
 BASE_URL = "http://localhost:3000/api/v1"
 
 class File(NamedTuple):
@@ -13,14 +12,19 @@ class File(NamedTuple):
 
 def insert_file(file: File, parent_folder: File, auth_token: str):
   print(f"Inserting file {file.name}...")
-  with open(file.path, "rb") as opened_file:
-    requests.post(
-      url=f"{BASE_URL}/files/upload{'?folderId=' + parent_folder.id if parent_folder.id is not None else ''}",
-      files=opened_file,
-      headers={
-        "Authorization": f"Bearer {auth_token}"
-      }
-    )
+
+  url = f"{BASE_URL}/files/upload"
+  if parent_folder.id is not None:
+    url += f"?folderId={parent_folder.id}"
+  print(url)
+  
+  requests.post(
+    url=url,
+    files={ "file": (file.name, open(file.path, "rb")) },
+    headers={
+      "Authorization": f"Bearer {auth_token}"
+    }
+  )
 
   print()
 
@@ -30,9 +34,10 @@ def insert_folder(folder: File, parent_folder: File, auth_token: str, only_conte
   print(parent_folder)
   print()
 
+  inserted_folder = folder
   if not only_content:
     print(f"Inserting folder {folder.name}...")
-    insertFolderResponse = requests.post(
+    insert_folder_response = requests.post(
       url=f"{BASE_URL}/files/folders/new",
       headers={
         "Authorization": f"Bearer {auth_token}"
@@ -42,50 +47,50 @@ def insert_folder(folder: File, parent_folder: File, auth_token: str, only_conte
         **({ "parentFolderId": parent_folder.id } if parent_folder.id is not None else {})
       },
     ).json()
-    parent_folder = File(
-      id=insertFolderResponse["id"],
-      name=insertFolderResponse["name"],
-      path=parent_folder.path
+    inserted_folder = File(
+      id=insert_folder_response["id"],
+      name=insert_folder_response["name"],
+      path=folder.path
     )
-    print(f"Inserted folder - {parent_folder}")
+    print(f"Inserted folder - {inserted_folder}")
     print()
-  
-  for file_name in os.listdir(folder.path):
+
+  for file_name in os.listdir(inserted_folder.path):
     file = File(
       id=None,
       name=file_name,
-      path=os.path.join(folder.path, file_name)
+      path=os.path.join(inserted_folder.path, file_name)
     )
     if os.path.isdir(file.path):
       insert_folder(
         folder=file,
-        parent_folder=folder,
+        parent_folder=inserted_folder,
         auth_token=auth_token
       )
     else:
       insert_file(
         file=file,
-        parent_folder=folder,
+        parent_folder=inserted_folder,
         auth_token=auth_token
       )
 
-def main():
-  authResponse = requests.post(
+def main(config: dict[str, any]):
+  auth_response = requests.post(
     url=f"{BASE_URL}/users/login",
     json={
-      "nameOrEmail": SUPERADMIN_LOGIN,
-      "password": SUPERADMIN_PASSWORD
+      "nameOrEmail": config["user"],
+      "password": config["password"]
     }
   )
 
-  print(authResponse.status_code)
-  if authResponse.status_code != 200:
+  print(auth_response.status_code)
+  if auth_response.status_code != 200:
     print("Authentication failed")
     return
 
   print("Authentication successfull")
   print()
-  auth_token = authResponse.json()["token"]
+  auth_token = auth_response.json()["token"]
 
   folder = File(
     id=None,
@@ -100,4 +105,9 @@ def main():
   )
 
 if __name__ == "__main__":
-  main()
+  parser = argparse.ArgumentParser()
+  parser.add_argument("--user", "-u", required=True, type=str, help="Login of user")
+  parser.add_argument("--password", "-p", required=True, type=str, help="Password of user")
+  config = vars(parser.parse_args())
+  
+  main(config)
