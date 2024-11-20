@@ -170,6 +170,23 @@ input::focus {
 }
 
 
+.activeChatHistoryButton {
+  background-color: #7289da99;
+  color: white;
+  padding: 10px 15px;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: white 2px solid;
+  font-size: medium;
+  margin: 5px;
+  width: 90%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 130px;
+}
+
 
 ul.chatHistory {
   padding: 0;
