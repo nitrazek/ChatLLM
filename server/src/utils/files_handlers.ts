@@ -1,6 +1,7 @@
 import { MultipartFile } from "@fastify/multipart";
 import pdf from "pdf-parse";
 import { FileType } from "../enums/file_type";
+import { File } from "../models/file";
 
 export const resolveFileMimetype = (fileMimetype: string): [(file: MultipartFile) => Promise<string>, FileType] | undefined => {
     switch(fileMimetype) {
