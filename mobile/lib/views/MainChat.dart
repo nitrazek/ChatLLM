@@ -514,7 +514,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                                             15.0),
                                                     color: AppColors.dark,
                                                   ),
-                                                  child: Text(
+                                                  child: SelectableText(
                                                     chatMessage.sender ==
                                                             'human'
                                                         ? chatMessage.content
