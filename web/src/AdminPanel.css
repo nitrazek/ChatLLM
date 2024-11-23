@@ -512,3 +512,44 @@ select {
 .p-toast .p-toast-message .p-toast-close:hover {
   opacity: 1;
 }
+
+.fileManagement {
+  width: 100%;
+}
+
+/* chonky-dark-theme.css */
+.chonky-file-browser {
+  background-color: #2d2d2d; /* Ciemne tło */
+  color: white; /* Biały tekst */
+}
+
+.chonky-file-item {
+  background-color: #444; /* Tło plików */
+  color: white;
+}
+
+.chonky-file-item:hover {
+  background-color: #555; /* Efekt na hover */
+}
+
+.chonky-file-item.is-folder {
+  background-color: #4CAF50; /* Kolor folderów */
+}
+
+.chonky-toolbar {
+  background-color: #333; /* Tło paska narzędzi */
+  color: white;
+}
+
+.chonky-toolbar-button {
+  color: white; /* Kolor przycisków */
+}
+
+.chonky-file-list {
+  background-color: #2d2d2d; /* Tło listy plików */
+}
+
+.chonky-breadcrumbs {
+  background-color: #333; /* Tło okruszków */
+  color: white;
+}

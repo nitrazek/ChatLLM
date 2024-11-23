@@ -279,7 +279,6 @@ function Chat() {
           </div>
         </div>
         <div className="lowerSide">
-          <button className="button">Ustawienia</button>
           {role =="admin" && <button className="button" onClick={handleAdminPanelButton}>Panel administratora</button>}
           <button className="button" onClick={handleLogout}>Wyloguj się</button>
         </div>

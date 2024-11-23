@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './AdminPanel.css';
 import { useNavigate } from "react-router-dom";
 import Cookies from 'js-cookie';
@@ -7,16 +7,20 @@ import TextField from '@mui/material/TextField';
 import EditUserPopup from './EditUserPopup';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { Toast, toast } from 'primereact/toast';
+import { FullFileBrowser, ChonkyActions, defineFileAction } from 'chonky';
+import { setChonkyDefaults } from 'chonky';
+import { ChonkyIconFA } from 'chonky-icon-fontawesome';
 
 function AdminPanel() {
     const navigate = useNavigate();
     const userToken = Cookies.get("userToken");
+
+    //USERS
     const [userManagement, setUserManagement] = useState(true);
     const [showFilters, setShowFilters] = useState(false);
     const [userList, setUserList] = useState([]);
     const [totalPages, setTotalPages] = useState(1);
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageInputValue, setPageInputValue] = useState(1);
     const [usernameFilter, setUsernameFilter] = useState("");
     const [emailFilter, setEmailFilter] = useState("");
     const [roleFilter, setRoleFilter] = useState("");
@@ -152,6 +156,108 @@ function AdminPanel() {
         setCurrentPage(value);
     };
 
+    //FILES
+
+    const [fileList, setFileList] = useState([]);
+    const [currentFolderId, setCurrentFolderId] = useState(null);
+    const [folderChain, setFolderChain] = useState([{ id: '0', name: "Baza plików", isDir: true }]);
+
+    // Set Chonky Defaults
+    setChonkyDefaults({ iconComponent: ChonkyIconFA });
+
+    const createFolderAction = defineFileAction({
+        id: 'create_folder',
+        button: {
+            name: 'Nowy folder',
+            toolbar: true,
+            contextMenu: true,
+            icon: 'folder-plus',
+        },
+    });
+
+    const fetchFiles = async (folderId = null) => {
+        try {
+             const queryParam = (folderId !== null && folderId !== 0) ? `?folderId=${folderId}` : '';
+        const response = await fetch(`http://localhost:3000/api/v1/files/list${queryParam}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${userToken}`,
+                    'Content-Type': 'application/json'
+                },
+            });
+            const data = await response.json();
+            const formattedFiles = data.files.map(file => ({
+                id: file.id.toString(),
+                name: file.name,
+                isDir: file.type === 'folder',
+            }));
+            setFileList(formattedFiles);
+        } catch (error) {
+            console.error("Error fetching files:", error);
+            setFileList([]);
+        }
+    };
+
+
+    useEffect(() => {
+        fetchFiles(currentFolderId);
+    }, [currentFolderId]);
+
+    // Folder Creation Function
+    const createFolder = async (folderName) => {
+        try {
+            console.log(currentFolderId);
+            const response = await fetch(`http://localhost:3000/api/v1/files/folders/new`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${userToken}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: folderName,
+                    parentFolderId: (currentFolderId !== null && currentFolderId !== 0) ? null : currentFolderId
+                }),
+            });
+
+            if (response.ok) {
+                fetchFiles(currentFolderId); // Refresh file list after folder creation
+            } else {
+                console.error("Error creating folder:", await response.text());
+            }
+        } catch (error) {
+            console.error("Error creating folder:", error);
+        }
+    };
+
+    const handleFileAction = useCallback((action) => {
+        if (action.id === ChonkyActions.OpenFiles.id && action.payload.files.length === 1) {
+            const file = action.payload.files[0];
+            if (file.isDir) {
+                // Jeśli klikniesz na folder, dodaj go do folderChain
+                setFolderChain((prevChain) => {
+                    // Upewnij się, że folder nie zostanie dodany wielokrotnie
+                    const folderExists = prevChain.some(folder => folder.id === file.id);
+                    if (!folderExists) {
+                        return [...prevChain, { id: file.id, name: file.name, isDir: true }];
+                    }
+                    return prevChain;
+                });
+                setCurrentFolderId(file.id);
+                fetchFiles(file.id); // Pobierz pliki w tym folderze
+            }
+        } else if (action.id === 'create_folder') {
+            const folderName = prompt("Podaj nazwę nowego folderu:");
+            if (folderName) {
+                createFolder(folderName);
+            }
+        }
+    }, [createFolder]);
+
+    useEffect(() => {
+        const cleanFolderChain = folderChain.filter(folder => folder && folder.id && folder.name);
+        setFolderChain(cleanFolderChain);
+    }, [folderChain]);
+
     return (
         <div className="adminApp">
             {showEditUserPopup && <EditUserPopup userId={userToEditId} />}
@@ -262,8 +368,15 @@ function AdminPanel() {
                     </div>
                 )}
                 {!userManagement && (
-                    <div>
-                        tutaj będzie zarządzanie plikami
+                    <div className="fileManagement">
+                        <div className="chonky-file-browser">
+                            <FullFileBrowser
+                                files={fileList}
+                                onFileAction={handleFileAction}
+                                fileActions={[createFolderAction]}
+                                folderChain={folderChain}
+                            />
+                        </div>
                     </div>
                 )}
             </div>
