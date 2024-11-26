@@ -30,6 +30,7 @@ export class ChromaService {
     }
 
     async getContext(question: string, callbacks: any): Promise<string> {
+        
         const retriever = this.chroma.asRetriever();
         const retrieverAndFormatter = retriever.pipe(formatDocumentsAsString);
         return await retrieverAndFormatter.invoke(question, callbacks);

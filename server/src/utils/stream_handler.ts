@@ -14,9 +14,9 @@ export const getRagChain = async (template: string, chatMessages: ChatMessage[])
     async (input, callbacks) => {
         const chromaService = await ChromaService.getInstance();
         return {
-            context: await chromaService.getContext(input, callbacks),
+            context: await chromaService.getContext(input.question, callbacks),
             question: input.question
-        }
+        };
     },
     ChatPromptTemplate.fromMessages([
         ["system", template],
