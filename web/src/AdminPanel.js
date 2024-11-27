@@ -171,13 +171,23 @@ function AdminPanel() {
             name: 'Nowy folder',
             toolbar: true,
             contextMenu: true,
-            icon: 'folder-plus',
+            icon: 'folderCreate',
+        },
+    });
+
+    const uploadFileAction = defineFileAction({
+        id: 'upload_file',
+        button: {
+            name: 'Wgraj plik',
+            toolbar: true,
+            contextMenu: true,
+            icon: 'upload', // ikona z FontAwesome lub innej biblioteki
         },
     });
 
     const fetchFiles = async (folderId = null) => {
         try {
-             const queryParam = (folderId !== null && folderId !== 0) ? `?folderId=${folderId}` : '';
+             const queryParam = (folderId !== null && folderId != 0) ? `?folderId=${folderId}` : '';
         const response = await fetch(`http://localhost:3000/api/v1/files/list${queryParam}`, {
                 method: 'GET',
                 headers: {
@@ -188,7 +198,7 @@ function AdminPanel() {
             const data = await response.json();
             const formattedFiles = data.files.map(file => ({
                 id: file.id.toString(),
-                name: file.name,
+                name: file.type === 'folder' ? file.name : `${file.name}.${file.type}`,
                 isDir: file.type === 'folder',
             }));
             setFileList(formattedFiles);
@@ -206,7 +216,6 @@ function AdminPanel() {
     // Folder Creation Function
     const createFolder = async (folderName) => {
         try {
-            console.log(currentFolderId);
             const response = await fetch(`http://localhost:3000/api/v1/files/folders/new`, {
                 method: 'POST',
                 headers: {
@@ -215,7 +224,7 @@ function AdminPanel() {
                 },
                 body: JSON.stringify({
                     name: folderName,
-                    parentFolderId: (currentFolderId !== null && currentFolderId !== 0) ? null : currentFolderId
+                    parentFolderId: (currentFolderId !== null && currentFolderId != 0) ? currentFolderId : null
                 }),
             });
 
@@ -233,30 +242,64 @@ function AdminPanel() {
         if (action.id === ChonkyActions.OpenFiles.id && action.payload.files.length === 1) {
             const file = action.payload.files[0];
             if (file.isDir) {
-                // Jeśli klikniesz na folder, dodaj go do folderChain
-                setFolderChain((prevChain) => {
-                    // Upewnij się, że folder nie zostanie dodany wielokrotnie
-                    const folderExists = prevChain.some(folder => folder.id === file.id);
-                    if (!folderExists) {
-                        return [...prevChain, { id: file.id, name: file.name, isDir: true }];
-                    }
-                    return prevChain;
-                });
-                setCurrentFolderId(file.id);
-                fetchFiles(file.id); // Pobierz pliki w tym folderze
+                const newFolderId = file.id;
+    
+                const folderIndex = folderChain.findIndex(folder => folder.id === newFolderId);
+                if (folderIndex !== -1) {
+                    const updatedFolderChain = folderChain.slice(0, folderIndex + 1);
+                    setFolderChain(updatedFolderChain);
+                } else {
+                    setFolderChain(prevChain => [...prevChain, { id: newFolderId, name: file.name, isDir: true }]);
+                }
+                setCurrentFolderId(newFolderId);
+                fetchFiles(newFolderId);
             }
         } else if (action.id === 'create_folder') {
             const folderName = prompt("Podaj nazwę nowego folderu:");
             if (folderName) {
                 createFolder(folderName);
             }
+        } else if (action.id === 'upload_file') {
+            // Akcja wgrywania pliku
+            const inputFile = document.createElement('input');
+            inputFile.type = 'file';
+            inputFile.onchange = (e) => {
+                const file = e.target.files[0];  // Pobierz wybrany plik
+                if (file) {
+                    uploadFile(file);
+                }
+            };
+            inputFile.click();  // Otwórz okno dialogowe wyboru pliku
         }
-    }, [createFolder]);
-
-    useEffect(() => {
-        const cleanFolderChain = folderChain.filter(folder => folder && folder.id && folder.name);
-        setFolderChain(cleanFolderChain);
-    }, [folderChain]);
+    }, [folderChain, createFolder]);
+    
+    const uploadFile = async (file) => {
+        try {            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('folderId', currentFolderId || '0');  // Dodaj folder, w którym plik ma być zapisany
+        
+            const response = await fetch(`http://localhost:3000/api/v1/files/upload${(currentFolderId !=null && currentFolderId != 0) ? `?folderId=${currentFolderId}` : "" }`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${userToken}`,
+                },
+                body: formData,
+            });
+    
+            if (response.ok) {
+                // Jeśli upload był udany, odśwież listę plików
+                fetchFiles(currentFolderId);
+            } else {
+                console.error("Error uploading file:", await response.text());
+            }
+        } catch (error) {
+            console.error("Error uploading file:", error);
+        }
+    };
+    
+    
+     
 
     return (
         <div className="adminApp">
@@ -373,7 +416,7 @@ function AdminPanel() {
                             <FullFileBrowser
                                 files={fileList}
                                 onFileAction={handleFileAction}
-                                fileActions={[createFolderAction]}
+                                fileActions={[createFolderAction, uploadFileAction]}
                                 folderChain={folderChain}
                             />
                         </div>

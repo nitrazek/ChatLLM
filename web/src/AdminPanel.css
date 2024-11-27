@@ -52,6 +52,7 @@
   width: 100%;
   table-layout: fixed;
   margin-top: 15px;
+  table-layout: fixed;
 }
 
 .userTable thead tr {
@@ -515,6 +516,7 @@ select {
 
 .fileManagement {
   width: 100%;
+  height: 100%;
 }
 
 /* chonky-dark-theme.css */
