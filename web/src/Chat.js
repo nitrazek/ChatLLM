@@ -24,6 +24,9 @@ function Chat() {
   const controller = useRef(null);
   const navigate = useNavigate();
   const userToken = Cookies.get("userToken");
+
+  let nextChatListPage = null;
+
   useEffect(() => {
     if (!userToken) {
       navigate('/');
@@ -32,14 +35,16 @@ function Chat() {
 
   const handleLogout = async () => {
     Cookies.remove("userToken");
-    //Cookies.remove("userId");
     Cookies.remove("userName");
     Cookies.remove("userRole");
     navigate("/");
   };
 
+  const handleAdminPanelButton = async () => {
+    navigate("/admin");
+  }
+
   const fetchChatHistory = async () => {
-    setChatHistory([]);
     try {
       const response = await fetch(`http://localhost:3000/api/v1/chats/list`, {
         method: 'GET',
@@ -49,12 +54,11 @@ function Chat() {
         },
       });
       const data = await response.json();
-      setChatHistory(data);
+      setChatHistory(data.chats);
     } catch (error) {
-      alert(error.errorMessage);
+      alert(error.message);
     }
   };
-
 
   const sendMessage = async () => {
     if (input.trim() === '') return;
@@ -72,6 +76,15 @@ function Chat() {
     setIsLoading(true);
     controller.current = new AbortController();
 
+    let botMessage = {
+      id: messages.length + 2,
+      text: '',
+      fromUser: false,
+      user: { name: "Bot", avatar: "/avatars/bot.png" }
+    };
+
+    setMessages(prevMessages => [...prevMessages, botMessage]);
+
     try {
       const response = await fetch(`http://localhost:3000/api/v1/chats/${chatId}`, {
         method: 'POST',
@@ -85,14 +98,7 @@ function Chat() {
 
       const reader = response.body.getReader();
       let accumulatedText = '';
-      let botMessage = {
-        id: messages.length + 2,
-        text: '',
-        fromUser: false,
-        user: { name: "Bot", avatar: "/avatars/bot.png" }
-      };
-
-      while(true) {
+      while (true) {
         const { done, value } = await reader.read();
         if (done) {
           setIsLoading(false);
@@ -101,11 +107,29 @@ function Chat() {
         }
 
         const chunk = new TextDecoder().decode(value);
+        console.log(chunk);
         const parsedChunk = JSON.parse(chunk);
         const answer = parsedChunk.answer;
-
+        console.log(parsedChunk);
+        console.log(answer);
         accumulatedText += answer;
-        botMessage.text = accumulatedText;
+
+        setMessages(prevMessages => {
+          const updatedMessages = [...prevMessages];
+          const botIndex = updatedMessages.findIndex(msg => msg.id === botMessage.id);
+
+          if (botIndex !== -1) {
+            updatedMessages[botIndex].text = accumulatedText;
+          }
+
+          if (mainTopRef.current) {
+            mainTopRef.current.lastChild.scrollIntoView({ behavior: 'smooth' });
+          }
+
+          return updatedMessages;
+        });
+
+        setIsGeneratingAnswer(true);
 
         if (parsedChunk.newChatName) {
           setChatHistory(prevHistory => {
@@ -116,36 +140,18 @@ function Chat() {
             return updatedHistory;
           });
         }
-
-        setMessages(prevMessages => {
-          const updatedMessages = [...prevMessages];
-          const existingMessageIndex = updatedMessages.findIndex(msg => !msg.fromUser && msg.id === botMessage.id);
-          if (existingMessageIndex !== -1) {
-            updatedMessages[existingMessageIndex].text = botMessage.text;
-          } else {
-            updatedMessages.push(botMessage);
-          }
-
-          if (mainTopRef.current) {
-            mainTopRef.current.lastChild.scrollIntoView({ behavior: 'smooth' });
-          }
-          return updatedMessages;
-        });
-
-        setIsLoading(false);
-        setIsGeneratingAnswer(true);
       }
     } catch (error) {
       setIsLoading(false);
       setIsGeneratingAnswer(false);
       controller.current = null;
-      if(error.name !== "AbortError")
-        alert(error.errorMessage);
+      if (error.name !== "AbortError")
+        alert(error.message);
     }
   };
 
   const cancelAnswer = (e) => {
-    if(controller.current) controller.current.abort();
+    if (controller.current) controller.current.abort();
   };
 
   const handleInputChange = (e) => {
@@ -160,21 +166,60 @@ function Chat() {
   };
 
 
-  useEffect(() => {
-    if (mainTopRef.current) {
-      mainTopRef.current.scrollTop = mainTopRef.current.scrollHeight;
+
+  const handleScroll = () => {
+    if (mainTopRef.current.scrollTop === 0 && nextChatListPage) {
+      fetchPreviousMessages();
     }
-  }, [messages]);
+  };
 
   useEffect(() => {
     fetchChatHistory();
   }, []);
 
   useEffect(() => {
+    if (mainTopRef.current) {
+      mainTopRef.current.scrollTop = mainTopRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const fetchPreviousMessages = async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/v1/chats/${chatId}?limit=10&page=${nextChatListPage}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${userToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+      nextChatListPage = data.pagination.nextPage;
+      setMessages(prevMessages => [
+        ...data.messages.map((msg, index) => ({
+          id: msg.id,
+          user: {
+            name: msg.sender === "human" ? `${Cookies.get("userName")}` : "Bot",
+            avatar: msg.sender === "human" ? "/avatars/user.png" : "/avatars/bot.png"
+          },
+          fromUser: msg.sender === "human",
+          text: msg.content
+        })),
+        ...prevMessages
+      ]);
+    }
+
+    catch (error) {
+      alert(error);
+    }
+  }
+
+
+  useEffect(() => {
     const fetchMessages = async () => {
       if (!chatId) return;
       try {
-        const response = await fetch(`http://localhost:3000/api/v1/chats/${chatId}`, {
+        const response = await fetch(`http://localhost:3000/api/v1/chats/${chatId}?limit=10`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${userToken}`,
@@ -183,16 +228,22 @@ function Chat() {
         });
 
         const data = await response.json();
-        const formattedMessages = data.map((msg, index) => ({
-          id: index + 1,
-          user: { name: msg.sender === "human" ? `${Cookies.get("userName")}` : "Bot", avatar: msg.sender === "human" ? "/avatars/user.png" : "/avatars/bot.png" },
-          fromUser: msg.sender === "human",
-          text: msg.content
-        }));
+        nextChatListPage = data.pagination.nextPage;
+        let formattedMessages = [];
+        if (data.messages.length > 0) {
+          formattedMessages = data.messages
+            .sort((a, b) => a.id - b.id)
+            .map((msg, index) => ({
+              id: index + 1,
+              user: { name: msg.sender === "human" ? `${Cookies.get("userName")}` : "Bot", avatar: msg.sender === "human" ? "/avatars/user.png" : "/avatars/bot.png" },
+              fromUser: msg.sender === "human",
+              text: msg.content
+            }));
+        }
 
         setMessages(formattedMessages);
       } catch (error) {
-        alert(error.errorMessage);
+        alert(error.message);
       }
     };
 
@@ -217,7 +268,7 @@ function Chat() {
                   .sort((a, b) => b.id - a.id)
                   .map((chat) => (
                     <li key={chat.id}>
-                      <button className="chatHistoryButton" onClick={() => navigate(`/chat/${chat.id}`)}>
+                      <button className={chat.id == chatId ? "activeChatHistoryButton" : "chatHistoryButton"} onClick={() => navigate(`/chat/${chat.id}`)}>
                         {chat.name || "Nowy czat"}
                       </button>
                     </li>
@@ -229,7 +280,7 @@ function Chat() {
         </div>
         <div className="lowerSide">
           <button className="button">Ustawienia</button>
-          {role === "admin" && <button className="button">Panel administratora</button>}
+          {role =="admin" && <button className="button" onClick={handleAdminPanelButton}>Panel administratora</button>}
           <button className="button" onClick={handleLogout}>Wyloguj się</button>
         </div>
       </div>
@@ -249,44 +300,38 @@ function Chat() {
                   <span className="username">{message.user.name}</span>
                 </div>
                 <div className="messageContent">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.text}</ReactMarkdown>
+                  {message.text ? (
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.text}</ReactMarkdown>
+                  ) :
+                    (isLoading && (
+                      <div className="loadingOval">
+                        <Oval color="#00BFFF" secondaryColor="#484d52" height={30} width={30} />
+                      </div>))
+                  }
+
                 </div>
               </div>
             ))
           )}
-
-          {isLoading && (
-            <div className="botMessage">
-              <div className="messageHeader">
-                <img src="./avatars/bot.png" alt="Bot" className="avatar" />
-                <span className="username">Bot</span>
-              </div>
-              <div className="messageContent">
-                <div className="loadingOval">
-                  <Oval color="#00BFFF" secondaryColor="#484d52" height={30} width={30} />
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="mainBottom">
-            {chatId && (
-              <div className="chatFooter">
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Napisz wiadomość..."
-                  value={input}
-                  onChange={handleInputChange}
-                  onKeyDown={handleKeyDown}
-                  disabled={isLoading || isGeneratingAnswer}
-                />
-                {isGeneratingAnswer && (
-                  <FontAwesomeIcon className="cancelBtn" icon={faStop} onClick={cancelAnswer} />
-                )}
-              </div>
-            )}
+          {chatId && (
+            <div className="chatFooter">
+              <input
+                className="chatInput"
+                type="text"
+                placeholder="Napisz wiadomość..."
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                disabled={isLoading || isGeneratingAnswer}
+              />
+              {isGeneratingAnswer && (
+                <FontAwesomeIcon className="cancelBtn" icon={faStop} onClick={cancelAnswer} />
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

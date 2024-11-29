@@ -149,6 +149,7 @@ function Login() {
     const resetForm = () => {
         setEmail("");
         setLogin("");
+        setLoginOrEmail("");
         setPassword("");
         setConfirmPassword("");
         setEmailError("");
@@ -205,7 +206,7 @@ function Login() {
             }
         }
         catch (error) {
-            alert(error.errorMessage);
+            alert(error.message);
         }
     };
 
@@ -230,7 +231,7 @@ function Login() {
                 alert(data.errorMessage);
             }
         } catch (error) {
-            alert("An error occurred. Try again later");
+            alert("An error occurred. Try again later\n" + error.message);
         }
     }
 
@@ -301,7 +302,6 @@ function Login() {
                             onChange={handleLoginOrEmailChange}
                             onBlur={handleLoginOrEmailBlur}
                         />
-                        {loginOrEmailError && <span className="error-tooltip">{loginOrEmailError}</span>}
                         <input
                             tabIndex={isRegister ? -1 : 0}
                             type="password"
@@ -311,7 +311,6 @@ function Login() {
                             onChange={handlePasswordChange}
                             onBlur={handlePasswordBlur}
                         />
-                        {passwordError && <span className="error-tooltip">{passwordError}</span>}
                         <br />
                         <button tabIndex={isRegister ? -1 : 0} type="button" onClick={handleLogin}>Zaloguj się</button>
                     </form>
