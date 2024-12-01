@@ -84,7 +84,8 @@ export const SendMessageSchema: FastifySchema = {
 // Schema for getting a list of chats for a specific user
 const GetChatListQueryTypes = Type.Object({
     page: Type.Optional(Type.Number({ description: "The page number for pagination" })),
-    limit: Type.Optional(Type.Number({ description: "The number of chats to retrieve per page" }))
+    limit: Type.Optional(Type.Number({ description: "The number of chats to retrieve per page" })),
+    order: Type.Optional(Type.String({ description: "Sort order for the list of chats (Default DESC)" }))
 }, { description: "Query parameters for paginated chat list retrieval" });
 export type GetChatListQuery = Static<typeof GetChatListQueryTypes>;
 
@@ -116,7 +117,8 @@ export type GetChatMessagesParams = Static<typeof GetChatMessagesParamsTypes>;
 
 const GetChatMessagesQueryTypes = Type.Object({
     page: Type.Optional(Type.Number({ description: "The page number for pagination" })),
-    limit: Type.Optional(Type.Number({ description: "The number of messages to retrieve per page" }))
+    limit: Type.Optional(Type.Number({ description: "The number of messages to retrieve per page" })),
+    order: Type.Optional(Type.String({ description: "Sort order for the list of messages (Default DESC)" }))
 }, { description: "Query parameters for paginated message retrieval" });
 export type GetChatMessagesQuery = Static<typeof GetChatMessagesQueryTypes>;
 

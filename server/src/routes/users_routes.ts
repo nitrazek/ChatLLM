@@ -63,7 +63,7 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
         schema: Schemas.GetUserListSchema,
         onRequest: [adminAuth(server)]
     }, async (req, reply) => {
-        const { page = 1, limit = 10, name, email, role, activated } = req.query;
+        const { page = 1, limit = 10, order = "DESC", name, email, role, activated } = req.query;
         if(page < 1) throw new BadRequestError("Invalid page number, must not be negative");
         if(limit < 1) throw new BadRequestError("Invalid limit value, must not be negative");
         
@@ -75,6 +75,9 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
             }
         }
 
+        if (!["ASC", "DESC"].includes(order.toUpperCase()))
+            throw new BadRequestError("Invalid order value, must be either 'ASC' or 'DESC'");
+
         const [users, totalUsers] = await User.findAndCount({
             skip: (page - 1) * limit,
             take: limit,
@@ -85,7 +88,7 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
                 ...(activated !== undefined && { activated }),
                 role: Not(UserRole.SUPERADMIN)
             },
-            order: { updatedAt: "DESC" }
+            order: { updatedAt: order.toUpperCase() === "ASC" ? "ASC" : "DESC" }
         });
 
         const paginationMetadata = getPaginationMetadata(page, limit, totalUsers);
