@@ -4,10 +4,11 @@ import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import './App.css';
 import Login from './Login';
 import Chat from './Chat';
+import AdminPanel from './AdminPanel';
 
 function App() {
   const location = useLocation();
-  
+
   return (
     <TransitionGroup>
       <CSSTransition key={location.key} classNames="fade" timeout={300}>
@@ -15,6 +16,7 @@ function App() {
           <Route path="/" element={<Login />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/chat/:chatId" element={<Chat />} />
+          <Route path="/admin" element={<AdminPanel />} />
         </Routes>
       </CSSTransition>
     </TransitionGroup>
@@ -22,9 +24,9 @@ function App() {
 }
 
 export default function AppWrapper() {
-    return (
-      <Router>
-        <App />
-      </Router>
-    );
-  }
+  return (
+    <Router>
+      <App />
+    </Router>
+  );
+}
