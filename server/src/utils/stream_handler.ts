@@ -13,8 +13,13 @@ import { getSummaryPrompt } from "../prompts";
 export const getRagChain = async (template: string, chatMessages: ChatMessage[]) => RunnableSequence.from([
     async (input, callbacks) => {
         const chromaService = await ChromaService.getInstance();
+
+        const context = await chromaService.getContext(input.question, callbacks)
+        console.log("CONTEXT:")
+        console.dir(context)
+
         return {
-            context: await chromaService.getContext(input.question, callbacks),
+            context: context,
             question: input.question
         };
     },

@@ -25,17 +25,13 @@ def insert_file(file: File, parent_folder: File, auth_token: str):
     }
   )
 
-  print()
-
 def insert_folder(folder: File, parent_folder: File, auth_token: str, only_content: bool = False):
   inserted_folder = folder
   if not only_content:
     print(f"Inserting folder {folder.name} into {parent_folder.name}...")
     insert_folder_response = requests.post(
       url=f"{BASE_URL}/files/folders/new",
-      headers={
-        "Authorization": f"Bearer {auth_token}"
-      },
+      headers={ "Authorization": f"Bearer {auth_token}" },
       json={
         "name": folder.name,
         **({ "parentFolderId": parent_folder.id } if parent_folder.id is not None else {})
@@ -47,7 +43,6 @@ def insert_folder(folder: File, parent_folder: File, auth_token: str, only_conte
       path=folder.path
     )
     print("Inserted folder")
-    print()
 
   for file_name in os.listdir(inserted_folder.path):
     file = File(
@@ -77,13 +72,11 @@ def main(config: dict[str, any]):
     }
   )
 
-  print(auth_response.status_code)
   if auth_response.status_code != 200:
     print("Authentication failed")
     return
 
-  print("Authentication successfull")
-  print()
+  print("Authentication successful")
   auth_token = auth_response.json()["token"]
 
   folder = File(
