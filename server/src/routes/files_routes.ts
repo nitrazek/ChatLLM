@@ -104,7 +104,7 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
         schema: Schemas.GetFileListSchema,
         onRequest: [adminAuth(server)]
     }, async (req, reply) => {
-        const { page = 1, limit = 30, folderId, name, creatorName, type } = req.query;
+        const { page = 1, limit = 30, order = "ASC", folderId, name, creatorName, type } = req.query;
         if(page < 1) throw new BadRequestError("Invalid page number, must not be negative");
         if(limit < 1) throw new BadRequestError("Invalid limit value, must not be negative");
 
@@ -120,6 +120,9 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
             }
         }
 
+        if (!["ASC", "DESC"].includes(order.toUpperCase()))
+            throw new BadRequestError("Invalid order value, must be either 'ASC' or 'DESC'");
+
         const [files, totalFiles] = await File.findAndCount({
             skip: (page - 1) * limit,
             take: limit,
@@ -129,7 +132,7 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
                 ...(creatorName !== undefined && { creator: { name: Like(`%${creatorName}%`) } }),
                 ...(type !== undefined && { type: getFileType(type) }),
             },
-            order: { name: "ASC" },
+            order: { updatedAt: order.toUpperCase() === "ASC" ? "ASC" : "DESC" },
             relations: ["creator"]
         });
 
