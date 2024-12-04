@@ -41,7 +41,7 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
             user = await User.findOneBy({ email: nameOrEmail });
         else 
             user = await User.findOneBy({ name: nameOrEmail });
-        if (!user) throw new BadRequestError('User do not exist.');
+        if (!user) throw new BadRequestError('User does not exist.');
 
         const isPasswordValid = await user.isPasswordValid(password);
         if (!isPasswordValid) throw new BadRequestError('Invalid password.');
@@ -111,7 +111,7 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
         onRequest: [adminAuth(server)]
     }, async (req, reply) => {
         const user = await User.findOneBy({ id: req.params.userId });
-        if (!user) throw new BadRequestError('User do not exist.');
+        if (!user) throw new BadRequestError('User does not exist.');
         if (user.role === UserRole.SUPERADMIN) throw new ForbiddenError('You do not have permission to access this resource.');
 
         reply.send(user);
@@ -127,7 +127,7 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
         onRequest: [adminAuth(server)]
     }, async (req, reply) => {
         const user = await User.findOneBy({ id: req.params.userId });
-        if (!user) throw new BadRequestError('User do not exist.');
+        if (!user) throw new BadRequestError('User does not exist.');
         if (user.role === UserRole.SUPERADMIN) throw new ForbiddenError('You do not have permission to access this resource.');
 
         user.activate();
@@ -147,7 +147,7 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
         onRequest: [adminAuth(server)]
     }, async (req, reply) => {
         const user = await User.findOneBy({ id: req.params.userId });
-        if (!user) throw new BadRequestError('User do not exist.');
+        if (!user) throw new BadRequestError('User does not exist.');
         if (user.role === UserRole.SUPERADMIN) throw new ForbiddenError('You do not have permission to access this resource.');
 
         const { name, email, password } = req.body;        
@@ -167,7 +167,7 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
         onRequest: [adminAuth(server)]
     }, async (req, reply) => {
         const user = await User.findOneBy({ id: req.params.userId });
-        if (!user) throw new BadRequestError('User do not exist.');
+        if (!user) throw new BadRequestError('User does not exist.');
         if (user.role === UserRole.SUPERADMIN) throw new ForbiddenError('You do not have permission to access this resource.');
 
         await user.remove();

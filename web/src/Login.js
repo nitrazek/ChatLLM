@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import './Login.css';
 import { useNavigate } from "react-router-dom";
 import Cookies from 'js-cookie';
+import { Toast, toast } from 'primereact/toast';
 
 function Login() {
     const [isRegister, setIsRegister] = useState(false);
@@ -17,6 +18,10 @@ function Login() {
     const [loginOrEmailError, setLoginOrEmailError] = useState("");
     const [passwordError, setPasswordError] = useState("");
     const [confirmPasswordError, setConfirmPasswordError] = useState("");
+
+    const serverUrl = process.env.OLLAMA_URL || 'http://localhost:3000';
+
+    const toast = useRef(null);
 
     const [touched, setTouched] = useState({
         email: false,
@@ -65,6 +70,9 @@ function Login() {
     const validatePassword = (password) => {
         if (!password) {
             return "Hasło jest wymagane";
+        }
+        else if (!isRegister) {
+            return "";
         } else if (password.length < 6 || password.length > 30) {
             return "Hasło musi mieć od 6 do 30 znaków";
         } else if (!/[a-z]/.test(password)) {
@@ -104,7 +112,7 @@ function Login() {
     };
 
     const handleLoginOrEmailBlur = () => {
-        setTouched((prev) => ({ ...prev, loginOrEmail: true}));
+        setTouched((prev) => ({ ...prev, loginOrEmail: true }));
         setLoginOrEmailError(validateLoginOrEmail(loginOrEmail));
     }
 
@@ -192,7 +200,6 @@ function Login() {
 
     const registerUser = async () => {
         try {
-            const serverUrl = process.env.OLLAMA_URL || 'http://localhost:3000';
             const response = await fetch(`${serverUrl}/api/v1/users/register`, {
                 method: 'POST',
                 headers: {
@@ -200,10 +207,22 @@ function Login() {
                 },
                 body: JSON.stringify({ name: login, email: email, password: password }),
             });
+
             if (response.status === 201) {
-                alert("You have successfully registered your account. Wait for administrator to activate your account.");
+                toast.current.show({ severity: 'success', summary: 'SUKCES!', detail: `Pomyślnie zarejestrowano! Poczekaj, aż administrator aktywuje konto, by móc korzystać z serwisu.`, life: 10000 });
                 resetForm();
                 handleToggleLogin();
+            }
+            else {
+                const data = await response.json();
+                if (data.statusCode == 400) {
+                    let errorMessageText = "";
+                    if (data.message == "Invalid password.") errorMessageText = "Hasło jest niepoprawne.";
+                    toast.current.show({ severity: 'danger', summary: 'BŁĄD! (400)', detail: `Błędne dane logowania! ${errorMessageText}`, life: 5000 });
+                }
+                if (data.statusCode == 500) {
+                    toast.current.show({ severity: 'danger', summary: 'BŁĄD! (500)', detail: 'Wystąpił wewnętrzny błąd serwera!', life: 5000 });
+                }
             }
         }
         catch (error) {
@@ -213,7 +232,6 @@ function Login() {
 
     const loginUser = async () => {
         try {
-            const serverUrl = process.env.OLLAMA_URL || 'http://localhost:3000';
             const response = await fetch(`${serverUrl}/api/v1/users/login`, {
                 method: 'POST',
                 headers: {
@@ -222,15 +240,28 @@ function Login() {
                 body: JSON.stringify({ nameOrEmail: loginOrEmail, password: password }),
             });
             const data = await response.json();
-
-            if (response.ok) {
+            if (!data.statusCode) {
                 Cookies.set("userToken", data.token);
                 Cookies.set("userId", data.id);
                 Cookies.set("userName", data.name);
                 Cookies.set("userRole", data.role);
                 navigate('/chat');
             } else {
-                alert(data.errorMessage);
+                if (data.statusCode == 400) {
+                    let errorMessageText = "";
+                    if (data.message == "User is not activated.") {
+                        errorMessageText = "Konto nie zostało aktywowane. Skontaktuj się z administratorem";
+                        toast.current.show({ severity: 'info', detail: `${errorMessageText}`, life: 5000 });
+                    }
+                    else {
+                        if (data.message == "User does not exist.") errorMessageText = "Konto nie istnieje";
+                        if (data.message == "Invalid password.") errorMessageText = "Hasło jest niepoprawne";
+                        toast.current.show({ severity: 'danger', summary: 'BŁĄD! (400)', detail: `${errorMessageText}`, life: 5000 });
+                    }
+                }
+                if (data.statusCode == 500) {
+                    toast.current.show({ severity: 'danger', summary: 'BŁĄD! (500)', detail: 'Wystąpił wewnętrzny błąd serwera!', life: 5000 });
+                }
             }
         } catch (error) {
             alert("An error occurred. Try again later\n" + error.message);
@@ -239,6 +270,7 @@ function Login() {
 
     return (
         <div className="center-wrapper">
+            <Toast ref={toast} />
             <div className={`container ${isRegister ? 'active' : ''}`}>
                 <div className="form-container sign-up">
                     <form onSubmit={(e) => e.preventDefault()} onKeyDown={handleKeyDown}>

@@ -3,15 +3,15 @@ body {
     color: white;
     font-family: "Source Sans 3", sans-serif;
     overflow-y: hidden;
-  }
-  
+}
+
 .center-wrapper {
-    
+
     display: flex;
     align-items: center;
     justify-content: center;
     height: 100vh;
-    padding: 0 20px; 
+    padding: 0 20px;
 }
 
 .center-wrapper .container {
@@ -20,8 +20,8 @@ body {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
     position: relative;
     overflow: hidden;
-    width: 900px; 
-    max-width: 100%; 
+    width: 900px;
+    max-width: 100%;
     height: 550px;
     margin: 0 auto;
 }
@@ -44,7 +44,7 @@ body {
     margin: 15px 0 10px;
 }
 
-.center-wrapper .container button{
+.center-wrapper .container button {
     background-color: #7289da;
     padding: 10px 20px;
     border-radius: 10px;
@@ -58,16 +58,16 @@ body {
     transition: all 100ms linear;
     position: relative;
     color: white;
-    box-shadow: inset 0 4px 6px -1px rgb(0 0 0 / 0.1), 
-    0 2px 4px -2px rgb(0 0 0 / 0.1);
+    box-shadow: inset 0 4px 6px -1px rgb(0 0 0 / 0.1),
+        0 2px 4px -2px rgb(0 0 0 / 0.1);
     z-index: 5;
-  }
-  
-  .center-wrapper .container button:active {
+}
+
+.center-wrapper .container button:active {
     box-shadow: inset 0 0 0 4px #043b3f6b;
-  }
-  
-  .center-wrapper .container button::before {
+}
+
+.center-wrapper .container button::before {
     content: "";
     width: 100%;
     height: 100%;
@@ -81,12 +81,12 @@ body {
     opacity: 0;
     animation: flash 100ms ease-in-out;
     transform: scaleX(1.25) scaleY(1.25);
-  }
-  
-  .center-wrapper .container button:hover::before {
+}
+
+.center-wrapper .container button:hover::before {
     opacity: 7;
     transform: scaleX(1) scaleY(1);
-  }
+}
 
 .container button.hidden {
     background-color: transparent;
@@ -146,11 +146,15 @@ body {
 }
 
 @keyframes move {
-    0%, 49.99% {
+
+    0%,
+    49.99% {
         opacity: 0;
         z-index: 1;
     }
-    50%, 100% {
+
+    50%,
+    100% {
         opacity: 1;
         z-index: 5;
     }
@@ -228,7 +232,7 @@ body {
 }
 
 .error-tooltip {
-    background-color: #b40000; 
+    background-color: #b40000;
     color: #fff;
     padding: 3px 6px 4px 6px;
     margin-top: 4px;
@@ -248,7 +252,7 @@ body {
     transform: translateY(-16px);
     border-width: 9px;
     border-style: solid;
-    border-color:  transparent transparent #b40000 transparent; 
+    border-color: transparent transparent #b40000 transparent;
 }
 
 .input-error {
@@ -261,4 +265,81 @@ body {
 
 .input-default {
     border: 2px solid transparent;
+}
+
+/* Toast container customization */
+.p-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    max-width: 300px;
+}
+
+/* Toast message styles */
+.p-toast-message {
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    font-family: 'Arial', sans-serif;
+    font-size: 14px;
+    padding: 12px;
+    margin-bottom: 10px;
+    animation: fadeIn 0.3s ease-out;
+    max-width: 100%; 
+    word-wrap: break-word;
+}
+
+/* Custom toast severity styles */
+.p-toast-message-info {
+    background-color: #d9edf7;
+    color: #31708f;
+    border-left: 4px solid #31708f;
+}
+
+.p-toast-message-success {
+    background-color: #dff0d8;
+    color: #3c763d;
+    border-left: 4px solid #3c763d;
+}
+
+.p-toast-message-warning {
+    background-color: #fcf8e3;
+    color: #8a6d3b;
+    border-left: 4px solid #8a6d3b;
+}
+
+.p-toast-message-danger, 
+.p-toast-message-error {
+    background-color: #f2dede;
+    color: #a94442;
+    border-left: 4px solid #a94442;
+}
+
+/* Toast message text alignment */
+.p-toast-message-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Toast close button */
+.p-toast-icon-close {
+    color: #555;
+    transition: color 0.3s ease;
+}
+
+.p-toast-icon-close:hover {
+    color: #000;
+}
+
+/* Animation for toast appearance */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

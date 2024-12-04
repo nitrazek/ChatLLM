@@ -3,7 +3,6 @@ import './AdminPanel.css';
 import { useNavigate } from "react-router-dom";
 import Cookies from 'js-cookie';
 import Pagination from '@mui/material/Pagination';
-import TextField from '@mui/material/TextField';
 import EditUserPopup from './EditUserPopup';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { Toast, toast } from 'primereact/toast';
@@ -32,8 +31,10 @@ function AdminPanel() {
 
     const toast = useRef(null);
 
+    const serverUrl = process.env.OLLAMA_URL || 'http://localhost:3000';
+
     useEffect(() => {
-        if (!userToken) {
+        if (!userToken || (Cookies.get("userRole")=="user")) {
             navigate('/');
         }
     }, [userToken, navigate]);
@@ -101,7 +102,7 @@ function AdminPanel() {
 
     const activateUser = async (userToActivateId) => {
         try {
-            await fetch(`http://localhost:3000/api/v1/users/${userToActivateId}/activate`, {
+            await fetch(`${serverUrl}/api/v1/users/${userToActivateId}/activate`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${userToken}`
@@ -116,7 +117,7 @@ function AdminPanel() {
 
     const deleteUser = async (userToDeleteId) => {
         try {
-            await fetch(`http://localhost:3000/api/v1/users/${userToDeleteId}`, {
+            await fetch(`${serverUrl}/api/v1/users/${userToDeleteId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${userToken}`
@@ -131,7 +132,7 @@ function AdminPanel() {
 
     const fetchUsers = async (queryParams) => {
         try {
-            const response = await fetch(`http://localhost:3000/api/v1/users/list?${queryParams}`, {
+            const response = await fetch(`${serverUrl}/api/v1/users/list?${queryParams}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${userToken}`,
@@ -187,8 +188,8 @@ function AdminPanel() {
 
     const fetchFiles = async (folderId = null) => {
         try {
-             const queryParam = (folderId !== null && folderId != 0) ? `?folderId=${folderId}` : '';
-        const response = await fetch(`http://localhost:3000/api/v1/files/list${queryParam}`, {
+            const queryParam = (folderId !== null && folderId != 0) ? `?folderId=${folderId}` : '';
+            const response = await fetch(`${serverUrl}/api/v1/files/list${queryParam}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${userToken}`,
@@ -216,18 +217,17 @@ function AdminPanel() {
     // Folder Creation Function
     const createFolder = async (folderName) => {
         try {
-            const response = await fetch(`http://localhost:3000/api/v1/files/folders/new`, {
+            const bodyData = {};
+            bodyData.name = folderName;
+            if (currentFolderId != null && currentFolderId != 0) bodyData.parentFolderId = currentFolderId;
+            const response = await fetch(`${serverUrl}/api/v1/files/folders/new`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${userToken}`,
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    name: folderName,
-                    parentFolderId: (currentFolderId !== null && currentFolderId != 0) ? currentFolderId : null
-                }),
+                body: JSON.stringify(bodyData),
             });
-
             if (response.ok) {
                 fetchFiles(currentFolderId); // Refresh file list after folder creation
             } else {
@@ -243,7 +243,7 @@ function AdminPanel() {
             const file = action.payload.files[0];
             if (file.isDir) {
                 const newFolderId = file.id;
-    
+
                 const folderIndex = folderChain.findIndex(folder => folder.id === newFolderId);
                 if (folderIndex !== -1) {
                     const updatedFolderChain = folderChain.slice(0, folderIndex + 1);
@@ -272,21 +272,21 @@ function AdminPanel() {
             inputFile.click();  // Otwórz okno dialogowe wyboru pliku
         }
     }, [folderChain, createFolder]);
-    
+
     const uploadFile = async (file) => {
-        try {            
+        try {
             const formData = new FormData();
             formData.append('file', file);
             formData.append('folderId', currentFolderId || '0');  // Dodaj folder, w którym plik ma być zapisany
-        
-            const response = await fetch(`http://localhost:3000/api/v1/files/upload${(currentFolderId !=null && currentFolderId != 0) ? `?folderId=${currentFolderId}` : "" }`, {
+
+            const response = await fetch(`${serverUrl}/api/v1/files/upload${(currentFolderId != null && currentFolderId != 0) ? `?folderId=${currentFolderId}` : ""}`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${userToken}`,
                 },
                 body: formData,
             });
-    
+
             if (response.ok) {
                 // Jeśli upload był udany, odśwież listę plików
                 fetchFiles(currentFolderId);
@@ -297,9 +297,9 @@ function AdminPanel() {
             console.error("Error uploading file:", error);
         }
     };
-    
-    
-     
+
+
+
 
     return (
         <div className="adminApp">

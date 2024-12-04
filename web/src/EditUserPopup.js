@@ -15,13 +15,15 @@ function EditUserPopup({ userId }) {
   const [userRole, setUserRole] = useState(false); //if false user, if true admin
   const [userActivated, setUserActivated] = useState(false);
 
+  const serverUrl = process.env.OLLAMA_URL || 'http://localhost:3000';
+
   const closePopup = async () => {
     navigate('/admin');
   };
 
   const fetchUser = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/v1/users/${userId}`, {
+      const response = await fetch(`${serverUrl}/api/v1/users/${userId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${userToken}`,
@@ -46,7 +48,7 @@ function EditUserPopup({ userId }) {
       bodyData.password = userPassword;
     }
     try {
-      const response = await fetch(`http://localhost:3000/api/v1/users/${userId}/update`, {
+      const response = await fetch(`${serverUrl}/api/v1/users/${userId}/update`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${userToken}`,

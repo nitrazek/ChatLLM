@@ -9,6 +9,9 @@ import Cookies from 'js-cookie';
 import NewChatPopup from './NewChatPopup';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faStop } from "@fortawesome/free-solid-svg-icons"
+import { Toast, toast } from 'primereact/toast';
+import { useLocation } from 'react-router-dom';
+
 
 function Chat() {
   const { chatId } = useParams();
@@ -23,7 +26,12 @@ function Chat() {
   const mainTopRef = useRef(null);
   const controller = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const userToken = Cookies.get("userToken");
+
+  const serverUrl = process.env.OLLAMA_URL || 'http://localhost:3000';
+
+  const toast = useRef(null);
 
   let nextChatListPage = null;
 
@@ -31,7 +39,10 @@ function Chat() {
     if (!userToken) {
       navigate('/');
     }
-  })
+    if (location.state?.toast) {
+      toast.current.show(location.state.toast);
+    }
+  }, [location.state]);
 
   const handleLogout = async () => {
     Cookies.remove("userToken");
@@ -46,7 +57,7 @@ function Chat() {
 
   const fetchChatHistory = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/v1/chats/list`, {
+      const response = await fetch(`${serverUrl}/api/v1/chats/list`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${userToken}`,
@@ -86,7 +97,7 @@ function Chat() {
     setMessages(prevMessages => [...prevMessages, botMessage]);
 
     try {
-      const response = await fetch(`http://localhost:3000/api/v1/chats/${chatId}`, {
+      const response = await fetch(`${serverUrl}/api/v1/chats/${chatId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${userToken}`,
@@ -185,7 +196,7 @@ function Chat() {
 
   const fetchPreviousMessages = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/v1/chats/${chatId}?limit=10&page=${nextChatListPage}`, {
+      const response = await fetch(`${serverUrl}/api/v1/chats/${chatId}?limit=10&page=${nextChatListPage}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${userToken}`,
@@ -219,7 +230,7 @@ function Chat() {
     const fetchMessages = async () => {
       if (!chatId) return;
       try {
-        const response = await fetch(`http://localhost:3000/api/v1/chats/${chatId}?limit=10`, {
+        const response = await fetch(`${serverUrl}/api/v1/chats/${chatId}?limit=10`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${userToken}`,
@@ -252,6 +263,7 @@ function Chat() {
 
   return (
     <div className="App">
+      <Toast ref={toast} />
       {showNewChatPopup && <NewChatPopup />}
       <div className="sideBar">
         <div className="generatorContainer">
@@ -279,7 +291,7 @@ function Chat() {
           </div>
         </div>
         <div className="lowerSide">
-          {role =="admin" && <button className="button" onClick={handleAdminPanelButton}>Panel administratora</button>}
+          {(role == "admin" || role == "superadmin") && <button className="button" onClick={handleAdminPanelButton}>Panel administratora</button>}
           <button className="button" onClick={handleLogout}>Wyloguj się</button>
         </div>
       </div>
