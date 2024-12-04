@@ -75,6 +75,7 @@ export const CreateFolderSchema: FastifySchema = {
 const GetFileListQueryTypes = Type.Object({
     page: Type.Optional(Type.Number({ description: "The page number for pagination" })),
     limit: Type.Optional(Type.Number({ description: "The number of files to retrieve per page" })),
+    order: Type.Optional(Type.String({ description: "Sort order for the list of files (Default ASC)" })),
     folderId: Type.Optional(Type.Number({ description: "Folder from which files will be received" })),
     name: Type.Optional(Type.String({ description: "Filters files by partial match of their name" })),
     creatorName: Type.Optional(Type.String({ description: "Filters files by partial match of their creator's name" })),

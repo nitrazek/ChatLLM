@@ -23,12 +23,12 @@ export const populateDatabase = async () => {
     const existingAdmin = await User.findOneBy({ name: "superadmin" });
     if(existingAdmin !== null) return;
      
-    const admin = User.create({
+    const superAdmin = User.create({
         name: "superadmin",
         email: "superadmin@admin.com",
         password: "Superadmin1!",
         activated: true,
-        role: UserRole.ADMIN
+        role: UserRole.SUPERADMIN
     });
-    await admin.save();
+    await superAdmin.save();
 }

@@ -69,15 +69,18 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         schema: Schemas.GetChatListSchema,
         onRequest:[userAuth(server)]
     }, async (req, reply) => {
-        const { page = 1, limit = 20 } = req.query;
+        const { page = 1, limit = 20, order = "DESC" } = req.query;
         if(page < 1) throw new BadRequestError("Invalid page number, must not be negative");
-        if(limit < 1) throw new BadRequestError("Invalid limit value, must not be negative");
+        if (limit < 1) throw new BadRequestError("Invalid limit value, must not be negative");
+        
+        if (!["ASC", "DESC"].includes(order.toUpperCase()))
+            throw new BadRequestError("Invalid order value, must be either 'ASC' or 'DESC'");
 
         const [chats, totalChats] = await Chat.findAndCount({
             skip: (page - 1) * limit,
             take: limit,
             where: { user: { id: req.user.id } },
-            order: { updatedAt: "DESC" }
+            order: { updatedAt: order.toUpperCase() === "ASC" ? "ASC" : "DESC" }
         });
 
         const paginationMetadata = getPaginationMetadata(page, limit, totalChats);
@@ -107,15 +110,18 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         if (!chat) throw new BadRequestError('Chat do not exist.');
         if (chat.user.id !== req.user.id) throw new ForbiddenError('You do not have permission to access this resource.');
 
-        const { page = 1, limit = 20 } = req.query;
+        const { page = 1, limit = 20, order = "DESC" } = req.query;
         if(page < 1) throw new BadRequestError("Invalid page number, must not be negative");
-        if(limit < 1) throw new BadRequestError("Invalid limit value, must not be negative");
+        if (limit < 1) throw new BadRequestError("Invalid limit value, must not be negative");
+        
+        if (!["ASC", "DESC"].includes(order.toUpperCase()))
+            throw new BadRequestError("Invalid order value, must be either 'ASC' or 'DESC'");
 
         const [messages, totalMessages] = await ChatMessage.findAndCount({
             skip: (page - 1) * limit,
             take: limit,
             where: { chat: { id: req.params.chatId } },
-            order: { updatedAt: "DESC" }
+            order: { updatedAt: order.toUpperCase() === "ASC" ? "ASC" : "DESC" }
         });
 
         const paginationMetadata = getPaginationMetadata(page, limit, totalMessages);
