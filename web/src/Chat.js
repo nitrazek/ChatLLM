@@ -64,6 +64,12 @@ function Chat() {
           'Content-Type': 'application/json'
         },
       });
+
+      if (response.status === 401) {
+        handleLogout();
+        return;
+    }
+    
       const data = await response.json();
       setChatHistory(data.chats);
     } catch (error) {
@@ -80,22 +86,22 @@ function Chat() {
       fromUser: true,
       user: { name: Cookies.get('userName'), avatar: "/avatars/user.png" }
     };
-
+    
     setMessages(prevMessages => [...prevMessages, userMessage]);
     setLastUserMessage(userMessage);
     setInput('');
     setIsLoading(true);
     controller.current = new AbortController();
-
+    
     let botMessage = {
       id: messages.length + 2,
       text: '',
       fromUser: false,
       user: { name: "Bot", avatar: "/avatars/bot.png" }
     };
-
+    
     setMessages(prevMessages => [...prevMessages, botMessage]);
-
+    
     try {
       const response = await fetch(`${serverUrl}/api/v1/chats/${chatId}`, {
         method: 'POST',
@@ -106,7 +112,14 @@ function Chat() {
         body: JSON.stringify({ question: input }),
         signal: controller.current.signal
       });
-
+      
+      
+          if (response.status === 401) {
+            handleLogout();
+            return;
+        }
+      
+      
       const reader = response.body.getReader();
       let accumulatedText = '';
       while (true) {
@@ -204,6 +217,11 @@ function Chat() {
         },
       });
 
+      if (response.status === 401) {
+        handleLogout();
+        return;
+    }
+
       const data = await response.json();
       nextChatListPage = data.pagination.nextPage;
       setMessages(prevMessages => [
@@ -237,6 +255,11 @@ function Chat() {
             'Content-Type': 'application/json',
           },
         });
+
+        if (response.status === 401) {
+          handleLogout();
+          return;
+      }
 
         const data = await response.json();
         nextChatListPage = data.pagination.nextPage;
