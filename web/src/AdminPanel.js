@@ -34,7 +34,7 @@ function AdminPanel() {
     const serverUrl = process.env.OLLAMA_URL || 'http://localhost:3000';
 
     useEffect(() => {
-        if (!userToken || (Cookies.get("userRole")=="user")) {
+        if (!userToken || (Cookies.get("userRole") == "user")) {
             navigate('/');
         }
     }, [userToken, navigate]);
@@ -162,6 +162,8 @@ function AdminPanel() {
     const [fileList, setFileList] = useState([]);
     const [currentFolderId, setCurrentFolderId] = useState(null);
     const [folderChain, setFolderChain] = useState([{ id: '0', name: "Baza plików", isDir: true }]);
+    const [selectedFiles, setSelectedFiles] = useState([]);
+
 
     // Set Chonky Defaults
     setChonkyDefaults({ iconComponent: ChonkyIconFA });
@@ -185,6 +187,17 @@ function AdminPanel() {
             icon: 'upload', // ikona z FontAwesome lub innej biblioteki
         },
     });
+
+    const deleteFileAction = defineFileAction({
+        id: 'delete_file',
+        button: {
+            name: 'Usuń plik',
+            toolbar: true,
+            contextMenu: true,
+            icon: 'trash',
+        },
+    });
+
 
     const fetchFiles = async (folderId = null) => {
         try {
@@ -239,6 +252,9 @@ function AdminPanel() {
     };
 
     const handleFileAction = useCallback((action) => {
+        console.log("Action received:", action);
+        console.log("Selected files:", action.payload?.files);
+
         if (action.id === ChonkyActions.OpenFiles.id && action.payload.files.length === 1) {
             const file = action.payload.files[0];
             if (file.isDir) {
@@ -271,6 +287,20 @@ function AdminPanel() {
             };
             inputFile.click();  // Otwórz okno dialogowe wyboru pliku
         }
+        else if (action.id === 'delete_file') {
+            const selectedFiles = action.state?.selectedFilesForAction || [];
+            if (selectedFiles.length === 0) {
+                console.error("Nie wybrano plików do usunięcia");
+                return;
+            }
+        
+            confirmDeleteFiles(selectedFiles); // Obsługa usuwania wielu plików
+        }
+        
+
+
+
+
     }, [folderChain, createFolder]);
 
     const uploadFile = async (file) => {
@@ -298,11 +328,48 @@ function AdminPanel() {
         }
     };
 
+    const deleteFile = async (fileId) => {
+        try {
+            const response = await fetch(`${serverUrl}/api/v1/files/${fileId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${userToken}`,
+                },
+            });
 
+            if (response.ok) {
+                toast.current.show({ severity: 'success', summary: 'Sukces!', detail: 'Plik został usunięty', life: 3000 });
+                fetchFiles(currentFolderId); // Odśwież listę plików
+            } else {
+                console.error("Błąd podczas usuwania pliku:", await response.text());
+            }
+        } catch (error) {
+            console.error("Błąd podczas usuwania pliku:", error);
+        }
+    };
+
+    const confirmDeleteFiles = (filesToDelete) => {
+        confirmDialog({
+            message: `Czy na pewno chcesz usunąć ${filesToDelete.length > 1 ? 'zaznaczone pliki?' : `plik "${filesToDelete[0].name}"?`}`,
+            header: 'Usuń pliki',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                filesToDelete.forEach((file) => deleteFile(file.id)); // Usuń wszystkie zaznaczone pliki
+            },
+            acceptClassName: 'p-button-success',
+            acceptLabel: "Tak",
+            rejectClassName: 'p-button-danger',
+            rejectLabel: "Nie"
+        });
+    };
+    
+    
 
 
     return (
         <div className="adminApp">
+            <Toast ref={toast} />
+            <ConfirmDialog />
             {showEditUserPopup && <EditUserPopup userId={userToEditId} />}
             <div className="adminSideBar">
                 <div className="adminUpperSideContainer">
@@ -327,8 +394,6 @@ function AdminPanel() {
             <div className={showFilters ? "adminMain adminMainFilters" : "adminMain"}>
                 {userManagement && (
                     <div>
-                        <ConfirmDialog />
-                        <Toast ref={toast} />
                         <div className='adminUserTopContainer'>
                             <div>
                                 <label>Szukaj użytkownika:</label>
@@ -416,8 +481,10 @@ function AdminPanel() {
                             <FullFileBrowser
                                 files={fileList}
                                 onFileAction={handleFileAction}
-                                fileActions={[createFolderAction, uploadFileAction]}
+                                fileActions={[createFolderAction, uploadFileAction, deleteFileAction]}
                                 folderChain={folderChain}
+                                disableDefaultFileActions={true}
+                                onSelectionChange={(selection) => setSelectedFiles(selection?.fileIds || [])}
                             />
                         </div>
                     </div>
