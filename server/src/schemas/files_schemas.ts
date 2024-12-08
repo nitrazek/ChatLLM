@@ -165,7 +165,7 @@ const MoveFileParamsTypes = Type.Object({
 export type MoveFileParams = Static<typeof MoveFileParamsTypes>;
 
 const MoveFileBodyTypes = Type.Object({
-    newParentFolderId: Type.Optional(Type.Number({ description: "ID of the new parent folder" }))
+    newParentFolderId: Type.Optional(Type.Number({ description: "(Optional) ID of the new parent folder, if not specified file will be moved to main folder" }))
 }, { description: "Payload containing information to which folder move this file" });
 export type MoveFileBody = Static<typeof MoveFileBodyTypes>;
 
