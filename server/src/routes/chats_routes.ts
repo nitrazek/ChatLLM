@@ -4,7 +4,7 @@ import { userAuth } from "../services/authentication_service";
 import { Chat } from "../models/chat";
 import { ChatMessage } from "../models/chat_message";
 import { BadRequestError, ForbiddenError } from "../schemas/errors_schemas";
-import { getRagTemplate } from "../prompts";
+// import { getRagTemplate } from "../prompts";
 import { SenderType } from "../enums/sender_type";
 import { getRagChain, transformStream } from "../utils/stream_handler";
 import { getPaginationMetadata } from "../utils/pagination_handler";
@@ -47,7 +47,7 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         if (!chat) throw new BadRequestError('Chat do not exist.');
         if (chat.user.id !== req.user.id) throw new ForbiddenError('You do not have permission to access this resource.');
 
-        const template = getRagTemplate(chat.isUsingOnlyKnowledgeBase);
+        // const template = getRagTemplate(chat.isUsingOnlyKnowledgeBase);
         const question = req.body.question;
         const [chatMessageList, _] = await ChatMessage.findAndCount({
             take: 10,
@@ -55,7 +55,8 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
             order: { updatedAt: "DESC" }
         });
         await chat.addMessage(SenderType.HUMAN, question);
-        const ragChain = await getRagChain(template, chatMessageList);
+        // const ragChain = await getRagChain(template, chatMessageList);
+        const ragChain = await getRagChain(chatMessageList);
         const stream = await ragChain.stream({ question });
         return reply.send(await transformStream(stream, chat));
     });

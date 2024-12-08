@@ -75,6 +75,8 @@ def main(config: dict[str, any]):
     print(f"Expected answer: \"{test_question['answer']}\"")
 
     print()
+    print("---------------------------------------------")
+    print()
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()

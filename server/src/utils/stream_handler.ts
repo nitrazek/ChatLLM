@@ -8,31 +8,36 @@ import { ChromaService } from "../services/chroma_service";
 import { SenderType } from "../enums/sender_type";
 import { Chat } from "../models/chat";
 import { IterableReadableStream } from "@langchain/core/dist/utils/stream";
-import { getSummaryPrompt } from "../prompts";
+import { getOnlyRagTemplate, getSummaryPrompt } from "../prompts";
 
-export const getRagChain = async (template: string, chatMessages: ChatMessage[]) => RunnableSequence.from([
+export const getRagChain = async (chatMessages: ChatMessage[]) => RunnableSequence.from([
     async (input, callbacks) => {
         const chromaService = await ChromaService.getInstance();
 
         const context = await chromaService.getContext(input.question, callbacks)
-        console.log("CONTEXT:")
-        console.dir(context)
+        // console.log("CONTEXT:")
+        // console.dir(context)
 
         return {
             context: context,
             question: input.question
         };
     },
-    ChatPromptTemplate.fromMessages([
-        ["system", template],
-        ...chatMessages.map(message => {
-            switch(message.sender) {
-                case SenderType.AI: return new AIMessage(message.content);
-                case SenderType.HUMAN: return new HumanMessage(message.content);
-            }
-        }),
-        [SenderType.HUMAN.toString(), "{question}"]
-    ]),
+    // ChatPromptTemplate.fromMessages([
+    //     ["system", template],
+    //     ...chatMessages.map(message => {
+    //         switch(message.sender) {
+    //             case SenderType.AI: return new AIMessage(message.content);
+    //             case SenderType.HUMAN: return new HumanMessage(message.content);
+    //         }
+    //     }),
+    //     [SenderType.HUMAN.toString(), "{question}"]
+    // ]),
+    ({ context, question }) => {
+        console.log("CONTEXT: " + context)
+        console.log("QUESTION: " + question)
+        return ChatPromptTemplate.fromTemplate(getOnlyRagTemplate(question, context, chatMessages))
+    },
     await OllamaService.getInstance()
 ]);
 

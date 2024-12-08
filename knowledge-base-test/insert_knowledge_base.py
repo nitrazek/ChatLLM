@@ -42,7 +42,6 @@ def insert_folder(folder: File, parent_folder: File, auth_token: str, only_conte
       name=insert_folder_response["name"],
       path=folder.path
     )
-    print("Inserted folder")
 
   for file_name in os.listdir(inserted_folder.path):
     file = File(
