@@ -1,0 +1,51 @@
+Roczne Sprawozdanie Finansowe za rok 2024
+
+Firma: KompTech S.A.
+Rok założenia: 2020
+Siedziba: Warszawa, Polska
+Obszar działalności: Sprzedaż części komputerowych
+
+1. Bilans
+
+Aktywa:
+- Aktywa trwałe:  5,000,000 PLN
+- Aktywa obrotowe:	8,500,000 PLN
+- Zapas produktów:	4,000,000 PLN
+- Należności krótkoterminowe: 2,500,000 PLN
+- Środki pieniężne:	2,000,000 PLN
+Razem aktywa:	13,500,000 PLN
+
+Pasywa:
+- Kapitał własny:	7,500,000 PLN
+- Zobowiązania krótkoterminowe:	5,000,000 PLN
+- Zobowiązania długoterminowe:	1,000,000 PLN
+Razem pasywa	13,500,000 PLN
+
+2. Rachunek zysków i strat
+
+Przychody ze sprzedaży:	45,000,000 PLN
+Koszty sprzedaży:	35,000,000 PLN
+Zysk brutto:	10,000,000 PLN
+Koszty operacyjne:	4,500,000 PLN
+Zysk operacyjny:	5,500,000 PLN
+Podatek dochodowy (19%):	1,045,000 PLN
+Zysk netto:	4,455,000 PLN
+
+3. Przepływy pieniężne (Cash Flow)
+
+Przepływy operacyjne:	6,000,000 PLN
+Przepływy inwestycyjne:	-3,000,000 PLN
+Przepływy finansowe:	-500,000 PLN
+Netto przepływy pieniężne:	2,500,000 PLN
+
+4. Kluczowe wskaźniki finansowe
+
+Rentowność sprzedaży: 9.9%
+Wskaźnik bieżącej płynności: 1.7
+Zadłużenie kapitału własnego: 0.8
+
+5. Podsumowanie działalności w 2024 roku
+- Firma KompTech S.A. zwiększyła przychody o 20% w porównaniu z rokiem 2023.
+- Wzrost sprzedaży w kategorii kart graficznych o 35% dzięki popularności serii NVIDIA RTX 4000.
+- Optymalizacja kosztów operacyjnych pozwoliła zwiększyć rentowność netto o 1.5 punktu procentowego.
+- Zainwestowano 3 mln PLN w automatyzację magazynów, co zwiększy efektywność obsługi zamówień.

@@ -1,0 +1,51 @@
+Roczne Sprawozdanie Finansowe za rok 2023
+
+Firma: KompTech S.A.
+Rok założenia: 2020
+Siedziba: Warszawa, Polska
+Obszar działalności: Sprzedaż części komputerowych
+
+1. Bilans
+
+Aktywa:
+- Aktywa trwałe:	4,500,000 PLN
+- Aktywa obrotowe:	7,800,000 PLN
+- Zapas produktów:	3,700,000 PLN
+- Należności krótkoterminowe:	2,200,000 PLN
+- Środki pieniężne:	1,900,000 PLN
+Razem aktywa:	12,300,000 PLN
+
+Pasywa:
+- Kapitał własny:	6,800,000 PLN
+- Zobowiązania krótkoterminowe:	4,500,000 PLN
+- Zobowiązania długoterminowe:	1,000,000 PLN
+Razem pasywa:	12,300,000 PLN
+
+2. Rachunek zysków i strat
+
+Przychody ze sprzedaży:	37,500,000 PLN
+Koszty sprzedaży:	29,000,000 PLN
+Zysk brutto:	8,500,000 PLN
+Koszty operacyjne:	4,200,000 PLN
+Zysk operacyjny:	4,300,000 PLN
+Podatek dochodowy (19%):	817,000 PLN
+Zysk netto:	3,483,000 PLN
+
+3. Przepływy pieniężne (Cash Flow)
+
+Przepływy operacyjne:	5,500,000 PLN
+Przepływy inwestycyjne:	-2,000,000 PLN
+Przepływy finansowe:	-700,000 PLN
+Netto przepływy pieniężne:	2,800,000 PLN
+
+4. Kluczowe wskaźniki finansowe
+
+Rentowność sprzedaży: 9.3%
+Wskaźnik bieżącej płynności: 1.73
+Zadłużenie kapitału własnego: 0.82
+
+5. Podsumowanie działalności w 2023 roku
+- Firma KompTech S.A. osiągnęła stabilny wzrost przychodów o 15% w porównaniu z rokiem 2022.
+- Znaczący wzrost sprzedaży procesorów Intel oraz kart graficznych z serii NVIDIA RTX.
+- Inwestycja w modernizację infrastruktury magazynowej o wartości 2 mln PLN, co skróciło czas realizacji zamówień o 25%.
+- Rozszerzenie sieci dystrybucyjnej o dodatkowe rynki w Europie Środkowej.
