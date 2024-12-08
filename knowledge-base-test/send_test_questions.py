@@ -1,7 +1,5 @@
-import os
 import requests
 import json
-import json_stream
 import argparse
 
 BASE_URL = "http://localhost:3000/api/v1"
