@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import './AdminPanel.css';
 import { useNavigate } from "react-router-dom";
 import Cookies from 'js-cookie';
 import Pagination from '@mui/material/Pagination';
@@ -9,6 +8,7 @@ import { Toast, toast } from 'primereact/toast';
 import { FullFileBrowser, ChonkyActions, defineFileAction } from 'chonky';
 import { setChonkyDefaults } from 'chonky';
 import { ChonkyIconFA } from 'chonky-icon-fontawesome';
+import './AdminPanel.css';
 
 function AdminPanel() {
     const navigate = useNavigate();
@@ -163,10 +163,21 @@ function AdminPanel() {
     const [currentFolderId, setCurrentFolderId] = useState(null);
     const [folderChain, setFolderChain] = useState([{ id: '0', name: "Baza plików", isDir: true }]);
     const [selectedFiles, setSelectedFiles] = useState([]);
-
+    const [filePage, setFilePage] = useState(1);
+    const [fileNextPage, setFileNextPage] = useState(null);
 
     // Set Chonky Defaults
     setChonkyDefaults({ iconComponent: ChonkyIconFA });
+
+    const fetchMoreFilesAction = defineFileAction({
+        id: 'fetch_more_files',
+        button: {
+            name: 'Załaduj więcej plików',
+            toolbar: true,
+            contextMenu: false,
+            icon: 'download'
+        },
+    });
 
     const createFolderAction = defineFileAction({
         id: 'create_folder',
@@ -201,7 +212,7 @@ function AdminPanel() {
 
     const fetchFiles = async (folderId = null) => {
         try {
-            const queryParam = (folderId !== null && folderId != 0) ? `?folderId=${folderId}` : '';
+            const queryParam = (folderId !== null && folderId != 0) ? `?limit=36&page=${filePage}&folderId=${folderId}` : '';
             const response = await fetch(`${serverUrl}/api/v1/files/list${queryParam}`, {
                 method: 'GET',
                 headers: {
@@ -215,7 +226,12 @@ function AdminPanel() {
                 name: file.type === 'folder' ? file.name : `${file.name}.${file.type}`,
                 isDir: file.type === 'folder',
             }));
-            setFileList(formattedFiles);
+            setFileNextPage(data.pagination.nextPage || null);
+            if (filePage > 1) {
+                setFileList(prevFiles => [...prevFiles, ...formattedFiles]);
+            } else {
+                setFileList(formattedFiles);
+            }
         } catch (error) {
             console.error("Error fetching files:", error);
             setFileList([]);
@@ -252,9 +268,6 @@ function AdminPanel() {
     };
 
     const handleFileAction = useCallback((action) => {
-        console.log("Action received:", action);
-        console.log("Selected files:", action.payload?.files);
-
         if (action.id === ChonkyActions.OpenFiles.id && action.payload.files.length === 1) {
             const file = action.payload.files[0];
             if (file.isDir) {
@@ -293,19 +306,72 @@ function AdminPanel() {
                 console.error("Nie wybrano plików do usunięcia");
                 return;
             }
-        
+
             confirmDeleteFiles(selectedFiles); // Obsługa usuwania wielu plików
         }
-        
 
+        else if (action.id === ChonkyActions.EndDragNDrop.id) {
+            const { draggedFile, destination } = action.payload || {};
 
+            if (!draggedFile || !destination) {
+                console.error("Brak danych do przeniesienia.");
+                return;
+            }
+
+            if (draggedFile.id === destination.id) {
+                toast.current.show({
+                    severity: 'error',
+                    summary: 'Błąd!',
+                    detail: 'Nie można przenieść folderu do samego siebie.',
+                    life: 3000,
+                });
+                return;
+            }
+
+            // Przenoszenie każdego pliku do nowego folderu
+            if (Array.isArray(draggedFile)) {
+                draggedFile.forEach((file) => {
+                    moveFile(file.id, destination.id);
+                });
+            } else {
+                // If draggedFile is not an array, handle it as a single file
+                moveFile(draggedFile.id, destination.id);
+            }
+        }
+        else if (action.id === 'fetch_more_files') {
+            if (fileNextPage == null) {
+                toast.current.show({
+                    severity: 'info',
+                    detail: 'Załadowano wszystkie pliki.',
+                    life: 5000,
+                });
+                return;
+            }
+            setFilePage(filePage + 1);
+            fetchFiles(currentFolderId);
+        }
 
 
     }, [folderChain, createFolder]);
 
     const uploadFile = async (file) => {
+        const loadingKey = 'loading'; // Klucz do zarządzania toastem
+        toast.current.show({
+            severity: 'info',
+            detail: `Plik "${file.name}" jest przesyłany...`,
+            sticky: true, // Toast pozostanie widoczny do momentu ręcznego usunięcia
+            closable: false, // Wyłącz przycisk zamknięcia podczas ładowania
+            life: 300000, // Maksymalny czas życia (opcjonalne zabezpieczenie przed zapętleniem)
+            key: loadingKey, // Unikalny identyfikator
+        });
         try {
             const formData = new FormData();
+            const allowedTypes = ['text/plain', 'application/pdf']; // MIME typy dla .txt i .pdf
+            if (!allowedTypes.includes(file.type)) {
+                toast.current.clear(loadingKey);
+                toast.current.show({ severity: 'danger', summary: 'Wybrano plik o niedopuszczalnym formacie!', detail: `Dozwolone formaty: .TXT, .PDF`, life: 5000 });
+                return;
+            }
             formData.append('file', file);
             formData.append('folderId', currentFolderId || '0');  // Dodaj folder, w którym plik ma być zapisany
 
@@ -318,8 +384,9 @@ function AdminPanel() {
             });
 
             if (response.ok) {
-                // Jeśli upload był udany, odśwież listę plików
                 fetchFiles(currentFolderId);
+                toast.current.clear(loadingKey);
+                toast.current.show({ severity: 'success', summary: 'Sukces!', detail: `Pomyślnie wgrano plik "${file.name}"!`, life: 5000 });
             } else {
                 console.error("Error uploading file:", await response.text());
             }
@@ -362,8 +429,32 @@ function AdminPanel() {
             rejectLabel: "Nie"
         });
     };
-    
-    
+
+    const moveFile = async (fileId, newParentFolderId) => {
+        try {
+            const bodyData = {};
+            if (newParentFolderId != 0) bodyData.newParentFolderId = newParentFolderId;
+            const response = await fetch(`${serverUrl}/api/v1/files/move/${fileId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${userToken}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(bodyData),
+            });
+
+            if (response.ok) {
+                toast.current.show({ severity: 'success', summary: 'Sukces!', detail: 'Plik został przeniesiony.', life: 3000 });
+                fetchFiles(currentFolderId);
+            } else {
+                const errorMessage = await response.text();
+                console.error("Błąd podczas przenoszenia pliku:", errorMessage);
+            }
+        } catch (error) {
+            console.error("Błąd podczas przenoszenia pliku:", error);
+        }
+    };
+
 
 
     return (
@@ -481,7 +572,7 @@ function AdminPanel() {
                             <FullFileBrowser
                                 files={fileList}
                                 onFileAction={handleFileAction}
-                                fileActions={[createFolderAction, uploadFileAction, deleteFileAction]}
+                                fileActions={[fetchMoreFilesAction, createFolderAction, uploadFileAction, deleteFileAction, ChonkyActions.MoveFiles]}
                                 folderChain={folderChain}
                                 disableDefaultFileActions={true}
                                 onSelectionChange={(selection) => setSelectedFiles(selection?.fileIds || [])}
