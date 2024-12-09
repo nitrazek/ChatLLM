@@ -223,7 +223,7 @@ function Chat() {
     }
 
       const data = await response.json();
-      nextChatListPage = data.pagination.nextPage;
+      nextChatListPage = data.pagination.nextPage || null;
       setMessages(prevMessages => [
         ...data.messages.map((msg, index) => ({
           id: msg.id,
@@ -290,7 +290,7 @@ function Chat() {
       {showNewChatPopup && <NewChatPopup />}
       <div className="sideBar">
         <div className="generatorContainer">
-          <div className="upperSideTop">C o k o l w i e k</div>
+          <div className="upperSideTop">Baza wiedzy</div>
           <button className="button" onClick={() => setShowNewChatPopup(true)}>Rozpocznij nowy czat</button>
         </div>
         <div className="upperSide">

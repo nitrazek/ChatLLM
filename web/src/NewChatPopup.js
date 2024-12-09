@@ -28,8 +28,9 @@ function NewChatPopup() {
       if (usingKnowlegde) {
         bodyData.isUsingOnlyKnowledgeBase = usingKnowlegde;
       }
-
-      const response = await fetch(`${serverUrl}}/api/v1/chats/new`, {
+      
+      console.log(bodyData);
+      const response = await fetch(`${serverUrl}/api/v1/chats/new`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${userToken}`,
