@@ -68,8 +68,8 @@ function Chat() {
       if (response.status === 401) {
         handleLogout();
         return;
-    }
-    
+      }
+
       const data = await response.json();
       setChatHistory(data.chats);
     } catch (error) {
@@ -86,22 +86,24 @@ function Chat() {
       fromUser: true,
       user: { name: Cookies.get('userName'), avatar: "/avatars/user.png" }
     };
-    
+
     setMessages(prevMessages => [...prevMessages, userMessage]);
     setLastUserMessage(userMessage);
     setInput('');
     setIsLoading(true);
     controller.current = new AbortController();
-    
+
     let botMessage = {
       id: messages.length + 2,
       text: '',
       fromUser: false,
       user: { name: "Bot", avatar: "/avatars/bot.png" }
     };
-    
+
     setMessages(prevMessages => [...prevMessages, botMessage]);
-    
+
+    let buffer = ""; // Buffer to store incomplete JSON
+
     try {
       const response = await fetch(`${serverUrl}/api/v1/chats/${chatId}`, {
         method: 'POST',
@@ -112,59 +114,114 @@ function Chat() {
         body: JSON.stringify({ question: input }),
         signal: controller.current.signal
       });
-      
-      
-          if (response.status === 401) {
-            handleLogout();
-            return;
-        }
-      
-      
+
+      if (response.status === 401) {
+        handleLogout();
+        return;
+      }
+
       const reader = response.body.getReader();
       let accumulatedText = '';
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
-          setIsLoading(false);
-          setIsGeneratingAnswer(false);
-          return;
+            // Koniec strumienia
+            setIsLoading(false);
+            setIsGeneratingAnswer(false);
+            buffer = ""; // Wyczyść bufor
+            return;
         }
-
+    
         const chunk = new TextDecoder().decode(value);
-        console.log(chunk);
-        const parsedChunk = JSON.parse(chunk);
-        const answer = parsedChunk.answer;
-        console.log(parsedChunk);
-        console.log(answer);
-        accumulatedText += answer;
-
-        setMessages(prevMessages => {
-          const updatedMessages = [...prevMessages];
-          const botIndex = updatedMessages.findIndex(msg => msg.id === botMessage.id);
-
-          if (botIndex !== -1) {
-            updatedMessages[botIndex].text = accumulatedText;
-          }
-
-          if (mainTopRef.current) {
-            mainTopRef.current.lastChild.scrollIntoView({ behavior: 'smooth' });
-          }
-
-          return updatedMessages;
-        });
-
-        setIsGeneratingAnswer(true);
-
-        if (parsedChunk.newChatName) {
-          setChatHistory(prevHistory => {
-            const updatedHistory = prevHistory.map(chat => {
-              const isMatch = chat.id == chatId;
-              return isMatch ? { ...chat, name: parsedChunk.newChatName } : chat;
-            });
-            return updatedHistory;
-          });
+        buffer += chunk;
+        console.log(buffer);
+        // Przetwarzaj bufor
+        while (buffer) {
+            try {
+                const jsonEndIndex = buffer.indexOf("}{"); 
+                if (jsonEndIndex !== -1) {
+                    const jsonString = buffer.slice(0, jsonEndIndex + 1); // Wyciągnij pierwszy JSON
+                    const parsedChunk = JSON.parse(jsonString); // Parsuj JSON
+                    buffer = buffer.slice(jsonEndIndex + 1); // Zaktualizuj bufor
+                    console.log(jsonString);
+                    const answer = parsedChunk.answer;
+                    accumulatedText += answer;
+    
+                    setMessages(prevMessages => {
+                        const updatedMessages = [...prevMessages];
+                        const botIndex = updatedMessages.findIndex(msg => msg.id === botMessage.id);
+    
+                        if (botIndex !== -1) {
+                            updatedMessages[botIndex].text = accumulatedText;
+                        }
+    
+                        if (mainTopRef.current) {
+                            mainTopRef.current.lastChild.scrollIntoView({ behavior: 'smooth' });
+                        }
+    
+                        return updatedMessages;
+                    });
+    
+                    setIsGeneratingAnswer(true);
+    
+                    if (parsedChunk.newChatName) {
+                      console.log("sraka nazwowa :(");
+                        setChatHistory(prevHistory => {
+                            const updatedHistory = prevHistory.map(chat => {
+                                const isMatch = chat.id == chatId;
+                                return isMatch ? { ...chat, name: parsedChunk.newChatName } : chat;
+                            });
+                            return updatedHistory;
+                        });
+                    }
+                } else {
+                    // Jeśli nie znaleziono granicy, próbuj sparsować cały bufor
+                    const parsedChunk = JSON.parse(buffer);
+                    buffer = ""; // Bufor przetworzony
+    
+                    const answer = parsedChunk.answer;
+                    accumulatedText += answer;
+    
+                    setMessages(prevMessages => {
+                        const updatedMessages = [...prevMessages];
+                        const botIndex = updatedMessages.findIndex(msg => msg.id === botMessage.id);
+    
+                        if (botIndex !== -1) {
+                            updatedMessages[botIndex].text = accumulatedText;
+                        }
+    
+                        if (mainTopRef.current) {
+                            mainTopRef.current.lastChild.scrollIntoView({ behavior: 'smooth' });
+                        }
+    
+                        return updatedMessages;
+                    });
+    
+                    setIsGeneratingAnswer(true);
+    
+                    if (parsedChunk.newChatName) {
+                      console.log("sraka nazwowa :(");
+                        setChatHistory(prevHistory => {
+                            const updatedHistory = prevHistory.map(chat => {
+                                const isMatch = chat.id == chatId;
+                                return isMatch ? { ...chat, name: parsedChunk.newChatName } : chat;
+                            });
+                            return updatedHistory;
+                        });
+                    }
+                }
+            } catch (e) {
+                if (e instanceof SyntaxError) {
+                    // Oczekujemy więcej danych
+                    break;
+                }
+                console.error("Unexpected error:", e);
+                throw e;
+            }
         }
-      }
+    }
+    
     } catch (error) {
       setIsLoading(false);
       setIsGeneratingAnswer(false);
@@ -173,6 +230,7 @@ function Chat() {
         alert(error.message);
     }
   };
+
 
   const cancelAnswer = (e) => {
     if (controller.current) controller.current.abort();
@@ -220,7 +278,7 @@ function Chat() {
       if (response.status === 401) {
         handleLogout();
         return;
-    }
+      }
 
       const data = await response.json();
       nextChatListPage = data.pagination.nextPage || null;
@@ -259,7 +317,7 @@ function Chat() {
         if (response.status === 401) {
           handleLogout();
           return;
-      }
+        }
 
         const data = await response.json();
         nextChatListPage = data.pagination.nextPage;
