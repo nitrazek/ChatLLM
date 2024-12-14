@@ -304,3 +304,19 @@ ul.chatHistory>li:hover {
   margin-bottom: 18px;
   margin-left: 20px;
 }
+
+.loadMoreButton {
+  background-color: #1e2124;
+  border-radius: 10px;
+  border: 2px solid #1e2124;
+  padding: 7px;
+  margin: 15px;
+  color: white;
+  width: 200px;
+  font-size: 14px;
+}
+
+.loadMoreButton:hover {
+  background-color: #424549;
+  border: 2px solid white;
+}

@@ -29,11 +29,16 @@ function Chat() {
   const location = useLocation();
   const userToken = Cookies.get("userToken");
 
+  const [chatsListPage, setChatsListPage] = useState(1);
+  const [messagesListPage, setMessagesListPage] = useState(1);
+
+  const [nextChatsListPage, setNextChatsListPage] = useState(null);
+  const [nextMessagesListPage, setNextMessagesListPage] = useState(null);
+
+
   const serverUrl = process.env.OLLAMA_URL || 'http://localhost:3000';
 
   const toast = useRef(null);
-
-  let nextChatListPage = null;
 
   useEffect(() => {
     if (!userToken) {
@@ -57,7 +62,7 @@ function Chat() {
 
   const fetchChatHistory = async () => {
     try {
-      const response = await fetch(`${serverUrl}/api/v1/chats/list`, {
+      const response = await fetch(`${serverUrl}/api/v1/chats/list?page=${chatsListPage}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${userToken}`,
@@ -71,7 +76,15 @@ function Chat() {
       }
 
       const data = await response.json();
-      setChatHistory(data.chats);
+
+      console.log(data.chats);
+      if (chatsListPage == 1) {
+        setChatHistory(data.chats);
+      }
+      else {
+        setChatHistory(prevChats => [data.chats, ...prevChats]);
+      }
+      setNextChatsListPage(data.pagination.nextPage || null);
     } catch (error) {
       alert(error.message);
     }
@@ -102,7 +115,7 @@ function Chat() {
 
     setMessages(prevMessages => [...prevMessages, botMessage]);
 
-    let buffer = ""; // Buffer to store incomplete JSON
+    let buffer = "";
 
     try {
       const response = await fetch(`${serverUrl}/api/v1/chats/${chatId}`, {
@@ -126,102 +139,96 @@ function Chat() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
-            // Koniec strumienia
-            setIsLoading(false);
-            setIsGeneratingAnswer(false);
-            buffer = ""; // Wyczyść bufor
-            return;
+          setIsLoading(false);
+          setIsGeneratingAnswer(false);
+          buffer = "";
+          return;
         }
-    
+
         const chunk = new TextDecoder().decode(value);
         buffer += chunk;
         console.log(buffer);
-        // Przetwarzaj bufor
         while (buffer) {
-            try {
-                const jsonEndIndex = buffer.indexOf("}{"); 
-                if (jsonEndIndex !== -1) {
-                    const jsonString = buffer.slice(0, jsonEndIndex + 1); // Wyciągnij pierwszy JSON
-                    const parsedChunk = JSON.parse(jsonString); // Parsuj JSON
-                    buffer = buffer.slice(jsonEndIndex + 1); // Zaktualizuj bufor
-                    console.log(jsonString);
-                    const answer = parsedChunk.answer;
-                    accumulatedText += answer;
-    
-                    setMessages(prevMessages => {
-                        const updatedMessages = [...prevMessages];
-                        const botIndex = updatedMessages.findIndex(msg => msg.id === botMessage.id);
-    
-                        if (botIndex !== -1) {
-                            updatedMessages[botIndex].text = accumulatedText;
-                        }
-    
-                        if (mainTopRef.current) {
-                            mainTopRef.current.lastChild.scrollIntoView({ behavior: 'smooth' });
-                        }
-    
-                        return updatedMessages;
-                    });
-    
-                    setIsGeneratingAnswer(true);
-    
-                    if (parsedChunk.newChatName) {
-                      console.log("sraka nazwowa :(");
-                        setChatHistory(prevHistory => {
-                            const updatedHistory = prevHistory.map(chat => {
-                                const isMatch = chat.id == chatId;
-                                return isMatch ? { ...chat, name: parsedChunk.newChatName } : chat;
-                            });
-                            return updatedHistory;
-                        });
-                    }
-                } else {
-                    // Jeśli nie znaleziono granicy, próbuj sparsować cały bufor
-                    const parsedChunk = JSON.parse(buffer);
-                    buffer = ""; // Bufor przetworzony
-    
-                    const answer = parsedChunk.answer;
-                    accumulatedText += answer;
-    
-                    setMessages(prevMessages => {
-                        const updatedMessages = [...prevMessages];
-                        const botIndex = updatedMessages.findIndex(msg => msg.id === botMessage.id);
-    
-                        if (botIndex !== -1) {
-                            updatedMessages[botIndex].text = accumulatedText;
-                        }
-    
-                        if (mainTopRef.current) {
-                            mainTopRef.current.lastChild.scrollIntoView({ behavior: 'smooth' });
-                        }
-    
-                        return updatedMessages;
-                    });
-    
-                    setIsGeneratingAnswer(true);
-    
-                    if (parsedChunk.newChatName) {
-                      console.log("sraka nazwowa :(");
-                        setChatHistory(prevHistory => {
-                            const updatedHistory = prevHistory.map(chat => {
-                                const isMatch = chat.id == chatId;
-                                return isMatch ? { ...chat, name: parsedChunk.newChatName } : chat;
-                            });
-                            return updatedHistory;
-                        });
-                    }
+          try {
+            const jsonEndIndex = buffer.indexOf("}{");
+            if (jsonEndIndex !== -1) {
+              const jsonString = buffer.slice(0, jsonEndIndex + 1);
+              const parsedChunk = JSON.parse(jsonString);
+              buffer = buffer.slice(jsonEndIndex + 1);
+              console.log(jsonString);
+              const answer = parsedChunk.answer;
+              accumulatedText += answer;
+
+              setMessages(prevMessages => {
+                const updatedMessages = [...prevMessages];
+                const botIndex = updatedMessages.findIndex(msg => msg.id === botMessage.id);
+
+                if (botIndex !== -1) {
+                  updatedMessages[botIndex].text = accumulatedText;
                 }
-            } catch (e) {
-                if (e instanceof SyntaxError) {
-                    // Oczekujemy więcej danych
-                    break;
+
+                if (mainTopRef.current) {
+                  mainTopRef.current.lastChild.scrollIntoView({ behavior: 'smooth' });
                 }
-                console.error("Unexpected error:", e);
-                throw e;
+
+                return updatedMessages;
+              });
+
+              setIsGeneratingAnswer(true);
+
+              if (parsedChunk.newChatName) {
+                setChatHistory(prevHistory => {
+                  const updatedHistory = prevHistory.map(chat => {
+                    const isMatch = chat.id == chatId;
+                    return isMatch ? { ...chat, name: parsedChunk.newChatName } : chat;
+                  });
+                  return updatedHistory;
+                });
+              }
+            } else {
+              const parsedChunk = JSON.parse(buffer);
+              buffer = "";
+
+              const answer = parsedChunk.answer;
+              accumulatedText += answer;
+
+              setMessages(prevMessages => {
+                const updatedMessages = [...prevMessages];
+                const botIndex = updatedMessages.findIndex(msg => msg.id === botMessage.id);
+
+                if (botIndex !== -1) {
+                  updatedMessages[botIndex].text = accumulatedText;
+                }
+
+                if (mainTopRef.current) {
+                  mainTopRef.current.lastChild.scrollIntoView({ behavior: 'smooth' });
+                }
+
+                return updatedMessages;
+              });
+
+              setIsGeneratingAnswer(true);
+
+              if (parsedChunk.newChatName) {
+                setChatHistory(prevHistory => {
+                  const updatedHistory = prevHistory.map(chat => {
+                    const isMatch = chat.id == chatId;
+                    return isMatch ? { ...chat, name: parsedChunk.newChatName } : chat;
+                  });
+                  return updatedHistory;
+                });
+              }
             }
+          } catch (e) {
+            if (e instanceof SyntaxError) {
+              break;
+            }
+            console.error("Unexpected error:", e);
+            throw e;
+          }
         }
-    }
-    
+      }
+
     } catch (error) {
       setIsLoading(false);
       setIsGeneratingAnswer(false);
@@ -247,14 +254,6 @@ function Chat() {
     }
   };
 
-
-
-  const handleScroll = () => {
-    if (mainTopRef.current.scrollTop === 0 && nextChatListPage) {
-      fetchPreviousMessages();
-    }
-  };
-
   useEffect(() => {
     fetchChatHistory();
   }, []);
@@ -265,82 +264,79 @@ function Chat() {
     }
   }, [messages]);
 
-  const fetchPreviousMessages = async () => {
+  const fetchMessages = async () => {
+    if (!chatId) return;
+  
     try {
-      const response = await fetch(`${serverUrl}/api/v1/chats/${chatId}?limit=10&page=${nextChatListPage}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${userToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.status === 401) {
-        handleLogout();
-        return;
-      }
-
-      const data = await response.json();
-      nextChatListPage = data.pagination.nextPage || null;
-      setMessages(prevMessages => [
-        ...data.messages.map((msg, index) => ({
-          id: msg.id,
-          user: {
-            name: msg.sender === "human" ? `${Cookies.get("userName")}` : "Bot",
-            avatar: msg.sender === "human" ? "/avatars/user.png" : "/avatars/bot.png"
-          },
-          fromUser: msg.sender === "human",
-          text: msg.content
-        })),
-        ...prevMessages
-      ]);
-    }
-
-    catch (error) {
-      alert(error);
-    }
-  }
-
-
-  useEffect(() => {
-    const fetchMessages = async () => {
-      if (!chatId) return;
-      try {
-        const response = await fetch(`${serverUrl}/api/v1/chats/${chatId}?limit=10`, {
+      // Zapisz aktualną pozycję scrolla przed pobraniem nowych wiadomości
+      const scrollContainer = mainTopRef.current;
+      const previousScrollHeight = scrollContainer?.scrollHeight || 0;
+      const previousScrollTop = scrollContainer?.scrollTop || 0;
+  
+      const response = await fetch(
+        `${serverUrl}/api/v1/chats/${chatId}?limit=10&page=${messagesListPage}`,
+        {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${userToken}`,
             'Content-Type': 'application/json',
           },
-        });
-
-        if (response.status === 401) {
-          handleLogout();
-          return;
         }
-
-        const data = await response.json();
-        nextChatListPage = data.pagination.nextPage;
-        let formattedMessages = [];
-        if (data.messages.length > 0) {
-          formattedMessages = data.messages
-            .sort((a, b) => a.id - b.id)
-            .map((msg, index) => ({
-              id: index + 1,
-              user: { name: msg.sender === "human" ? `${Cookies.get("userName")}` : "Bot", avatar: msg.sender === "human" ? "/avatars/user.png" : "/avatars/bot.png" },
-              fromUser: msg.sender === "human",
-              text: msg.content
-            }));
-        }
-
-        setMessages(formattedMessages);
-      } catch (error) {
-        alert(error.message);
+      );
+  
+      if (response.status === 401) {
+        handleLogout();
+        return;
       }
-    };
+  
+      const data = await response.json();
+      setNextMessagesListPage(data.pagination.nextPage || null);
+  
+      let formattedMessages = [];
+      if (data.messages.length > 0) {
+        formattedMessages = data.messages
+          .sort((a, b) => a.id - b.id)
+          .map(msg => ({
+            id: msg.id,
+            user: {
+              name: msg.sender === 'human' ? `${Cookies.get('userName')}` : 'Bot',
+              avatar: msg.sender === 'human' ? '/avatars/user.png' : '/avatars/bot.png',
+            },
+            fromUser: msg.sender === 'human',
+            text: msg.content,
+          }));
+      }
+  
+      // Aktualizujemy stan wiadomości (doklejamy na górę)
+      setMessages(prevMessages => [...formattedMessages, ...prevMessages]);
+  
+      // Przywracamy poprzednią pozycję scrolla po aktualizacji DOM
+      setTimeout(() => {
+        if (scrollContainer) {
+          const newScrollHeight = scrollContainer.scrollHeight;
+          scrollContainer.scrollTop = newScrollHeight - previousScrollHeight + previousScrollTop;
+        }
+      }, 0);
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+  
+  
+  
+  
+  const handleMoreMessages = () => {
+    setMessagesListPage(prevPage => prevPage + 1);
+  };
+  
 
+  useEffect(() => {
     fetchMessages();
   }, [chatId]);
+
+  useEffect(() => {
+    fetchMessages();
+  }, [messagesListPage]);
 
   return (
     <div className="App">
@@ -379,7 +375,15 @@ function Chat() {
 
       <div className="main">
         <div className="mainTop" ref={mainTopRef}>
+          {nextMessagesListPage !== null && chatId && (
+            <button
+              className="loadMoreButton"
+              onClick={handleMoreMessages}
+            >Załaduj więcej wiadomości
+            </button>
+          )}
           {!chatId ? (
+
             <div className="noChatSelected">
               <h3>Nie wybrano czatu</h3>
               <p>Proszę wybrać istniejący czat lub rozpocząć nowy.</p>
