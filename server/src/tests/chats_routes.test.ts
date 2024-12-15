@@ -112,33 +112,6 @@ describe('Chats Routes', () => {
     });
 
     describe('POST /:chatId', () => {
-        let app: FastifyInstance;
-    
-        const createdAt = Date.now().toString();
-        const updatedAt = Date.now().toString();
-        const testUser = {
-            id: 1,
-            name: "test",
-            email: "test@test.pl",
-            password: "TestPassword123!",
-            activated: true,
-            role: UserRole.USER,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-        };
-    
-        beforeAll(async () => {
-            app = Fastify();
-            await app.register(errorsService);
-            await app.register(chatsRoutes);
-            await app.ready();
-        });
-    
-        afterAll(async () => {
-            await app.close();
-            jest.clearAllMocks();
-        });
-    
         it('should send a message and return a transformed response', async () => {
             const mockChat = {
                 id: 1,
@@ -326,32 +299,6 @@ describe('Chats Routes', () => {
     });
 
     describe('GET /:chatId', () => {
-        let app: FastifyInstance;
-        const createdAt = Date.now().toString();
-        const updatedAt = Date.now().toString();
-        const testUser = {
-            id: 1,
-            name: "test",
-            email: "test@test.pl",
-            password: "TestPassword123!",
-            activated: true,
-            role: UserRole.USER,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-        };
-    
-        beforeAll(async () => {
-            app = Fastify();
-            await app.register(errorsService);
-            await app.register(chatsRoutes);
-            await app.ready();
-        });
-    
-        afterAll(async () => {
-            await app.close();
-            jest.clearAllMocks();
-        });
-    
         it('should return chat history with pagination metadata', async () => {
             const mockChat = {
                 id: 1,
@@ -536,33 +483,6 @@ describe('Chats Routes', () => {
     });
 
     describe('PUT /:chatId', () => {
-        let app: FastifyInstance;
-    
-        const createdAt = Date.now().toString();
-        const updatedAt = Date.now().toString();
-        const testUser = {
-            id: 1,
-            name: "test",
-            email: "test@test.pl",
-            password: "TestPassword123!",
-            activated: true,
-            role: UserRole.USER,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-        };
-    
-        beforeAll(async () => {
-            app = Fastify();
-            await app.register(errorsService);
-            await app.register(chatsRoutes);
-            await app.ready();
-        });
-    
-        afterAll(async () => {
-            await app.close();
-            jest.clearAllMocks();
-        });
-    
         it('should update chat details and return the updated chat', async () => {
             const mockChat = {
                 id: 1,
@@ -689,33 +609,6 @@ describe('Chats Routes', () => {
     });
 
     describe('DELETE /:chatId', () => {
-        let app: FastifyInstance;
-    
-        const createdAt = Date.now().toString();
-        const updatedAt = Date.now().toString();
-        const testUser = {
-            id: 1,
-            name: "test",
-            email: "test@test.pl",
-            password: "TestPassword123!",
-            activated: true,
-            role: UserRole.USER,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-        };
-    
-        beforeAll(async () => {
-            app = Fastify();
-            await app.register(errorsService);
-            await app.register(chatsRoutes);
-            await app.ready();
-        });
-    
-        afterAll(async () => {
-            await app.close();
-            jest.clearAllMocks();
-        });
-    
         it('should delete the chat successfully', async () => {
             const mockChat = {
                 id: 1,
