@@ -35,6 +35,7 @@ function Chat() {
   const [nextChatsListPage, setNextChatsListPage] = useState(null);
   const [nextMessagesListPage, setNextMessagesListPage] = useState(null);
 
+  const [scrollBehavior, setScrollBehavior] = useState('bottom'); // 'bottom' lub 'preserve'
 
   const serverUrl = process.env.OLLAMA_URL || 'http://localhost:3000';
 
@@ -71,7 +72,8 @@ function Chat() {
       });
 
       if (response.status === 401) {
-        handleLogout();
+        Cookies.remove("userToken");
+        navigate("/");
         return;
       }
 
@@ -92,6 +94,8 @@ function Chat() {
 
   const sendMessage = async () => {
     if (input.trim() === '') return;
+
+    setScrollBehavior('bottom');
 
     const userMessage = {
       id: messages.length + 1,
@@ -129,7 +133,8 @@ function Chat() {
       });
 
       if (response.status === 401) {
-        handleLogout();
+        Cookies.remove("userToken");
+        navigate("/");
         return;
       }
 
@@ -259,20 +264,34 @@ function Chat() {
   }, []);
 
   useEffect(() => {
-    if (mainTopRef.current) {
-      mainTopRef.current.scrollTop = mainTopRef.current.scrollHeight;
+    const scrollContainer = mainTopRef.current;
+
+    if (scrollContainer) {
+      if (scrollBehavior === 'bottom') {
+        // Przesunięcie scrolla na dół
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      } else if (scrollBehavior === 'preserve') {
+        // Zachowanie pozycji scrolla po załadowaniu starszych wiadomości
+        const newScrollHeight = scrollContainer.scrollHeight;
+        scrollContainer.scrollTop = newScrollHeight - scrollContainer.previousScrollHeight;
+      }
     }
-  }, [messages]);
+  }, [messages, scrollBehavior]);
+
 
   const fetchMessages = async () => {
     if (!chatId) return;
-  
+
     try {
-      // Zapisz aktualną pozycję scrolla przed pobraniem nowych wiadomości
       const scrollContainer = mainTopRef.current;
-      const previousScrollHeight = scrollContainer?.scrollHeight || 0;
-      const previousScrollTop = scrollContainer?.scrollTop || 0;
-  
+
+      // Zapisz aktualną pozycję scrolla
+      if (scrollContainer) {
+        scrollContainer.previousScrollHeight = scrollContainer.scrollHeight;
+      }
+
+      setScrollBehavior('preserve'); // Ustaw tryb zachowania scrolla
+
       const response = await fetch(
         `${serverUrl}/api/v1/chats/${chatId}?limit=10&page=${messagesListPage}`,
         {
@@ -283,15 +302,16 @@ function Chat() {
           },
         }
       );
-  
+
       if (response.status === 401) {
-        handleLogout();
+        Cookies.remove("userToken");
+        navigate("/");
         return;
       }
-  
+
       const data = await response.json();
       setNextMessagesListPage(data.pagination.nextPage || null);
-  
+
       let formattedMessages = [];
       if (data.messages.length > 0) {
         formattedMessages = data.messages
@@ -306,37 +326,24 @@ function Chat() {
             text: msg.content,
           }));
       }
-  
-      // Aktualizujemy stan wiadomości (doklejamy na górę)
+
       setMessages(prevMessages => [...formattedMessages, ...prevMessages]);
-  
-      // Przywracamy poprzednią pozycję scrolla po aktualizacji DOM
-      setTimeout(() => {
-        if (scrollContainer) {
-          const newScrollHeight = scrollContainer.scrollHeight;
-          scrollContainer.scrollTop = newScrollHeight - previousScrollHeight + previousScrollTop;
-        }
-      }, 0);
+
     } catch (error) {
       alert(error.message);
     }
   };
-  
-  
-  
-  
+
   const handleMoreMessages = () => {
     setMessagesListPage(prevPage => prevPage + 1);
   };
-  
 
   useEffect(() => {
-    fetchMessages();
-  }, [chatId]);
+    if (chatId) {
+      fetchMessages();
+    }
+  }, [chatId, messagesListPage]);
 
-  useEffect(() => {
-    fetchMessages();
-  }, [messagesListPage]);
 
   return (
     <div className="App">
