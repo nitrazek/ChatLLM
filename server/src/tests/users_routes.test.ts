@@ -11,7 +11,7 @@ import { ValidationError } from 'class-validator';
 import errorsService from '../services/errors_service';
 import { SenderType } from '../enums/sender_type';
 import { User } from '../models/user';
-import userRoutes from '../routes/users_routes';
+import usersRoutes from '../routes/users_routes';
 import fastifyJwt from '@fastify/jwt';
 
 const createdAt = Date.now().toString();
@@ -43,21 +43,15 @@ jest.mock('../services/authentication_service.ts', () => {
         })
     };
 });
-jest.mock('../utils/stream_handler.ts', () => ({
-    getRagChain: jest.fn(() => ({
-        stream: jest.fn(() => Promise.resolve(['response'])),
-    })),
-    transformStream: jest.fn((stream, chat) => Promise.resolve('transformed response'))
-}));
 
-describe('Chats Routes', () => {
+describe('Users Routes', () => {
     let app: FastifyInstance;
 
     beforeAll(async () => {
         app = Fastify();
         await app.register(errorsService);
         await app.register(fastifyJwt, { secret: "jwtsecret" });
-        await app.register(userRoutes);
+        await app.register(usersRoutes);
         await app.ready();
     });
 
@@ -207,7 +201,6 @@ describe('Chats Routes', () => {
                 .post('/login')
                 .send({ nameOrEmail: 'John Doe', password: 'TestPassword123!' });
     
-            console.log(response.body)
             expect(response.statusCode).toBe(200);
             expect(response.body).toHaveProperty('token');
             expect(response.body.name).toBe(user.name);
@@ -637,7 +630,6 @@ describe('Chats Routes', () => {
                 .put('/2/activate')
                 .set('Authorization', `Bearer valid-admin-token`);
     
-            console.log(response.body);
             expect(response.statusCode).toBe(200);
             expect(userToActivate.activate).toHaveBeenCalled();
             expect(findUserMock).toHaveBeenCalledWith({ id: 2 });

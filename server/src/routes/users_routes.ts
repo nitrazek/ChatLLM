@@ -9,7 +9,7 @@ import { Like, Not } from "typeorm";
 import { UserRole } from "../enums/user_role";
 import { AuthHeader } from "../schemas/base_schemas";
 
-const userRoutes: FastifyPluginCallback = (server, _, done) => {
+const usersRoutes: FastifyPluginCallback = (server, _, done) => {
     // Register new user
     server.post<{
         Body: Schemas.RegisterBody,
@@ -177,4 +177,4 @@ const userRoutes: FastifyPluginCallback = (server, _, done) => {
     done();
 };
 
-export default userRoutes;
+export default usersRoutes;

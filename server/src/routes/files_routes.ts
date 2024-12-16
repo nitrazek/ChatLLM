@@ -256,7 +256,7 @@ const filesRoutes: FastifyPluginCallback = (server, _, done) => {
     done();
 }
 
-const getFolder = async (folderId: number | undefined): Promise<File | null> => {
+export const getFolder = async (folderId: number | undefined): Promise<File | null> => {
     if(folderId === undefined) return null;
     const folder = await File.findOneBy({ id: folderId });
     if(folder === null) throw new BadRequestError('Folder do not exist.');

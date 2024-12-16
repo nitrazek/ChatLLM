@@ -105,8 +105,6 @@ describe('Chats Routes', () => {
                 .set('Authorization', 'Bearer mock-token')
                 .send({});
     
-            console.log(response.status);
-            console.log(response.body);
             expect(response.statusCode).toBe(400);
         });
     });
@@ -211,7 +209,6 @@ describe('Chats Routes', () => {
                 .set('Authorization', 'Bearer mock-token') // Simulate token authentication
                 .query({ page: 1, limit: 20, order: 'ASC' });
     
-            console.log(response.body)
             expect(response.statusCode).toBe(200);
             expect(response.body).toHaveProperty('chats');
             expect(response.body).toHaveProperty('pagination');
@@ -327,7 +324,6 @@ describe('Chats Routes', () => {
                 .set('Authorization', 'Bearer mock-token') // Simulate token authentication
                 .query({ page: 1, limit: 20, order: 'ASC' });
     
-            console.log(response.body)
             expect(response.statusCode).toBe(200);
             expect(response.body).toHaveProperty('messages');
             expect(response.body).toHaveProperty('pagination');
