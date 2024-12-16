@@ -63,7 +63,7 @@ function Chat() {
 
   const fetchChatHistory = async () => {
     try {
-      const response = await fetch(`${serverUrl}/api/v1/chats/list?page=${chatsListPage}`, {
+      const response = await fetch(`${serverUrl}/api/v1/chats/list?page=${chatsListPage}&limit=10`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${userToken}`,
@@ -79,13 +79,12 @@ function Chat() {
 
       const data = await response.json();
 
-      console.log(data.chats);
-      if (chatsListPage == 1) {
+      if (chatsListPage === 1) {
         setChatHistory(data.chats);
+      } else {
+        setChatHistory(prevChats => [...prevChats, ...data.chats]);
       }
-      else {
-        setChatHistory(prevChats => [data.chats, ...prevChats]);
-      }
+
       setNextChatsListPage(data.pagination.nextPage || null);
     } catch (error) {
       alert(error.message);
@@ -261,7 +260,7 @@ function Chat() {
 
   useEffect(() => {
     fetchChatHistory();
-  }, []);
+  }, [chatsListPage]);
 
   useEffect(() => {
     const scrollContainer = mainTopRef.current;
@@ -338,6 +337,10 @@ function Chat() {
     setMessagesListPage(prevPage => prevPage + 1);
   };
 
+  const handleMoreChats = () => {
+    setChatsListPage(prevPage => prevPage + 1);
+  };
+
   useEffect(() => {
     if (chatId) {
       fetchMessages();
@@ -364,15 +367,25 @@ function Chat() {
                   .sort((a, b) => b.id - a.id)
                   .map((chat) => (
                     <li key={chat.id}>
-                      <button className={chat.id == chatId ? "activeChatHistoryButton" : "chatHistoryButton"} onClick={() => navigate(`/chat/${chat.id}`)}>
+                      <button className={chat.id == chatId ? "chatHistoryButton activeChatHistoryButton" : "chatHistoryButton"} onClick={() => navigate(`/chat/${chat.id}`)}>
                         {chat.name || "Nowy czat"}
                       </button>
                     </li>
                   ))
               )}
+              {nextChatsListPage !== null && (
+                <li>
+                  <button
+                    className="button"
+                    onClick={handleMoreChats}
+                    style={{ width: "220px", fontSize: "small" }}>
+                    Załaduj więcej czatów
+                  </button>
+                </li>
+              )}
             </ul>
-
           </div>
+
         </div>
         <div className="lowerSide">
           {(role == "admin" || role == "superadmin") && <button className="button" onClick={handleAdminPanelButton}>Panel administratora</button>}
