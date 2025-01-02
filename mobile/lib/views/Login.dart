@@ -110,7 +110,7 @@ class _LoginPageState extends State<LoginPage> with RouteAware {
                                     suffixIcon: const Icon(Icons.check,
                                         color: Colors.white),
                                     label: Text(
-                                      'Login',
+                                      'Login/Email',
                                       style: TextStyle(
                                         fontFamily: AppTextStyles.Andada,
                                         color: Colors.white,
