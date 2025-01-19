@@ -5,6 +5,8 @@ import { User } from "../models/user";
 import { ErrorReply } from "../schemas/errors_schemas";
 import { UserRole } from "../enums/user_role";
 
+export const jwtSecret: string = process.env.TOKEN_SECRET ?? "jwtsecret";
+
 declare module 'fastify' {
     export interface FastifyInstance {
         userAuthenticate: Function;
@@ -22,7 +24,7 @@ export const userAuth = (server: FastifyInstance) => (req: FastifyRequest, reply
 export const adminAuth = (server: FastifyInstance) => (req: FastifyRequest, reply: FastifyReply) => server.adminAuthenticate(req, reply);
 
 const authenticationService: FastifyPluginCallback = (server, _, done) => {
-    server.register(fastifyJwt, { secret: 'jwtsecret' });
+    server.register(fastifyJwt, { secret: jwtSecret });
 
     // Authenticate if user has valid token (is logged in)
     server.decorate('userAuthenticate', async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
@@ -44,7 +46,7 @@ const authenticationService: FastifyPluginCallback = (server, _, done) => {
         try {
             await req.jwtVerify();
             
-            if (req.user.role !== UserRole.ADMIN) {
+            if (req.user.role !== UserRole.ADMIN && req.user.role !== UserRole.SUPERADMIN) {
                 const errorReply: ErrorReply = {
                     statusCode: 403,
                     error: 'Forbidden',

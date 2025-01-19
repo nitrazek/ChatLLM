@@ -5,6 +5,8 @@ services:
             context: ./web
         ports:
             - "80:80"
+        env_file:
+            - docker-config.env
         depends_on:
             - server
 

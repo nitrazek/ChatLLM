@@ -192,7 +192,8 @@ function Login() {
 
     const registerUser = async () => {
         try {
-            const response = await fetch('http://localhost:3000/api/v1/users/register', {
+            const serverUrl = process.env.OLLAMA_URL || 'http://localhost:3000';
+            const response = await fetch(`${serverUrl}/api/v1/users/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -212,7 +213,8 @@ function Login() {
 
     const loginUser = async () => {
         try {
-            const response = await fetch('http://localhost:3000/api/v1/users/login', {
+            const serverUrl = process.env.OLLAMA_URL || 'http://localhost:3000';
+            const response = await fetch(`${serverUrl}/api/v1/users/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

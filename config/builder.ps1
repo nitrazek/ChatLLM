@@ -23,7 +23,7 @@ Get-Content ../docker-config.env | ForEach-Object {
     if ($_ -match "^OLLAMA_MODEL\s*=\s*(.*)") {
         $OLLAMA_MODEL = $matches[1].Trim()
     }
-    elseif ($_ -match "^OLLAMA_EMBEDDING_MODEL\s*=\s*(.*)") {
+    if ($_ -match "^OLLAMA_EMBEDDING_MODEL\s*=\s*(.*)") {
         $OLLAMA_EMBEDDING_MODEL = $matches[1].Trim()
     }
 }
