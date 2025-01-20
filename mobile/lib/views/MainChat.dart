@@ -381,13 +381,13 @@ class _MainChatPageState extends State<MainChatPage> {
                               }),
                               Container(
                                 margin:
-                                    EdgeInsets.only(right: 50.w, left: 50.w),
+                                    EdgeInsets.only(right: 41.w, left: 41.w),
                                 child: Text(
-                                  'CREATOR',
+                                  'Baza wiedzy',
                                   style: TextStyle(
                                       fontFamily: AppTextStyles.Andada,
                                       color: Colors.white,
-                                      fontSize: 35.sp),
+                                      fontSize: 30.sp),
                                 ),
                               ),
                               Builder(builder: (context) {
