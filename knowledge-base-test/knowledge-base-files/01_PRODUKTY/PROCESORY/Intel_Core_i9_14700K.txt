@@ -1,0 +1,61 @@
+1. Specyfikacja produktu
+
+Nazwa produktu: Intel Core i9-14700K
+Opis: Procesor klasy premium z 14. generacji, przeznaczony dla entuzjastów gier, zaawansowanych użytkowników oraz profesjonalistów.
+
+Parametry techniczne:
+- Architektura: Raptor Lake
+- Rdzenie/Wątki: 24 (8 wydajnościowych, 16 efektywnych)
+- Taktowanie bazowe: 3.4 GHz (wydajnościowe), 2.5 GHz (efektywne)
+- Taktowanie Boost: Do 5.8 GHz
+- Pamięć Cache: 36 MB (L3)
+- Obsługa pamięci: DDR4-3200, DDR5-5600
+- TDP: 125 W (bazowe), do 253 W (maksymalne)
+- Zintegrowana grafika: Intel UHD Graphics 770
+
+2. Instrukcja użytkowania i montażu
+
+Kroki instalacji:
+- Przygotowanie: Wyłącz komputer, odłącz zasilanie i otwórz obudowę.
+- Instalacja:
+  - Otwórz gniazdo procesora (LGA 1700) na płycie głównej.
+  - Umieść procesor, dopasowując złote oznaczenie w rogu do wskazania w gnieździe.
+  - Zamknij mechanizm i zabezpiecz dźwignią.
+- Chłodzenie:
+  - Nałóż cienką warstwę pasty termoprzewodzącej na procesor.
+  - Zamontuj chłodzenie zgodnie z instrukcją jego producenta.
+- Konfiguracja BIOS:
+  - Zaktualizuj BIOS do najnowszej wersji.
+  - Włącz profil pamięci XMP, aby zoptymalizować pamięć RAM.
+
+3. Raport testowy
+
+Wydajność:
+- Cinebench R23: 32,100 punktów (wielowątkowy), 2,150 punktów (jednowątkowy).
+- 3DMark CPU Profile: 14,500 punktów (maksymalna wielowątkowość).
+- Gry (Cyberpunk 2077, 1080p, Ultra): Stabilne 170 FPS w połączeniu z RTX 4090.
+Temperatury:
+- Spoczynek: 35°C
+- Obciążenie: 90°C (chłodzenie powietrzne wysokiej klasy)
+
+Wnioski:
+- Intel Core i9-14700K zapewnia doskonałą wydajność w zastosowaniach wymagających wielowątkowości oraz w grach, szczególnie w połączeniu z kartami graficznymi klasy premium.
+
+4. Instrukcja diagnostyki i serwisowania
+
+Typowe problemy i rozwiązania:
+
+Komputer nie uruchamia się:
+- Sprawdź poprawność montażu procesora i złącza.
+- Upewnij się, że BIOS płyty głównej obsługuje ten model procesora.
+
+Przegrzewanie:
+- Upewnij się, że chłodzenie jest prawidłowo zamontowane i regularnie czyszczone.
+- Sprawdź, czy pasta termoprzewodząca jest równomiernie nałożona.
+
+Niska wydajność:
+- Sprawdź w BIOS ustawienia trybu Turbo Boost i profilów pamięci XMP.
+
+Zalecenia serwisowe:
+- Regularnie aktualizuj BIOS oraz sterowniki płyty głównej.
+- Zapewnij odpowiednią wentylację w obudowie komputera.

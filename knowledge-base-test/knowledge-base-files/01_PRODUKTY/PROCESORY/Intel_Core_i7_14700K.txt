@@ -1,0 +1,58 @@
+1. Specyfikacja produktu
+
+Nazwa produktu: Intel Core i7-14700K
+Opis: Wysokowydajny procesor 14. generacji przeznaczony dla entuzjastów gier i zaawansowanych aplikacji.
+
+Parametry techniczne:
+- Architektura: Raptor Lake
+- Rdzenie/Wątki: 20 (8 wydajnościowych, 12 efektywnych)
+- Taktowanie bazowe: 3.4 GHz (wydajnościowe), 2.5 GHz (efektywne)
+- Taktowanie Boost: Do 5.6 GHz
+- Pamięć Cache: 33 MB (L3)
+- Obsługa pamięci: DDR4-3200, DDR5-5600
+- TDP: 125 W (bazowe), do 253 W (maksymalne)
+- Zintegrowana grafika: Intel UHD Graphics 770
+
+2. Instrukcja użytkowania i montażu
+
+Kroki instalacji:
+- Przygotowanie: Wyłącz komputer i odłącz zasilanie.
+- Montaż:
+  - Otwórz gniazdo procesora (LGA 1700) na płycie głównej.
+  - Ostrożnie umieść procesor, dopasowując złote oznaczenie w rogu.
+  - Zamknij klapkę i zabezpiecz dźwignię mocującą.
+- Chłodzenie:
+  - Nałóż cienką warstwę pasty termoprzewodzącej na procesor.
+  - Zamontuj chłodzenie zgodnie z instrukcją producenta.
+- Konfiguracja BIOS: Upewnij się, że BIOS obsługuje procesor i ustaw odpowiedni profil pamięci (XMP).
+
+3. Raport testowy
+
+Wydajność:
+- Cinebench R23: 28,500 punktów (wielowątkowy), 2,050 punktów (jednowątkowy).
+- 3DMark CPU Profile: 12,800 punktów (maksymalna wydajność wielowątkowa).
+- Gry (Cyberpunk 2077, 1080p, Ultra): Stabilne 150 FPS w połączeniu z RTX 4070.
+Temperatury:
+- Spoczynek: 34°C
+- Pod obciążeniem: 85°C (chłodzenie powietrzne)
+
+Wnioski:
+- Intel Core i7-14700K to procesor o doskonałym stosunku wydajności do ceny, szczególnie w grach i aplikacjach wielowątkowych.
+
+4. Instrukcja diagnostyki i serwisowania
+
+Typowe problemy i rozwiązania:
+
+Komputer nie uruchamia się:
+- Sprawdź, czy procesor jest poprawnie zamontowany.
+- Zaktualizuj BIOS do najnowszej wersji.
+
+Przegrzewanie:
+- Upewnij się, że chłodzenie jest prawidłowo zamontowane i pasta termoprzewodząca nałożona równomiernie.
+
+Niższa wydajność:
+- Sprawdź ustawienia BIOS i upewnij się, że funkcja Intel Turbo Boost jest włączona.
+
+Zalecenia serwisowe:
+- Regularnie czyszcz chłodzenie z kurzu.
+- Aktualizuj sterowniki i oprogramowanie płyty głównej.

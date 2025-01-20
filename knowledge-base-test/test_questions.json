@@ -1,0 +1,34 @@
+[
+  {
+    "question": "Jaki typ pamięci RAM obsługuje procesor Intel Core i7-14700K?",
+    "answer": "Procesor Intel Core i7-14700K obsługuje pamięci RAM DDR4-3200 i DDR5-5600."
+  },
+  {
+    "question": "Jakie są różnice między modelem Intel Core i7-14700K a Intel Core i9-14700K?",
+    "answer": "Różnice między modelem Intel Core i7-14700K a Intel Core i9-14700K: 1. Liczba rdzeni/wątków: Model i7-14700K ma 20 rdzeni/wątków, podczas gdy model i9-14700K ma 24 rdzenie/wątki. 2. Taktowanie Boost: Model i9-14700K ma taktowanie Boost do 5.8 GHz, podczas gdy model i7-14700K ma taktowanie Boost do 5.6 GHz. 3. Pamięć Cache: Model i9-14700K ma 33 MB (L3) pamięć cache, podczas gdy model i7-14700K ma 36 MB (L3) pamięć cache."
+  },
+  {
+    "question": "Jakie są różnice w architekturze między procesorami Intel Core i7-14700K i AMD Ryzen 5 5600?",
+    "answer": ""
+  },
+  {
+    "question": "Jaka jest częstotliwość taktowania procesora Intel Core i9-14700K?",
+    "answer": ""
+  },
+  {
+    "question": "Jakie złącza oferują karty graficzne ASUS GeForce RTX 4060 i Gigabyte GeForce RTX 4060?",
+    "answer": ""
+  },
+  {
+    "question": "Czy karta graficzna MSI GeForce RTX 4060 obsługuje technologie ray tracing i DLSS?",
+    "answer": ""
+  },
+  {
+    "question": "Jaka jest różnica w wydajności między kartami graficznymi ASUS GeForce RTX 4060 i MSI GeForce RTX 4060?",
+    "answer": ""
+  },
+  {
+    "question": "Który procesor, Intel Core i7-14700K czy AMD Ryzen 5 5600, lepiej nadaje się do gier komputerowych?",
+    "answer": ""
+  }
+]

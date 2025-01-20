@@ -2,40 +2,31 @@ import { OllamaService } from "../services/ollama_service";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { ChatPromptTemplate } from "@langchain/core/prompts"
 import { formatDocumentsAsString } from "langchain/util/document"
-import { AIMessage, AIMessageChunk, BaseMessageChunk, HumanMessage } from "@langchain/core/messages";
+import { AIMessage, BaseMessageChunk, HumanMessage } from "@langchain/core/messages";
 import { ChatMessage } from "../models/chat_message";
 import { ChromaService } from "../services/chroma_service";
 import { SenderType } from "../enums/sender_type";
 import { Chat } from "../models/chat";
 import { IterableReadableStream } from "@langchain/core/dist/utils/stream";
+import { getOnlyRagTemplate, getSummaryPrompt } from "../prompts";
 
-export const getRagChain = (template: string, chatMessages: ChatMessage[]) => RunnableSequence.from([
-    {
-        context: async (input, callbacks) => {
-            const chroma = await ChromaService.getInstance();
-            const retriever = chroma.asRetriever();
-            const retrieverAndFormatter = retriever.pipe(formatDocumentsAsString);
-            return retrieverAndFormatter.invoke(input.question, callbacks);
-        },
-        question: (input) => input.question,
+export const getRagChain = async (chatMessages: ChatMessage[], templateFn: (question: string, context: string, messages: ChatMessage[]) => string) => RunnableSequence.from([
+    async (input, callbacks) => {
+        const chromaService = await ChromaService.getInstance();
+        const context = await chromaService.getContext(input.question, callbacks)
+        return {
+            context: context,
+            question: input.question
+        };
     },
-    ChatPromptTemplate.fromMessages([
-        ["system", template],
-        ...chatMessages.map(message => {
-            switch(message.sender) {
-                case SenderType.AI: return new AIMessage(message.content);
-                case SenderType.HUMAN: return new HumanMessage(message.content);
-            }
-        }),
-        [SenderType.HUMAN.toString(), "{question}"]
-    ]),
-    OllamaService.getInstance()
+    ({ context, question }) => ChatPromptTemplate.fromTemplate(templateFn(question, context, chatMessages)),
+    await OllamaService.getInstance()
 ]);
 
-export const transformStream = (stream: IterableReadableStream<BaseMessageChunk>, chat: Chat) => {
+export const transformStream = async (stream: IterableReadableStream<BaseMessageChunk>, chat: Chat) => {
     const transformedStream = getTransformedStream(stream, chat);
     if(chat.name !== null) return transformedStream;
-    return getNewChatNameStream(transformedStream, chat);
+    return await getNewChatNameStream(transformedStream, chat);
 }
 
 const getTransformedStream = (stream: ReadableStream<BaseMessageChunk>, chat: Chat): ReadableStream<string> => {
@@ -52,7 +43,6 @@ const getTransformedStream = (stream: ReadableStream<BaseMessageChunk>, chat: Ch
             }
             const answerChunk = value.content as string;
             answerChunks.push(answerChunk);
-            console.log(answerChunk);
             controller.enqueue(JSON.stringify({ answer: answerChunk }));
         },
         async cancel() {
@@ -62,8 +52,8 @@ const getTransformedStream = (stream: ReadableStream<BaseMessageChunk>, chat: Ch
     });
 };
 
-const getNewChatNameStream = (stream: ReadableStream<string>, chat: Chat) => {
-    const ollama = OllamaService.getInstance();
+const getNewChatNameStream = async (stream: ReadableStream<string>, chat: Chat) => {
+    const ollama = await OllamaService.getInstance();
     const answerChunks: string[] = [];
     const buffer: string[] = [];
     const reader = stream.getReader();
@@ -73,8 +63,9 @@ const getNewChatNameStream = (stream: ReadableStream<string>, chat: Chat) => {
             const { done, value } = await reader.read();
             if(done || isCanceled) {
                 answerChunks.push(buffer[0]);
-                const summary: string = (await ollama.invoke(`Summarize this answer into 3 words: ${answerChunks.join("")}`)).content as string;
-                await Chat.update({ id: chat.id }, { name: summary });
+                const summary: string = (await ollama.invoke(getSummaryPrompt(answerChunks.join("")))).content as string;
+                chat.name = summary.substring(0, 29);
+                await chat.save();
                 controller.enqueue(JSON.stringify({ answer: buffer[0], newChatName: summary }));
                 controller.close();
                 return;

@@ -1,0 +1,60 @@
+1. Specyfikacja produktu
+
+Nazwa produktu: AMD Ryzen 5 5600
+Opis: Procesor o wysokiej wydajności, oparty na architekturze AMD Zen 3, zoptymalizowany do gier i aplikacji wielowątkowych.
+
+Parametry techniczne:
+- Architektura: Zen 3
+- Rdzenie/Wątki: 6/12
+- Taktowanie bazowe: 3.5 GHz
+- Taktowanie Boost: Do 4.4 GHz
+- Pamięć Cache: 35 MB (L2 + L3)
+- Socket: AM4
+- TDP: 65 W
+- Obsługa pamięci: DDR4-3200
+
+2. Instrukcja użytkowania i montażu
+
+Kroki instalacji:
+- Przygotowanie: Wyłącz komputer i odłącz zasilanie.
+- Instalacja:
+  - Otwórz gniazdo procesora AM4.
+  - Delikatnie umieść procesor w gnieździe, dopasowując trójkątny znacznik na procesorze do znacznika na płycie głównej.
+  - Zamknij mechanizm zabezpieczający procesor.
+- Montaż chłodzenia:
+  - Nałóż pastę termoprzewodzącą na procesor.
+  - Zamontuj radiator i wentylator zgodnie z instrukcją.
+- Konfiguracja BIOS: Zaktualizuj BIOS płyty głównej do wersji obsługującej AMD Ryzen 5000.
+
+3. Raport testowy
+
+Wydajność:
+- Cinebench R23: 11,250 punktów (wielowątkowy), 1,500 punktów (jednowątkowy).
+- Gry (Cyberpunk 2077, 1080p, Ultra): Stabilne 85 FPS (w połączeniu z RTX 3060).
+Pobór mocy: Typowy pobór mocy wynosi 65 W, a maksymalny pod obciążeniem około 90 W.
+Temperatury:
+- Spoczynek: 35°C
+- Pod obciążeniem: 75°C (przy standardowym chłodzeniu Wraith Spire).
+
+Wnioski:
+- AMD Ryzen 5 5600 oferuje świetny stosunek wydajności do ceny, doskonale sprawdzając się w grach i codziennych zadaniach.
+
+4. Instrukcja diagnostyki i serwisowania
+
+Typowe problemy i rozwiązania:
+
+Komputer nie uruchamia się:
+- Sprawdź, czy procesor jest poprawnie zainstalowany.
+- Zaktualizuj BIOS, jeśli płyta główna nie obsługuje Ryzen 5000.
+
+Przegrzewanie:
+- Sprawdź, czy chłodzenie jest prawidłowo zamontowane i czy pasta termoprzewodząca jest odpowiednio nałożona.
+- Wyczyść radiator z kurzu.
+
+Problemy z wydajnością:
+- Włącz tryb Precision Boost w BIOS.
+- Sprawdź, czy pamięć RAM działa w trybie dual-channel i na odpowiednim taktowaniu.
+
+Zalecenia serwisowe:
+- Regularnie czyszcz chłodzenie i obudowę z kurzu.
+- Aktualizuj sterowniki chipsetu oraz system operacyjny, aby zapewnić optymalne działanie procesora.

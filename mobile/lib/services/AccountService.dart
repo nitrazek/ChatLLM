@@ -1,62 +1,16 @@
 import 'dart:convert';
 import 'dart:io';
 
-import '../models/Account.dart';
+import 'package:mobile/states/AccountState.dart';
+
+import '../constants/Constants.dart';
+import '../models/ErrorResponse.dart';
 import 'ChatService.dart';
 
-class BadRequestException implements Exception {
-  final String message;
-  BadRequestException(this.message);
-
-  @override
-  String toString() => "BadRequestException: $message";
-}
-
-class ServerException implements Exception {
-  final String message;
-  ServerException(this.message);
-
-  @override
-  String toString() => "ServerException: $message";
-}
-class NotFoundException implements Exception {
-  final String message;
-  NotFoundException(this.message);
-
-  @override
-  String toString() => "NotFoundException: $message";
-}
-
 class AccountService {
-  final String baseUrl = "http://10.0.2.2:3000";
+  final String baseUrl = Constants.baseUrl;
+
   final httpClient = HttpClient();
-
-  Future<Account> activateAccount(int loggedUserId) async {
-    try {
-      final uri = Uri.parse("$baseUrl/api/v1/users/$loggedUserId/activate");
-      final request = await httpClient.postUrl(uri);
-
-      request.headers.set(HttpHeaders.contentTypeHeader, "application/json");
-
-      request.add(utf8.encode(jsonEncode({
-        'loggedUserId': loggedUserId,
-      })));
-      final response = await request.close();
-
-      if (response.statusCode == 200) {
-        final responseBody = await response.transform(utf8.decoder).join();
-        Map<String, dynamic> json = jsonDecode(responseBody);
-        return Account.fromJson(json);
-      }
-      throw HttpException('Failed to activate user with status code: ${response.statusCode}');
-    } catch (e) {
-      if (e is SocketException) {
-        throw FetchDataException(e.message);
-      } else {
-        rethrow;
-      }
-    }
-    }
 
   Future<bool> register(String name, String email, String password) async {
     try {
@@ -72,13 +26,19 @@ class AccountService {
       })));
 
       final response = await request.close();
+      final responseBody = await response.transform(utf8.decoder).join();
 
       switch (response.statusCode) {
         case 201:
-          //final responseBody = await response.transform(utf8.decoder).join();
           return true;
         case 400:
-          throw BadRequestException('Dane są już zajęte.');
+          final errorResponse =
+              ErrorResponse.fromJson(jsonDecode(responseBody));
+          throw BadRequestException(errorResponse.message);
+        case 500:
+          final errorResponse =
+              ErrorResponse.fromJson(jsonDecode(responseBody));
+          throw ServerException(errorResponse.message);
         default:
           throw ServerException('Błąd serwera: ${response.statusCode}');
       }
@@ -91,7 +51,7 @@ class AccountService {
     }
   }
 
-  Future<String> login(String nameOrEmail, String password) async {
+  Future<void> login(String nameOrEmail, String password) async {
     try {
       final uri = Uri.parse("$baseUrl/api/v1/users/login");
       final request = await httpClient.postUrl(uri);
@@ -110,12 +70,14 @@ class AccountService {
           final responseBody = await response.transform(utf8.decoder).join();
           Map<String, dynamic> json = jsonDecode(responseBody);
           String token = json['token'];
-          return token;
+          AccountState.token = token;
         case 400:
+          throw BadRequestException("Nieprawidłowe dane logowania.");
+        case 500:
           final responseBody = await response.transform(utf8.decoder).join();
-          throw BadRequestException('Nieprawidłowe dane logowania.');
-        case 403:
-          throw NotFoundException('Konto nie zostało aktywowane. Poczekaj na aktywacje');
+          final errorResponse =
+              ErrorResponse.fromJson(jsonDecode(responseBody));
+          throw ServerException(errorResponse.message);
         default:
           throw ServerException('Błąd serwera: ${response.statusCode}');
       }

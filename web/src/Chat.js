@@ -9,6 +9,9 @@ import Cookies from 'js-cookie';
 import NewChatPopup from './NewChatPopup';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faStop } from "@fortawesome/free-solid-svg-icons"
+import { Toast, toast } from 'primereact/toast';
+import { useLocation } from 'react-router-dom';
+
 
 function Chat() {
   const { chatId } = useParams();
@@ -23,41 +26,75 @@ function Chat() {
   const mainTopRef = useRef(null);
   const controller = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const userToken = Cookies.get("userToken");
+
+  const [chatsListPage, setChatsListPage] = useState(1);
+  const [messagesListPage, setMessagesListPage] = useState(1);
+
+  const [nextChatsListPage, setNextChatsListPage] = useState(null);
+  const [nextMessagesListPage, setNextMessagesListPage] = useState(null);
+
+  const [scrollBehavior, setScrollBehavior] = useState('bottom'); // 'bottom' lub 'preserve'
+
+  const serverUrl = process.env.OLLAMA_URL || 'http://localhost:3000';
+
+  const toast = useRef(null);
+
   useEffect(() => {
     if (!userToken) {
       navigate('/');
     }
-  })
+    if (location.state?.toast) {
+      toast.current.show(location.state.toast);
+    }
+  }, [location.state]);
 
   const handleLogout = async () => {
     Cookies.remove("userToken");
-    //Cookies.remove("userId");
     Cookies.remove("userName");
     Cookies.remove("userRole");
     navigate("/");
   };
 
+  const handleAdminPanelButton = async () => {
+    navigate("/admin");
+  }
+
   const fetchChatHistory = async () => {
-    setChatHistory([]);
     try {
-      const response = await fetch(`http://localhost:3000/api/v1/chats/list`, {
+      const response = await fetch(`${serverUrl}/api/v1/chats/list?page=${chatsListPage}&limit=10`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${userToken}`,
           'Content-Type': 'application/json'
         },
       });
+
+      if (response.status === 401) {
+        Cookies.remove("userToken");
+        navigate("/");
+        return;
+      }
+
       const data = await response.json();
-      setChatHistory(data);
+
+      if (chatsListPage === 1) {
+        setChatHistory(data.chats);
+      } else {
+        setChatHistory(prevChats => [...prevChats, ...data.chats]);
+      }
+
+      setNextChatsListPage(data.pagination.nextPage || null);
     } catch (error) {
-      alert(error.errorMessage);
+      alert(error.message);
     }
   };
 
-
   const sendMessage = async () => {
     if (input.trim() === '') return;
+
+    setScrollBehavior('bottom');
 
     const userMessage = {
       id: messages.length + 1,
@@ -72,8 +109,19 @@ function Chat() {
     setIsLoading(true);
     controller.current = new AbortController();
 
+    let botMessage = {
+      id: messages.length + 2,
+      text: '',
+      fromUser: false,
+      user: { name: "Bot", avatar: "/avatars/bot.png" }
+    };
+
+    setMessages(prevMessages => [...prevMessages, botMessage]);
+
+    let buffer = "";
+
     try {
-      const response = await fetch(`http://localhost:3000/api/v1/chats/${chatId}`, {
+      const response = await fetch(`${serverUrl}/api/v1/chats/${chatId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${userToken}`,
@@ -83,69 +131,120 @@ function Chat() {
         signal: controller.current.signal
       });
 
+      if (response.status === 401) {
+        Cookies.remove("userToken");
+        navigate("/");
+        return;
+      }
+
       const reader = response.body.getReader();
       let accumulatedText = '';
-      let botMessage = {
-        id: messages.length + 2,
-        text: '',
-        fromUser: false,
-        user: { name: "Bot", avatar: "/avatars/bot.png" }
-      };
 
-      while(true) {
+      while (true) {
         const { done, value } = await reader.read();
         if (done) {
           setIsLoading(false);
           setIsGeneratingAnswer(false);
+          buffer = "";
           return;
         }
 
         const chunk = new TextDecoder().decode(value);
-        const parsedChunk = JSON.parse(chunk);
-        const answer = parsedChunk.answer;
+        buffer += chunk;
+        console.log(buffer);
+        while (buffer) {
+          try {
+            const jsonEndIndex = buffer.indexOf("}{");
+            if (jsonEndIndex !== -1) {
+              const jsonString = buffer.slice(0, jsonEndIndex + 1);
+              const parsedChunk = JSON.parse(jsonString);
+              buffer = buffer.slice(jsonEndIndex + 1);
+              console.log(jsonString);
+              const answer = parsedChunk.answer;
+              accumulatedText += answer;
 
-        accumulatedText += answer;
-        botMessage.text = accumulatedText;
+              setMessages(prevMessages => {
+                const updatedMessages = [...prevMessages];
+                const botIndex = updatedMessages.findIndex(msg => msg.id === botMessage.id);
 
-        if (parsedChunk.newChatName) {
-          setChatHistory(prevHistory => {
-            const updatedHistory = prevHistory.map(chat => {
-              const isMatch = chat.id == chatId;
-              return isMatch ? { ...chat, name: parsedChunk.newChatName } : chat;
-            });
-            return updatedHistory;
-          });
+                if (botIndex !== -1) {
+                  updatedMessages[botIndex].text = accumulatedText;
+                }
+
+                if (mainTopRef.current) {
+                  mainTopRef.current.lastChild.scrollIntoView({ behavior: 'smooth' });
+                }
+
+                return updatedMessages;
+              });
+
+              setIsGeneratingAnswer(true);
+
+              if (parsedChunk.newChatName) {
+                setChatHistory(prevHistory => {
+                  const updatedHistory = prevHistory.map(chat => {
+                    const isMatch = chat.id == chatId;
+                    return isMatch ? { ...chat, name: parsedChunk.newChatName } : chat;
+                  });
+                  return updatedHistory;
+                });
+              }
+            } else {
+              const parsedChunk = JSON.parse(buffer);
+              buffer = "";
+
+              const answer = parsedChunk.answer;
+              accumulatedText += answer;
+
+              setMessages(prevMessages => {
+                const updatedMessages = [...prevMessages];
+                const botIndex = updatedMessages.findIndex(msg => msg.id === botMessage.id);
+
+                if (botIndex !== -1) {
+                  updatedMessages[botIndex].text = accumulatedText;
+                }
+
+                if (mainTopRef.current) {
+                  mainTopRef.current.lastChild.scrollIntoView({ behavior: 'smooth' });
+                }
+
+                return updatedMessages;
+              });
+
+              setIsGeneratingAnswer(true);
+
+              if (parsedChunk.newChatName) {
+                setChatHistory(prevHistory => {
+                  const updatedHistory = prevHistory.map(chat => {
+                    const isMatch = chat.id == chatId;
+                    return isMatch ? { ...chat, name: parsedChunk.newChatName } : chat;
+                  });
+                  return updatedHistory;
+                });
+              }
+            }
+          } catch (e) {
+            if (e instanceof SyntaxError) {
+              break;
+            }
+            console.error("Unexpected error:", e);
+            throw e;
+          }
         }
-
-        setMessages(prevMessages => {
-          const updatedMessages = [...prevMessages];
-          const existingMessageIndex = updatedMessages.findIndex(msg => !msg.fromUser && msg.id === botMessage.id);
-          if (existingMessageIndex !== -1) {
-            updatedMessages[existingMessageIndex].text = botMessage.text;
-          } else {
-            updatedMessages.push(botMessage);
-          }
-
-          if (mainTopRef.current) {
-            mainTopRef.current.lastChild.scrollIntoView({ behavior: 'smooth' });
-          }
-          return updatedMessages;
-        });
-
-        setIsLoading(false);
-        setIsGeneratingAnswer(true);
       }
+
     } catch (error) {
       setIsLoading(false);
       setIsGeneratingAnswer(false);
       controller.current = null;
-      if(error.name !== "AbortError")
-        alert(error.errorMessage);
+      if (error.name !== "AbortError")
+        alert(error.message);
     }
   };
 
+
   const cancelAnswer = (e) => {
-    if(controller.current) controller.current.abort();
+    if (controller.current) controller.current.abort();
   };
 
   const handleInputChange = (e) => {
@@ -159,52 +258,103 @@ function Chat() {
     }
   };
 
-
-  useEffect(() => {
-    if (mainTopRef.current) {
-      mainTopRef.current.scrollTop = mainTopRef.current.scrollHeight;
-    }
-  }, [messages]);
-
   useEffect(() => {
     fetchChatHistory();
-  }, []);
+  }, [chatsListPage]);
 
   useEffect(() => {
-    const fetchMessages = async () => {
-      if (!chatId) return;
-      try {
-        const response = await fetch(`http://localhost:3000/api/v1/chats/${chatId}`, {
+    const scrollContainer = mainTopRef.current;
+
+    if (scrollContainer) {
+      if (scrollBehavior === 'bottom') {
+        // Przesunięcie scrolla na dół
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      } else if (scrollBehavior === 'preserve') {
+        // Zachowanie pozycji scrolla po załadowaniu starszych wiadomości
+        const newScrollHeight = scrollContainer.scrollHeight;
+        scrollContainer.scrollTop = newScrollHeight - scrollContainer.previousScrollHeight;
+      }
+    }
+  }, [messages, scrollBehavior]);
+
+
+  const fetchMessages = async () => {
+    if (!chatId) return;
+
+    try {
+      const scrollContainer = mainTopRef.current;
+
+      // Zapisz aktualną pozycję scrolla
+      if (scrollContainer) {
+        scrollContainer.previousScrollHeight = scrollContainer.scrollHeight;
+      }
+
+      setScrollBehavior('preserve'); // Ustaw tryb zachowania scrolla
+
+      const response = await fetch(
+        `${serverUrl}/api/v1/chats/${chatId}?limit=10&page=${messagesListPage}`,
+        {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${userToken}`,
             'Content-Type': 'application/json',
           },
-        });
+        }
+      );
 
-        const data = await response.json();
-        const formattedMessages = data.map((msg, index) => ({
-          id: index + 1,
-          user: { name: msg.sender === "human" ? `${Cookies.get("userName")}` : "Bot", avatar: msg.sender === "human" ? "/avatars/user.png" : "/avatars/bot.png" },
-          fromUser: msg.sender === "human",
-          text: msg.content
-        }));
-
-        setMessages(formattedMessages);
-      } catch (error) {
-        alert(error.errorMessage);
+      if (response.status === 401) {
+        Cookies.remove("userToken");
+        navigate("/");
+        return;
       }
-    };
 
-    fetchMessages();
-  }, [chatId]);
+      const data = await response.json();
+      setNextMessagesListPage(data.pagination.nextPage || null);
+
+      let formattedMessages = [];
+      if (data.messages.length > 0) {
+        formattedMessages = data.messages
+          .sort((a, b) => a.id - b.id)
+          .map(msg => ({
+            id: msg.id,
+            user: {
+              name: msg.sender === 'human' ? `${Cookies.get('userName')}` : 'Bot',
+              avatar: msg.sender === 'human' ? '/avatars/user.png' : '/avatars/bot.png',
+            },
+            fromUser: msg.sender === 'human',
+            text: msg.content,
+          }));
+      }
+
+      setMessages(prevMessages => [...formattedMessages, ...prevMessages]);
+
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleMoreMessages = () => {
+    setMessagesListPage(prevPage => prevPage + 1);
+  };
+
+  const handleMoreChats = () => {
+    setChatsListPage(prevPage => prevPage + 1);
+  };
+
+  useEffect(() => {
+    if (chatId) {
+      fetchMessages();
+    }
+  }, [chatId, messagesListPage]);
+
 
   return (
     <div className="App">
+      <Toast ref={toast} />
       {showNewChatPopup && <NewChatPopup />}
       <div className="sideBar">
         <div className="generatorContainer">
-          <div className="upperSideTop">C o k o l w i e k</div>
+          <div className="upperSideTop">Baza wiedzy</div>
           <button className="button" onClick={() => setShowNewChatPopup(true)}>Rozpocznij nowy czat</button>
         </div>
         <div className="upperSide">
@@ -217,26 +367,43 @@ function Chat() {
                   .sort((a, b) => b.id - a.id)
                   .map((chat) => (
                     <li key={chat.id}>
-                      <button className="chatHistoryButton" onClick={() => navigate(`/chat/${chat.id}`)}>
+                      <button className={chat.id == chatId ? "chatHistoryButton activeChatHistoryButton" : "chatHistoryButton"} onClick={() => navigate(`/chat/${chat.id}`)}>
                         {chat.name || "Nowy czat"}
                       </button>
                     </li>
                   ))
               )}
+              {nextChatsListPage !== null && (
+                <li>
+                  <button
+                    className="button"
+                    onClick={handleMoreChats}
+                    style={{ width: "220px", fontSize: "small" }}>
+                    Załaduj więcej czatów
+                  </button>
+                </li>
+              )}
             </ul>
-
           </div>
+
         </div>
         <div className="lowerSide">
-          <button className="button">Ustawienia</button>
-          {role === "admin" && <button className="button">Panel administratora</button>}
+          {(role == "admin" || role == "superadmin") && <button className="button" onClick={handleAdminPanelButton}>Panel administratora</button>}
           <button className="button" onClick={handleLogout}>Wyloguj się</button>
         </div>
       </div>
 
       <div className="main">
         <div className="mainTop" ref={mainTopRef}>
+          {nextMessagesListPage !== null && chatId && (
+            <button
+              className="loadMoreButton"
+              onClick={handleMoreMessages}
+            >Załaduj więcej wiadomości
+            </button>
+          )}
           {!chatId ? (
+
             <div className="noChatSelected">
               <h3>Nie wybrano czatu</h3>
               <p>Proszę wybrać istniejący czat lub rozpocząć nowy.</p>
@@ -249,44 +416,38 @@ function Chat() {
                   <span className="username">{message.user.name}</span>
                 </div>
                 <div className="messageContent">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.text}</ReactMarkdown>
+                  {message.text ? (
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.text}</ReactMarkdown>
+                  ) :
+                    (isLoading && (
+                      <div className="loadingOval">
+                        <Oval color="#00BFFF" secondaryColor="#484d52" height={30} width={30} />
+                      </div>))
+                  }
+
                 </div>
               </div>
             ))
           )}
-
-          {isLoading && (
-            <div className="botMessage">
-              <div className="messageHeader">
-                <img src="./avatars/bot.png" alt="Bot" className="avatar" />
-                <span className="username">Bot</span>
-              </div>
-              <div className="messageContent">
-                <div className="loadingOval">
-                  <Oval color="#00BFFF" secondaryColor="#484d52" height={30} width={30} />
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="mainBottom">
-            {chatId && (
-              <div className="chatFooter">
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Napisz wiadomość..."
-                  value={input}
-                  onChange={handleInputChange}
-                  onKeyDown={handleKeyDown}
-                  disabled={isLoading || isGeneratingAnswer}
-                />
-                {isGeneratingAnswer && (
-                  <FontAwesomeIcon className="cancelBtn" icon={faStop} onClick={cancelAnswer} />
-                )}
-              </div>
-            )}
+          {chatId && (
+            <div className="chatFooter">
+              <input
+                className="chatInput"
+                type="text"
+                placeholder="Napisz wiadomość..."
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                disabled={isLoading || isGeneratingAnswer}
+              />
+              {isGeneratingAnswer && (
+                <FontAwesomeIcon className="cancelBtn" icon={faStop} onClick={cancelAnswer} />
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

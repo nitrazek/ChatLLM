@@ -1,20 +1,31 @@
 function CheckDockerRunning {
     $dockerRunning = $false
-    try {
-        docker ps 2>$null
-        if ($LASTEXITCODE -eq 0) {
-            $dockerRunning = $true
-        }
-    } catch {
-        
+    docker ps 2>$null
+    if ($LASTEXITCODE -eq 0) {
+        $dockerRunning = $true
     }
     return $dockerRunning
 }
 
-Set-Location -Path $PSScriptRoot
 If (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
   Start-Process powershell.exe "-File",('"{0}"' -f $MyInvocation.MyCommand.Path) -Verb RunAs
   exit
+}
+
+Set-Location -Path $PSScriptRoot
+Clear-Host
+
+# Defaults for models
+$OLLAMA_MODEL = "llama3.2"
+$OLLAMA_EMBEDDING_MODEL = "nomic-embed-text"
+
+Get-Content ../docker-config.env | ForEach-Object {
+    if ($_ -match "^OLLAMA_MODEL\s*=\s*(.*)") {
+        $OLLAMA_MODEL = $matches[1].Trim()
+    }
+    if ($_ -match "^OLLAMA_EMBEDDING_MODEL\s*=\s*(.*)") {
+        $OLLAMA_EMBEDDING_MODEL = $matches[1].Trim()
+    }
 }
 
 $gpuInfo = Get-WmiObject -Class Win32_VideoController | Where-Object {$_.Description -like '*NVIDIA*'}
@@ -34,15 +45,20 @@ while ($continue) {
     Clear-Host
 
     if (-not (CheckDockerRunning)) {
-        Write-Host "Docker is still not running. Check it manually"
+        Write-Host "Docker is not running. Check it manually"
         Write-Host -NoNewLine 'Press any key to close program...'
         $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
         exit
     }
 
     docker-compose -f $composeFilePath down
+
+    docker-compose -f $composeFilePath up ollama -d
+    docker exec ollama ollama pull $OLLAMA_MODEL
+    docker exec ollama ollama pull $OLLAMA_EMBEDDING_MODEL
+
     docker-compose -f $composeFilePath up --build -d
-    docker exec ollama ollama run llama3
+    docker builder prune -f
     docker image prune -f
     Start-Sleep 1
     docker ps

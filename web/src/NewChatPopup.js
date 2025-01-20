@@ -12,6 +12,8 @@ function NewChatPopup() {
   const { chatId } = useParams();
   const userToken = Cookies.get("userToken");
 
+  const serverUrl = process.env.OLLAMA_URL || 'http://localhost:3000';
+
   const createNewChat = async () => {
 
 
@@ -26,8 +28,9 @@ function NewChatPopup() {
       if (usingKnowlegde) {
         bodyData.isUsingOnlyKnowledgeBase = usingKnowlegde;
       }
-
-      const response = await fetch(`http://localhost:3000/api/v1/chats/new`, {
+      
+      console.log(bodyData);
+      const response = await fetch(`${serverUrl}/api/v1/chats/new`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${userToken}`,

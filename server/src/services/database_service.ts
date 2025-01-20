@@ -3,6 +3,7 @@ import { Chat } from "../models/chat";
 import { User } from "../models/user";
 import { ChatMessage } from "../models/chat_message";
 import { UserRole } from "../enums/user_role";
+import { File } from "../models/file";
 
 export const AppDataSource = new DataSource({
     type: "postgres",
@@ -13,7 +14,7 @@ export const AppDataSource = new DataSource({
     database: process.env.POSTGRES_DB ?? "chatdb",
     synchronize: true,
     logging: false,
-    entities: [User, Chat, ChatMessage],
+    entities: [User, Chat, ChatMessage, File],
     migrations: [],
     subscribers: [],
 });
@@ -22,12 +23,12 @@ export const populateDatabase = async () => {
     const existingAdmin = await User.findOneBy({ name: "superadmin" });
     if(existingAdmin !== null) return;
      
-    const admin = User.create({
+    const superAdmin = User.create({
         name: "superadmin",
         email: "superadmin@admin.com",
         password: "Superadmin1!",
         activated: true,
-        role: UserRole.ADMIN
+        role: UserRole.SUPERADMIN
     });
-    await admin.save();
+    await superAdmin.save();
 }

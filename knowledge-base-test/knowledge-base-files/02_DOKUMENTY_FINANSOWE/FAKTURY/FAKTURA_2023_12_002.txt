@@ -1,0 +1,32 @@
+Faktura VAT
+
+Sprzedawca:
+KompTech S.A.
+ul. Technologiczna 12, 00-001 Warszawa
+NIP: 123-456-78-90
+
+Nabywca:
+Jan Kowalski
+ul. Klonowa 5, 00-002 Kraków
+NIP: 987-654-32-10
+
+Faktura nr: 2023/12/002
+Data wystawienia: 08.12.2023
+Data sprzedaży: 08.12.2023
+
+Sprzedane towary:
+
+Lp.	Nazwa towaru/usługi   Ilość   Cena netto (PLN)	VAT (%) Kwota brutto (PLN)
+1	  Intel Core i9-14700K	1 szt.	2,200.00	        23%	    2,706.00
+
+Razem netto: 2,200.00 PLN
+VAT (23%): 506.00 PLN
+Razem brutto: 2,706.00 PLN
+
+Sposób płatności: Przelew bankowy
+Termin płatności: 7 dni
+
+Wystawił: Anna Nowak
+Podpis: _____________________
+
+Dziękujemy za zakupy w KompTech S.A.!

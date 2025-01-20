@@ -19,10 +19,15 @@ export class Chat extends ExtendedBaseEntity {
     @Column({ default: false })
     isUsingOnlyKnowledgeBase!: boolean;
 
-    @ManyToOne(() => User, (user) => user.chats)
+    @ManyToOne(() => User, (user) => user.chats, {
+        onDelete: "CASCADE"
+    })
     user!: User;
 
-    @OneToMany(() => ChatMessage, (message) => message.chat)
+    @OneToMany(() => ChatMessage, (message) => message.chat, {
+        cascade: true,
+        onDelete: "CASCADE"
+    })
     messageHistory!: ChatMessage[];
 
     async addMessage(sender: SenderType, content: string) {

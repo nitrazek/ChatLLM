@@ -1,0 +1,65 @@
+1. Specyfikacja produktu
+
+Nazwa produktu: MSI GeForce RTX 4060 Gaming X 8GB
+Opis: Wysokowydajna karta graficzna oparta na architekturze NVIDIA Ada Lovelace, stworzona do płynnego grania w rozdzielczości 1080p oraz do zastosowań kreatywnych.
+
+Parametry techniczne:
+- Architektura GPU: NVIDIA Ada Lovelace
+- Pamięć: 8 GB GDDR6
+- Szyna pamięci: 128-bit
+- Taktowanie Boost: 2595 MHz
+- Rdzenie CUDA: 3072
+- Złącza: 1x HDMI 2.1a, 3x DisplayPort 1.4a
+- TDP: 115 W
+- Zalecany zasilacz: 500 W
+- Technologie: DLSS 3, Ray Tracing, NVIDIA Reflex, MSI Mystic Light RGB
+
+2. Instrukcja użytkowania i montażu
+
+Kroki instalacji:
+- Przygotowanie:
+  - Wyłącz komputer i odłącz zasilanie.
+  - Sprawdź kompatybilność karty z obudową i płytą główną (slot PCIe x16).
+- Montaż:
+  - Usuń zaślepkę z odpowiedniego slotu PCIe.
+  - Włóż kartę w slot PCIe x16 i zabezpiecz ją śrubami.
+  - Podłącz dodatkowe zasilanie PCIe (8-pin).
+- Konfiguracja:
+  - Włącz komputer i zainstaluj sterowniki ze strony MSI lub NVIDIA.
+  - Skorzystaj z MSI Afterburner, aby zoptymalizować wydajność lub obniżyć hałas pracy wentylatorów.
+
+3. Raport testowy
+
+Wydajność w grach:
+- Cyberpunk 2077 (1080p, Ultra, DLSS 3): 94 FPS
+- Shadow of the Tomb Raider (1080p, High): 120 FPS
+- Apex Legends (1080p, High): 175 FPS
+Benchmarki:
+- 3DMark Time Spy: 10,450 punktów
+- Unigine Heaven (1080p, Ultra): 5,200 punktów
+Temperatury:
+- Spoczynek: 34°C
+- Obciążenie: 66°C (przy standardowym chłodzeniu MSI Twin Frozr 9)
+
+Wnioski:
+- Karta MSI RTX 4060 Gaming X oferuje wysoką wydajność w grach 1080p z technologią DLSS 3, niskie temperatury i cichą pracę.
+
+4. Instrukcja diagnostyki i serwisowania
+
+Typowe problemy i rozwiązania:
+
+Brak obrazu:
+- Sprawdź, czy karta jest poprawnie zainstalowana w slocie PCIe.
+- Upewnij się, że kabel zasilania 8-pin jest podłączony.
+
+Przegrzewanie:
+- Oczyść wentylatory i radiator z kurzu.
+- Sprawdź ustawienia wentylatorów w MSI Afterburner.
+
+Artefakty graficzne:
+- Zainstaluj najnowsze sterowniki NVIDIA.
+- Przywróć ustawienia domyślne w MSI Afterburner.
+
+Zalecenia serwisowe:
+- Aktualizuj sterowniki i BIOS karty graficznej.
+- Wymieniaj pastę termoprzewodzącą oraz termopady co 1–2 lata, szczególnie przy intensywnym użytkowaniu.

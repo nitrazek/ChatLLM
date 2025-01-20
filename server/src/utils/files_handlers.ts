@@ -1,10 +1,13 @@
 import { MultipartFile } from "@fastify/multipart";
 import pdf from "pdf-parse";
+import { FileType } from "../enums/file_type";
+import { File } from "../models/file";
 
-export const getFileHandler = (fileMimetype: string) => {
+export const resolveFileMimetype = (fileMimetype: string): [(file: MultipartFile) => Promise<string>, FileType] | undefined => {
     switch(fileMimetype) {
-        case "text/plain": return getTxtFileHandler;
-        case "application/pdf": return getPdfFileHandler;
+        case "text/plain": return [getTxtFileHandler, FileType.TXT];
+        case "application/pdf": return [getPdfFileHandler, FileType.PDF];
+        default: return undefined;
     }
 }
 
