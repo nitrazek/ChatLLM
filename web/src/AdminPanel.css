@@ -52,6 +52,7 @@
   width: 100%;
   table-layout: fixed;
   margin-top: 15px;
+  table-layout: fixed;
 }
 
 .userTable thead tr {
@@ -359,55 +360,55 @@ select {
 .p-confirm-dialog {
   background-color: #424549;
   border-radius: 8px;
-  padding: 20px;  
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); 
+  padding: 20px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .p-confirm-dialog-header {
-  background-color: #f44336; 
+  background-color: #f44336;
   color: #424549;
-  font-size: 18px;  
-  font-weight: bold;  
-  padding: 15px;  
-  border-radius: 8px 8px 0 0; 
+  font-size: 18px;
+  font-weight: bold;
+  padding: 15px;
+  border-radius: 8px 8px 0 0;
 }
 
 .p-confirm-dialog-message {
-  font-size: 16px; 
-  margin: 10px 0; 
-  color: white; 
+  font-size: 16px;
+  margin: 10px 0;
+  color: white;
 }
 
 .p-confirm-dialog-footer {
-  text-align: right;  
+  text-align: right;
 }
 
 .p-button {
-  background-color: #f44336; 
-  color: white;  
-  border: none; 
-  padding: 10px 20px;  
-  border-radius: 4px; 
-  font-size: 14px;  
-  margin-left: 10px;  
-  cursor: pointer;  
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-left: 10px;
+  cursor: pointer;
 }
 
 .p-button.pi {
-  font-size: 18px;  
+  font-size: 18px;
 }
 
 .p-button:hover {
-  background-color: #e53935;  
+  background-color: #e53935;
 }
 
 .p-button-secondary {
-  background-color: #ccc;  
-  color: white;  
+  background-color: #ccc;
+  color: white;
 }
 
 .p-button-secondary:hover {
-  background-color: #bdbdbd;  
+  background-color: #bdbdbd;
 }
 
 .p-confirm-dialog p {
@@ -419,96 +420,144 @@ select {
 .p-button-success {
   background-color: green !important;
   border-color: green !important;
+  border: 2px solid transparent !important;
 }
 
 .p-button-danger {
-  background-color: darkred !important; 
+  background-color: darkred !important;
   border-color: darkred !important;
+  border: 2px solid transparent !important;
 }
 
 .p-button-success:hover {
-  background-color: rgb(0, 200, 0) !important;;
-  border: 2px solid white !important;;
+  background-color: rgb(0, 200, 0) !important;
+  border: 2px solid white !important;
 }
 
 .p-button-danger:hover {
-  background-color: rgb(200, 0, 0) !important;;
-  border: 2px solid white !important;;
+  background-color: rgb(200, 0, 0) !important;
+  border: 2px solid white !important;
+}
+
+.fileManagement {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.chonky-file-browser {
+  height: 100%;
+  width: 100%;
+}
+
+/* Nadpisanie tła Chonky File Browser */
+.chonky-chonkyRoot {
+  background-color: #282b30 !important;
+  /* Tło pasujące do reszty aplikacji */
+  color: white !important;
+  /* Biały tekst */
+  border: none !important;
+  height: 95% !important;
+}
+
+.folderBackSideTop-0-2-22::after {
+  border-color: rgb(40, 43, 48) rgb(40, 43, 48) transparent transparent;
+}
+
+.MuiButton-label,
+.chonky-fileListEmptyContent,
+.chonky-separator,
+.fa-search,
+.MuiInputBase-input {
+  color: white !important;
+}
+
+.MuiButton-root:hover {
+  color: #ffffff30 !important
+}
+
+.MuiFormControl-root {
+  background-color: #484d52 !important;
+  color: white !important;
 }
 
 
+/* Toast container customization */
 .p-toast {
   position: fixed;
-  top: 15px;
-  right: 15px;
-  z-index: 10000;
-  width: auto;
-  max-width: 500px;
-  padding: 10px;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  max-width: 300px;
 }
 
-
-.p-toast .p-toast-message.p-toast-message-success {
-  background-color: #28a745; 
-  color: white;
-  border: 2px solid #155d27; 
-  font-weight: bold;
-}
-
-
-.p-toast .p-toast-message.p-toast-message-error {
-  background-color: #dc3545; 
-  color: white;
-  border: 2px solid #9e2a2f; 
-  font-weight: bold;
-}
-
-
-.p-toast .p-toast-message.p-toast-message-info {
-  background-color: #17a2b8; 
-  color: white;
-  border: 2px solid #117a8b; 
-  font-weight: bold;
-}
-
-.p-toast .p-toast-message.p-toast-message-warn {
-  background-color: #ffc107; 
-  color: white;
-  border: 2px solid #b37c00; 
-  font-weight: bold;
-}
-
-.p-toast .p-toast-message {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  0% {
-      opacity: 0;
-  }
-  100% {
-      opacity: 1;
-  }
-}
-
-.p-toast .p-toast-message .p-toast-summary {
-  font-size: 16px;
-  font-weight: bold;
-}
-
-.p-toast .p-toast-message .p-toast-detail {
+/* Toast message styles */
+.p-toast-message {
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  font-family: 'Arial', sans-serif;
   font-size: 14px;
-  font-style: italic;
+  padding: 12px;
+  margin-bottom: 10px;
+  animation: fadeIn 0.3s ease-out;
+  max-width: 100%;
+  word-wrap: break-word;
 }
 
-.p-toast .p-toast-message .p-toast-close {
-  color: white;
-  font-size: 18px;
-  font-weight: bold;
-  opacity: 0.8;
-  cursor: pointer;
+/* Custom toast severity styles */
+.p-toast-message-info {
+  background-color: #d9edf7;
+  color: #31708f;
+  border-left: 4px solid #31708f;
 }
 
-.p-toast .p-toast-message .p-toast-close:hover {
-  opacity: 1;
+.p-toast-message-success {
+  background-color: #dff0d8;
+  color: #3c763d;
+  border-left: 4px solid #3c763d;
+}
+
+.p-toast-message-warning {
+  background-color: #fcf8e3;
+  color: #8a6d3b;
+  border-left: 4px solid #8a6d3b;
+}
+
+.p-toast-message-danger,
+.p-toast-message-error {
+  background-color: #f2dede;
+  color: #a94442;
+  border-left: 4px solid #a94442;
+}
+
+/* Toast message text alignment */
+.p-toast-message-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Toast close button */
+.p-toast-icon-close {
+  color: #555;
+  transition: color 0.3s ease;
+}
+
+.p-toast-icon-close:hover {
+  color: #000;
+}
+
+/* Animation for toast appearance */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

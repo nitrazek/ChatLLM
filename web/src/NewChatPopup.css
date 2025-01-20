@@ -54,16 +54,19 @@ h4 {
 }
 
 .popup-container input[type="checkbox"] {
-    transform: scale(2); /* Skaluje checkbox do 1.5x*/
-    -webkit-transform: scale(2); /* Dla wsparcia w przeglądarkach WebKit (Safari, Chrome) */
-    -moz-transform: scale(2); /* Dla Firefox */
+    transform: scale(2);
+    /* Skaluje checkbox do 1.5x*/
+    -webkit-transform: scale(2);
+    /* Dla wsparcia w przeglądarkach WebKit (Safari, Chrome) */
+    -moz-transform: scale(2);
+    /* Dla Firefox */
 }
 
 .popup-container input[type="text"] {
     width: 320px;
 }
 
-.button{
+.button {
     background-color: #7289da;
     padding: 10px 20px;
     border-radius: 10px;
@@ -78,16 +81,16 @@ h4 {
     transition: all 100ms linear;
     color: white;
     position: relative;
-    box-shadow: inset 0 4px 6px -1px rgb(0 0 0 / 0.1), 
-    0 2px 4px -2px rgb(0 0 0 / 0.1);
+    box-shadow: inset 0 4px 6px -1px rgb(0 0 0 / 0.1),
+        0 2px 4px -2px rgb(0 0 0 / 0.1);
     z-index: 5;
-  }
-  
-  .button:active {
+}
+
+.button:active {
     box-shadow: inset 0 0 0 4px #043b3f6b;
-  }
-  
-  .button::before {
+}
+
+.button::before {
     content: "";
     width: 100%;
     height: 100%;
@@ -101,20 +104,21 @@ h4 {
     opacity: 0;
     animation: flash 100ms ease-in-out;
     transform: scaleX(1.25) scaleY(1.25);
-  }
-  
-  .button:hover::before {
+}
+
+.button:hover::before {
     opacity: 1;
     transform: scaleX(1) scaleY(1);
-  }
-  
-  @keyframes flash {
-    0%{
+}
+
+@keyframes flash {
+    0% {
         opacity: 1;
         transform: translate(45px);
     }
-    100%{
+
+    100% {
         opacity: 0;
         transform: translate(0);
     }
-  }
+}
