@@ -48,7 +48,7 @@ const chatsRoutes: FastifyPluginCallback = (server, _, done) => {
         if (!chat) throw new BadRequestError('Chat do not exist.');
         if (chat.user.id !== req.user.id) throw new ForbiddenError('You do not have permission to access this resource.');
 
-        const templateFn = chat.isUsingOnlyKnowledgeBase ? getRagTemplate : getOnlyRagTemplate
+        const templateFn = chat.isUsingOnlyKnowledgeBase ? getOnlyRagTemplate : getRagTemplate
         const question = req.body.question;
         const [chatMessageList, _] = await ChatMessage.findAndCount({
             take: 10,

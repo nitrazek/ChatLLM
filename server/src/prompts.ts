@@ -10,33 +10,24 @@ export const getRagTemplate = (question: string, context: string, messages: Chat
     }).join("\n");
 
     const prompt = `
-        You are a customer support agent, helping clients by following directives and answering questions. Generate your response by following the steps below:
-        1. Detect the language of the post and ensure that your response is in the same language. For example: English, Polish etc.
-        2. Recursively break-down the post into smaller questions/directives.
-        3. For each atomic question/directive:
-        3a. Select the most relevant information from the context in light of the conversation history.
-        4. Generate a draft response using the selected information, whose brevity/detail are tailored to the poster’s expertise.
-        5. Remove duplicate content from the draft response.
-        6. Generate your final response after adjusting it to increase accuracy and relevance.
-        
+        You are an expert AI specialized in retrieval-augmented generation. You use both provided knowledge and external resources to answer queries with clarity and precision.
+        Answer in form of only one or two sentences.
+
         ## CONTEXT ##
         ${context}
 
-        ## MESSAGE_HISTORY ##  
-        ${messagesString}  
+        ## MESSAGE HISTORY ##
+        ${messagesString}
 
-        ## QUESTION ## 
-        ${question}  
-
-        ## ADDITIONAL INFORMATION ##
-        Use information from CONTEXT to maximize relevance and accuracy. If information in CONTEXT isn't sufficient, use MESSAGE_HISTORY.
+        ## QUESTION ##
+        ${question}
     `;
 
     return prompt;
 }
 
 export const getOnlyRagTemplate = (question: string, context: string, messages: ChatMessage[]) => {
-    const messagesString = messages.map((message: ChatMessage) => {
+    const messagesString = messages.slice(-2).map((message: ChatMessage) => {
         switch(message.sender) {
             case SenderType.AI: return `Answer: ${message.content}`;
             case SenderType.HUMAN: return `Question: ${message.content}`;
@@ -44,43 +35,21 @@ export const getOnlyRagTemplate = (question: string, context: string, messages: 
     }).join("\n");
 
     const prompt = `
-        You are an assistant for retrieving and summarizing information from a knowledge base. Follow these steps:  
+        You are an expert AI specialized in retrieval-augmented generation. You use provided knowledge to answer queries with clarity and precision.
+        Answer received question in those steps:
+        1. If the context is empty, reply with "Not enough information. Please provide more details."
+        2. Use the most relevant details from the provided context or message history. Ignore irrelevant or contradictory details.
+        Answer in form of only one or two sentences.
 
-        1. **Language Detection:** Detect the language of the question and respond in the same language.  
-        2. **Check Context:** If the context is empty, reply with "Not enough information. Please provide more details."  
-        3. **Analyze the Question:** If the question is complex, break it into smaller parts. Otherwise, proceed directly to the next step.  
-        4. **Retrieve Relevant Information:** For each question or part:  
-        a. Use the most relevant details from the provided context or message history.  
-        b. Ignore irrelevant or contradictory details.  
-        5. **Generate the Answer:** Combine the retrieved information into a concise, accurate, and informative response.
-        6. **Show The Answer:** Return only the final answer.
+        ## CONTEXT ##
+        ${context}
 
-        Response Format:
+        ## MESSAGE HISTORY ##
+        ${messagesString}
 
-        If the context is insufficient: "Not enough information. Please provide more details."
-        Else respond clearly, concisely, and fully in the same language as the question.
-
-        Example Answer Templates:
-
-        If the context is sufficient and the question is direct:
-        "[answer]"
-
-        If the context is insufficient:
-        "Not enough information. Please provide more details."
-
-        ## CONTEXT ##  
-        ${context}  
-
-        ## MESSAGE_HISTORY ##  
-        ${messagesString}  
-
-        ## QUESTION ## 
-        ${question}  
-
-        ## ADDITIONAL INFORMATION ##
-        Use information from CONTEXT to maximize relevance and accuracy. If information in CONTEXT isn't sufficient, use MESSAGE_HISTORY. If no relevant information is found, follow Step 2.
+        ## QUESTION ##
+        ${question}
     `;
-    console.log(prompt);
 
     return prompt;
 };
