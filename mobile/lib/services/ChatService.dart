@@ -6,13 +6,14 @@ import 'package:mobile/states/ChatState.dart';
 import 'package:mobile/viewModels/MainChatViewModel.dart';
 import 'package:provider/provider.dart';
 
+import '../constants/Constants.dart';
 import '../models/Chat.dart';
 import '../models/ErrorResponse.dart';
 import '../states/AccountState.dart';
 import 'AccountService.dart';
 
 class ChatService {
-  final String baseUrl = "http://10.0.2.2:3000";
+  final String baseUrl = Constants.baseUrl;
   bool _isRequestCancelled = false;
   String? token = AccountState.token;
   final httpClient = HttpClient();

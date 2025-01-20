@@ -514,7 +514,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                                             15.0),
                                                     color: AppColors.dark,
                                                   ),
-                                                  child: Text(
+                                                  child: SelectableText(
                                                     chatMessage.sender ==
                                                             'human'
                                                         ? chatMessage.content
@@ -572,6 +572,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                                                         .content;
 
                                                             return MarkdownBody(
+                                                              selectable: true,
                                                               data: data,
                                                               styleSheet:
                                                                   MarkdownStyleSheet(
@@ -658,6 +659,7 @@ class _MainChatPageState extends State<MainChatPage> {
                                                           },
                                                         )
                                                       : MarkdownBody(
+                                                    selectable: true,
                                                           data: chatMessage
                                                               .content,
                                                           styleSheet:
