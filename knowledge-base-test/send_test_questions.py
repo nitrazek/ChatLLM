@@ -21,27 +21,27 @@ def main(config: dict[str, any]):
   print()
   auth_token = auth_response.json()["token"]
 
-  new_chat_response = requests.post(
-    url=f"{BASE_URL}/chats/new",
-    headers={ "Authorization": f"Bearer {auth_token}" },
-    json={
-      "name": "model_testing",
-      "isUsingOnlyKnowledgeBase": True
-    }
-  )
-
-  if new_chat_response.status_code != 200:
-    print("Creating chat failed")
-    return
-  
-  print("Creating chat successful")
-  print()
-  chat_id = new_chat_response.json()["id"]
-
   with open("test_questions.json", "r", encoding="utf-8") as file:
     test_questions = json.loads(file.read())
 
   for test_question in test_questions:
+    new_chat_response = requests.post(
+      url=f"{BASE_URL}/chats/new",
+      headers={ "Authorization": f"Bearer {auth_token}" },
+      json={
+        "name": "model_testing",
+        "isUsingOnlyKnowledgeBase": True
+      }
+    )
+
+    if new_chat_response.status_code != 200:
+      print("Creating chat failed")
+      return
+    
+    print("Creating chat successful")
+    print()
+    chat_id = new_chat_response.json()["id"]
+
     print(f"Sending question: \"{test_question['question']}\"")
     send_question_response = requests.post(
       url=f"{BASE_URL}/chats/{chat_id}",

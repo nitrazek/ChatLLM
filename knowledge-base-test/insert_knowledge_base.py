@@ -37,6 +37,7 @@ def insert_folder(folder: File, parent_folder: File, auth_token: str, only_conte
         **({ "parentFolderId": parent_folder.id } if parent_folder.id is not None else {})
       },
     ).json()
+    print(insert_folder_response)
     inserted_folder = File(
       id=insert_folder_response["id"],
       name=insert_folder_response["name"],

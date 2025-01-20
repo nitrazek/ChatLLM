@@ -34,8 +34,8 @@ export const getRagChain = async (chatMessages: ChatMessage[]) => RunnableSequen
     //     [SenderType.HUMAN.toString(), "{question}"]
     // ]),
     ({ context, question }) => {
-        console.log("CONTEXT: " + context)
-        console.log("QUESTION: " + question)
+        // console.log("CONTEXT: " + context)
+        // console.log("QUESTION: " + question)
         return ChatPromptTemplate.fromTemplate(getOnlyRagTemplate(question, context, chatMessages))
     },
     await OllamaService.getInstance()
