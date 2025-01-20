@@ -5,8 +5,8 @@ services:
             context: ./web
         ports:
             - "80:80"
-        environment:
-            - SERVER_URL=http://localhost:3000
+        env_file:
+            - docker-config.env
         depends_on:
             - server
 
