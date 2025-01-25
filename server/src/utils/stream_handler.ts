@@ -62,13 +62,10 @@ const getNewChatNameStream = async (stream: ReadableStream<string>, chat: Chat) 
         async pull(controller) {
             const { done, value } = await reader.read();
             if (done || isCanceled) {
-                if (buffer.length > 0 && buffer[0].length > 0) {
-                    console.log("Test-" + buffer[0] + "-Test");
-                    answerChunks.push(buffer[0]);
-                }
+                answerChunks.push(buffer[0]);
                 const summary: string = (await ollama.invoke(getSummaryPrompt(answerChunks.join("")))).content as string;
                 var chatName = summary.substring(0, 29);
-                if (chatName[0] == '"' && chatName[chatName.length - 1] == '"') {
+                if (chatName[0] === '"' && chatName[chatName.length - 1] === '"') {
                     chatName = chatName.substring(1, chatName.length - 2);
                 }
                 chat.name = chatName.substring(0, 29);
